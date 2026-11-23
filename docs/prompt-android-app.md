@@ -91,9 +91,13 @@ Kein Fettdruck über 600. Ruhe entsteht durch leichte große Schrift.
 
 Nachbauen wie in der Vorlage, jeweils mit Preview in Hell und Dunkel:
 
+**Icons: ausschließlich Material Symbols (Rounded)**, das offizielle Icon-Set von Material Design. Keine eigenen SVGs, keine anderen Icon-Pakete. In Compose über `androidx.compose.material:material-icons-extended` (`Icons.Rounded.*`) oder die Material-Symbols-Vektoren aus Android Studio (Vector Asset → Material Symbols, Stil Rounded, Gewicht 300–400, nicht gefüllt; aktive Reiter gefüllt). Standardgröße 24 dp, in kleinen Zählern 16–18 dp. Verwendete Icons: home, calendar_today, event, task_alt, edit_note, checklist, description, add, search, check, schedule, location_on, arrow_outward, photo_camera, image, notifications, chevron_left, chevron_right, swap_vert, settings, light_mode.
+
+**Listeneinträge wie in Gmail (M3 „segmented list“):** Jede Liste (Aufgaben, Termine, Notizen, Einstellungen) besteht aus einzelnen Einträgen auf eigener Fläche (`surface`), **2 dp Abstand** zwischen den Einträgen, **Eckenradius 4 dp**, nur die äußeren Ecken der Gruppe (oben beim ersten, unten beim letzten Eintrag) 16 dp. Keine Trennlinien, keine umschließende Karte. Abstände wie Gmail: 16 dp links und rechts, 14 dp oben und unten, mindestens 64 dp Höhe (72 dp bei drei Zeilen), 16 dp zwischen führendem Element (Checkbox, Uhrzeit, Icon) und Text. Erste Zeile 15 sp Gewicht 500, zweite 12,5 sp textSoft, Status-Tag oder Meta rechts.
+
 1. **SoftIconButton** (rund, 40 und 48 dp)
-2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **CaptureButton**: runder Knopf 66 dp in der Typfarbe (Termin Navy bzw. im Dunkeln hell, Aufgabe Blau, Notiz Gelb) mit dünnem **Plus-Icon** (24 dp, Strich 1,6), darunter die Beschriftung „Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“ (12,5 sp, Gewicht 400, textMuted). Die drei Knöpfe teilen sich die Breite gleichmäßig (`Arrangement.SpaceEvenly`) und müssen ab 320 dp Bildschirmbreite in eine Zeile passen.
-3. **ExtendedAddButton**: Höhe 54 dp, Radius 18, Plus-Icon + Text („Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“), Typfarbe
+2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **CaptureButton**: runder Knopf 66 dp in der Typfarbe (Termin Navy bzw. im Dunkeln hell, Aufgabe Blau, Notiz Gelb) mit dem **Icon des Typs** statt eines Plus (24 dp, dünnes Gewicht): Termin `event`, Aufgabe `task_alt`, Notiz `edit_note`. Darunter die Beschriftung „Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“ (12,5 sp, Gewicht 400, textMuted). Die drei Knöpfe teilen sich die Breite gleichmäßig (`Arrangement.SpaceEvenly`) und müssen ab 320 dp Bildschirmbreite in eine Zeile passen.
+3. **ExtendedAddButton** nach Material 3 (`ExtendedFloatingActionButton` mit `expanded`-Parameter): Höhe 56 dp, Radius 16, Icon `add` (24 dp) + kurzer Text „Termin“, „Aufgabe“ oder „Notiz“ (liest sich als „+ Aufgabe“), Typfarbe. Eingeklappt wird er zum quadratischen Icon-FAB 56 × 56 dp, nur mit Plus. Animierter Übergang (Breite und Label ausblenden, ca. 250 ms).
 4. **GlassCard** (mit Haze-Blur)
 5. **BriefingTile** (Vorbild: Guthaben-Karten oben in der PayPal-App): Karte im Format **16 : 9** mit **100 dp Höhe** (also ca. 178 dp breit), Radius 20, Innenabstand 12, nur ein ganz leichter Schatten (y 2–3, blur 8–10, Navy 5–10 %), in einer **horizontal wischbaren Liste** (`LazyRow` mit Snap, die nächste Karte schaut am rechten Rand heraus). Oben links der Titel (Heute, Morgen, Diese Woche), oben rechts drei kleine Zähler mit Icons (11,5 sp; Termine, Aufgaben, Notizen mit Erinnerung). Unten groß (19 sp, Gewicht 400) die wichtigste Info mit Icon, z. B. „in 25 Min“, „ab 09:00“, „Fr voll“, darunter eine Zeile (11 sp), z. B. „Sprint-Review · 10:00“. Titel kurz halten: Heute, Morgen, Woche. Der **gelbe Fortschrittsbalken** erscheint nur, wenn etwas in den nächsten 60 Minuten beginnt, er füllt sich bis zum Beginn. Gewählte Kachel: hell = Navy mit weißer Schrift, dunkel = `#F4F7FB` mit Navy-Schrift.
 6. **NextEventCard** (große Navy-Karte mit blauem Lichtschein, Zeit, Titel, Ort, Dauer, Teilnehmer-Avatare, Pfeil-Knopf, gelber Chip „in 25 Min“)
@@ -105,14 +109,14 @@ Nachbauen wie in der Vorlage, jeweils mit Preview in Hell und Dunkel:
 12. **DateDivider**: Datum mittig, links und rechts eine dünne Wellenlinie
 13. **NoteCard** im Logbuch-Muster: links Bilderstapel (oder gestrichelter Platzhalter „Foto aufnehmen / oder aus Galerie“), rechts ein kleines liniertes Notizblatt mit blauer Randlinie, leicht gedrehtem Blatt dahinter, Titel und Vorschau, Pille „2 Notizen“
 14. **Switch** im Soft-Stil
-15. **FloatingTabBar** (darüber ein dezenter Verlauf vom Hintergrund, der höchstens 16 dp über die Leiste hinausragt und eher schwach ist, max. 80 % Deckkraft): schwebende Navy-Glas-Pille, 4 Reiter. Aktiver Reiter = **weiße Pille** mit Icon und Text in Navy, die anderen nur Icon (mit `contentDescription`). Klappt beim Runterscrollen nach unten weg und kommt beim Hochscrollen zurück.
+15. **FloatingTabBar** (darüber ein dezenter Verlauf vom Hintergrund, der höchstens 16 dp über die Leiste hinausragt und eher schwach ist, max. 80 % Deckkraft): schwebende Navy-Glas-Pille, 4 Reiter. Aktiver Reiter = **weiße Pille** mit Icon und Text in Navy, die anderen nur Icon (mit `contentDescription`). Beim Scrollen in den Inhalt (Finger wischt nach oben) gleitet die Leiste nach unten aus dem Bild (`slideOutVertically` + Ausblenden), beim Zurückscrollen oder ganz oben kommt sie wieder (Verhalten wie M3 `BottomAppBarScrollBehavior` / `exitAlwaysScrollBehavior`).
 
 ## Bildschirme
 
 ### Navigation
 Vier Reiter: **Übersicht**, **Termine**, **Aufgaben**, **Notizen**. Es gibt **keinen** zentralen Add-Button in der Leiste.
 - Auf der Übersicht gibt es keinen schwebenden Add-Button.
-- Auf Termine, Aufgaben und Notizen sitzt rechts über der Leiste der **ExtendedAddButton** in der Typfarbe (wie Gmail). Beim Scrollen schrumpft er auf das Plus-Icon.
+- Auf Termine, Aufgaben und Notizen sitzt rechts über der Leiste der **ExtendedAddButton** in der Typfarbe (wie Gmail). Beim Scrollen in den Inhalt verschwindet die Leiste nach unten, und **nur der Anlege-Knopf bleibt sichtbar**: er rutscht nach unten an den Platz der Leiste (16 dp Abstand zum Rand) und klappt zum 56-dp-Icon-FAB ein. Beim Zurückscrollen klappt er wieder aus und sitzt über der Leiste. Auslöser über `NestedScrollConnection` bzw. `LazyListState` (Richtung des Scrollens, kleine Schwelle von ca. 8 dp gegen Flackern).
 - Einstellungen sind ein eigener Bildschirm, erreichbar über das Zahnrad oben rechts in der Übersicht. Dort ist die Leiste ausgeblendet, oben links ein Zurück-Knopf.
 
 ### Übersicht
@@ -120,7 +124,7 @@ Von oben nach unten:
 1. Kopfzeile: Wortmarke „Organi**7**er“ in 28 sp (die 7 mit gelbem Unterstrich) links, Zahnrad (Einstellungen) rechts.
 2. Darunter mittig eine **Datumszeile mit Pfeilen**: `‹  Montag, 23. November  ›` (14 sp, textMuted, Pfeile als dezente 36-dp-Icon-Knöpfe in textSoft). Die Pfeile blättern tageweise (heute bis +6 Tage, zurück vor heute ist deaktiviert). Der Tag steuert Kacheln und Inhalt: heute = Kachel „Heute“, morgen = Kachel „Morgen“, später = keine Kachel markiert, Inhalt für diesen Tag. Tippt man auf die Kachel „Woche“, zeigt die Zeile den Zeitraum („23.–29. November“). Die gewählte Kachel scrollt automatisch ins Bild. Abstände: Kopfzeile → Datum 18 dp, Datum → Kacheln 14 dp, Kacheln → Erfassen 22 dp. **Keine** Überschrift „Heute“, **keine** Begrüßung, **keine** Zähler-Chips.
 3. **Briefing-Kacheln** als horizontale, wischbare Liste: Heute, Morgen, Woche (16 : 9, 100 dp hoch, siehe BriefingTile). Sie funktionieren wie Reiter und steuern den Inhalt darunter.
-4. Abschnitt **„Erfassen“** (Überschrift bewusst leise als Overline, 12 sp Versalien in textSoft) mit drei runden Plus-Knöpfen (CaptureButton) gleichmäßig verteilt: Neuer Termin, Neue Aufgabe, Neue Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
+4. Abschnitt **„Erfassen“** (Überschrift bewusst leise als Overline, 12 sp Versalien in textSoft) mit drei runden Plus-Knöpfen (CaptureButton) gleichmäßig verteilt, jeder mit dem Icon seines Typs: Neuer Termin, Neue Aufgabe, Neue Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
 5. Inhalt der gewählten Kachel:
    - *Heute:* „Als Nächstes“ mit NextEventCard und den weiteren Terminen, danach „Aufgaben heute“.
    - *Morgen:* „Termine morgen“, „Aufgaben morgen“.
@@ -144,7 +148,7 @@ Von oben nach unten:
   - *Aktiv:* gruppiert nach Überfällig, Heute, Diese Woche, Später. Aktive Aufgaben haben einen optionalen **Unterstatus**, angezeigt als kleiner Tag rechts: *In Arbeit* (blau), *Geblockt* (rot), *Verschoben* (grau). Ohne Unterstatus kein Tag.
   - *Erledigt:* die letzten 30 Tage, ältere einklappbar.
 - Abhaken mit kurzer Animation und Rückgängig-Snackbar.
-- Neue Aufgabe als Bottom Sheet: Titel, optional Datum/Uhrzeit, Priorität, Liste/Tag. Ohne Datum landet sie in Entwürfe.
+- Aufgabe anlegen als Bottom Sheet: Titel, optional Datum/Uhrzeit, Priorität, Liste/Tag. Ohne Datum landet sie in Entwürfe.
 
 ### Notizen
 - Seitentitel nur „Notizen“.

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0&display=block" rel="stylesheet">
 <style>
 /* =========================================================
    1) PRIMITIVE FARBEN (Skalen). Kernfarben = 900 / 500 / 500
@@ -121,6 +122,9 @@
    DOKU-SEITE
    ========================================================= */
 * { box-sizing:border-box; }
+.ms { font-family:"Material Symbols Rounded"; font-weight:normal; font-style:normal; font-size:20px; line-height:1; letter-spacing:normal; text-transform:none; white-space:nowrap; direction:ltr; display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; overflow:hidden; flex:none; -webkit-font-smoothing:antialiased; font-variation-settings:"FILL" 0, "wght" 350, "GRAD" 0, "opsz" 24; }
+.tab[aria-selected="true"] .ms, .check[aria-checked="true"] .ms { font-variation-settings:"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+.capture .circ .ms { font-variation-settings:"FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24; }
 html { -webkit-text-size-adjust:100%; }
 body { margin:0; font-family:var(--font); background:var(--bg); color:var(--text); line-height:1.5; font-weight:400; }
 a { color:var(--link); }
@@ -241,14 +245,14 @@ tr:last-child td { border-bottom:0; }
 .knob { width:48px; height:48px; border-radius:50%; border:0; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--text);
   background:linear-gradient(180deg,var(--knob-top),var(--knob-bottom)); box-shadow:var(--shadow-soft); flex:none; }
 .knob.sm { width:40px; height:40px; }
-.knob svg { width:20px; height:20px; }
+.knob svg, .knob .ms { width:20px; height:20px;  font-size:20px; }
 /* Kombi „Pille im Rahmen“ (wie LOG IN in der Vorlage) */
 .combo { display:inline-flex; align-items:center; gap:6px; padding:5px; border-radius:var(--r-pill); background:var(--glass-strong); box-shadow:var(--shadow-soft); border:1px solid var(--glass-line); }
 .combo .btn { min-height:44px; }
 
 .fab { width:60px; height:60px; border-radius:50%; border:0; cursor:pointer; background:var(--accent); color:var(--on-accent); display:inline-flex; align-items:center; justify-content:center;
   box-shadow:0 10px 26px rgba(255,213,0,.35), 0 2px 0 rgba(255,255,255,.6) inset; transition:transform .2s ease; flex:none; }
-.fab svg { width:26px; height:26px; }
+.fab svg, .fab .ms { width:26px; height:26px;  font-size:26px; }
 .fab[aria-expanded="true"] { transform:rotate(45deg); }
 
 .chip { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px 0 4px; border-radius:var(--r-pill); background:var(--glass-strong); border:1px solid var(--glass-line); font-size:13px; font-weight:500; color:var(--text); }
@@ -268,7 +272,7 @@ tr:last-child td { border-bottom:0; }
 .field { display:flex; align-items:center; gap:10px; height:48px; padding:0 16px; border-radius:var(--r-pill); background:var(--glass-strong); border:1px solid var(--glass-line); box-shadow:var(--shadow-soft); color:var(--text-soft); }
 .field input { flex:1; border:0; background:transparent; font:inherit; font-size:15px; color:var(--text); outline:none; min-width:0; }
 .field input::placeholder { color:var(--text-soft); }
-.field svg { width:18px; height:18px; flex:none; }
+.field svg, .field .ms { width:18px; height:18px; flex:none;  font-size:18px; }
 
 /* Segment-Steuerung (Soft) */
 .segm { display:flex; padding:4px; border-radius:var(--r-pill); background:var(--surface-2); gap:2px; }
@@ -279,7 +283,7 @@ tr:last-child td { border-bottom:0; }
 .task { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--r-md); }
 .check { width:28px; height:28px; border-radius:50%; flex:none; border:0; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center;
   background:linear-gradient(180deg,var(--knob-top),var(--knob-bottom)); box-shadow:var(--shadow-soft), inset 0 0 0 1.5px var(--border); color:transparent; }
-.check svg { width:15px; height:15px; }
+.check svg, .check .ms { width:15px; height:15px;  font-size:15px; }
 .check[aria-checked="true"] { background:var(--primary); box-shadow:0 4px 12px rgba(37,99,235,.35); color:#fff; }
 .task .tt { flex:1; min-width:0; }
 .task .tt b { display:block; font-weight:500; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -295,12 +299,12 @@ tr:last-child td { border-bottom:0; }
 .event-hero h4 { font-size:22px; font-weight:400; letter-spacing:-.01em; margin:22px 0 4px; line-height:1.2; }
 .event-hero .meta { font-size:13px; color:var(--on-hero-muted); display:flex; gap:12px; flex-wrap:wrap; }
 .event-hero .meta span { display:inline-flex; align-items:center; gap:5px; }
-.event-hero .meta svg { width:14px; height:14px; }
+.event-hero .meta svg, .event-hero .meta .ms { width:14px; height:14px;  font-size:14px; }
 .event-hero .foot { display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
 .avatars { display:flex; } .avatars i { width:28px; height:28px; border-radius:50%; border:2px solid var(--hero); margin-left:-8px; display:inline-flex; align-items:center; justify-content:center; font-style:normal; font-size:11px; font-weight:600; color:#061B3A; }
 .avatars i:first-child { margin-left:0; }
 .join { width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.22); color:#fff; display:inline-flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); }
-.join svg { width:18px; height:18px; }
+.join svg, .join .ms { width:18px; height:18px;  font-size:18px; }
 
 .event-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:var(--r-md); }
 .event-row .time { width:50px; flex:none; font-size:14px; font-weight:500; }
@@ -327,7 +331,7 @@ tr:last-child td { border-bottom:0; }
   radial-gradient(70% 60% at 20% 90%, rgba(6,27,58,.85), transparent 70%),
   linear-gradient(200deg,#93BBFD,#1A3665); }
 .note .media .count { position:absolute; left:8px; bottom:8px; height:24px; padding:0 9px; border-radius:var(--r-pill); background:rgba(6,27,58,.55); color:#fff; font-size:11.5px; font-weight:500; display:inline-flex; align-items:center; gap:4px; backdrop-filter:blur(8px); }
-.note .media .count svg { width:12px; height:12px; }
+.note .media .count svg, .note .media .count .ms { width:12px; height:12px;  font-size:12px; }
 .note .media.empty { border:1.5px dashed color-mix(in srgb, var(--brand-blue) 55%, transparent); background:color-mix(in srgb, var(--brand-blue) 7%, transparent); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--text-muted); font-size:12px; text-align:center; padding:8px; }
 .note .media.empty .knob { width:42px; height:42px; }
 .note .sheet { flex:1; aspect-ratio: 1 / 1.3; position:relative; }
@@ -345,7 +349,7 @@ tr:last-child td { border-bottom:0; }
 .tabbar { flex:1; min-width:0; display:flex; align-items:center; gap:2px; height:64px; padding:6px; border-radius:var(--r-pill); background:var(--nav); border:1px solid rgba(147,187,253,.14);
   backdrop-filter:blur(24px) saturate(170%); -webkit-backdrop-filter:blur(24px) saturate(170%); box-shadow:var(--shadow-float); }
 .tab { height:52px; border:0; border-radius:var(--r-pill); background:transparent; color:var(--nav-icon); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; font:inherit; font-size:13px; font-weight:500; transition:flex .25s ease, background .25s ease; min-width:44px; padding:0 8px; }
-.tab svg { width:22px; height:22px; flex:none; }
+.tab svg, .tab .ms { width:22px; height:22px; flex:none;  font-size:22px; }
 .tab .lbl { display:none; white-space:nowrap; }
 .tab[aria-selected="true"] { flex:1 1 auto; background:#FFFFFF; color:#061B3A; padding:0 14px; box-shadow:0 4px 14px rgba(0,0,0,.18); }
 .tab[aria-selected="false"] { flex:0 1 48px; }
@@ -379,7 +383,7 @@ tr:last-child td { border-bottom:0; }
 .home-top .apphead { padding-top:6px; }
 .datenav { display:flex; align-items:center; justify-content:center; gap:4px; margin:18px 0 14px; }
 .datenav button { width:36px; height:36px; border-radius:50%; border:0; background:transparent; color:var(--text-soft); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-.datenav button svg { width:16px; height:16px; }
+.datenav button svg, .datenav button .ms { width:16px; height:16px;  font-size:16px; }
 .datenav button:hover { background:var(--surface-2); }
 .datenav button:disabled { opacity:.3; cursor:default; background:transparent; }
 .datenav button:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; }
@@ -397,13 +401,18 @@ tr:last-child td { border-bottom:0; }
 .sec-h a { font-size:13.5px; text-decoration:none; color:var(--link); font-weight:500; }
 .stack { display:flex; flex-direction:column; gap:8px; }
 .list-card { border-radius:var(--r-lg); padding:4px; }
-.list-card .task + .task, .list-card .event-row + .event-row { border-top:1px solid color-mix(in srgb, var(--border) 60%, transparent); border-radius:0; }
+/* Listen wie Gmail (M3 Segmented List): jeder Eintrag eine eigene Fläche, 2px Abstand, Radius 4, außen 16 */
+.list-card, .list-card.glass { background:transparent; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; padding:0; border-radius:0; display:flex; flex-direction:column; gap:2px; }
+.list-card > * { background:var(--surface); border-radius:4px; padding:14px 16px; min-height:64px; box-sizing:border-box; }
+.list-card > :first-child { border-top-left-radius:16px; border-top-right-radius:16px; }
+.list-card > :last-child { border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+.list-card .task, .list-card .event-row { gap:16px; }
 .phone-nav { position:absolute; left:16px; right:16px; bottom:16px; z-index:6; }
 .phone-nav[hidden] { display:none; }
 .phone-nav .tabbar { min-width:0; gap:0; padding:5px; }
 .phone-nav .tab[aria-selected="false"] { flex:1 1 0; }
 .phone-nav .tab[aria-selected="true"] { flex:2 1 auto; padding:0 12px; font-size:12.5px; gap:5px; min-width:0; }
-.phone-nav .tab svg { width:20px; height:20px; }
+.phone-nav .tab svg, .phone-nav .tab .ms { width:20px; height:20px;  font-size:20px; }
 .phone-nav .tabbar { height:60px; } .phone-nav .tab { height:48px; }
 .phone-nav .tabbar { justify-content:space-between; }
 .today .row { gap:6px; flex-wrap:nowrap; }
@@ -416,7 +425,7 @@ tr:last-child td { border-bottom:0; }
 .addmenu.open button { opacity:1; transform:none; }
 .addmenu.open button:nth-child(2){ transition-delay:.03s; } .addmenu.open button:nth-child(3){ transition-delay:.06s; }
 .addmenu .btn { background:var(--glass-strong); color:var(--text); border:1px solid var(--glass-line); box-shadow:var(--shadow-float); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
-.addmenu .btn svg { width:18px; height:18px; color:var(--brand-blue); }
+.addmenu .btn svg, .addmenu .btn .ms { width:18px; height:18px; color:var(--brand-blue);  font-size:18px; }
 .scrim { position:absolute; inset:0; z-index:6; background:color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:opacity .2s; }
 .scrim.on { opacity:1; pointer-events:auto; }
 
@@ -457,10 +466,10 @@ tr:last-child td { border-bottom:0; }
 .brief .bt { font-size:14.5px; font-weight:500; letter-spacing:-.01em; }
 .brief .st { display:flex; gap:6px; font-size:11.5px; font-weight:500; color:var(--text-muted); padding-top:2px; }
 .brief .st span { display:inline-flex; align-items:center; gap:3px; }
-.brief .st svg { width:12px; height:12px; }
+.brief .st svg, .brief .st .ms { width:12px; height:12px;  font-size:12px; }
 .brief .bot { display:flex; flex-direction:column; gap:1px; min-width:0; }
 .brief .big { font-size:19px; font-weight:400; letter-spacing:-.02em; line-height:1.1; display:flex; align-items:center; gap:6px; }
-.brief .big svg { width:15px; height:15px; flex:none; opacity:.8; }
+.brief .big svg, .brief .big .ms { width:15px; height:15px; flex:none; opacity:.8;  font-size:15px; }
 .brief .cap { font-size:11px; color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .brief .pb { height:3px; margin-top:5px; border-radius:var(--r-pill); background:color-mix(in srgb, var(--text) 12%, transparent); overflow:hidden; }
 .brief .pb i { display:block; height:100%; border-radius:inherit; background:var(--accent); }
@@ -477,7 +486,7 @@ tr:last-child td { border-bottom:0; }
 .capture { display:flex; justify-content:space-evenly; }
 .capture button { font:inherit; border:0; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text-muted); font-size:12.5px; font-weight:400; padding:0; min-width:0; white-space:nowrap; }
 .capture .circ { width:66px; height:66px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); transition:transform .15s ease; }
-.capture .circ svg { width:24px; height:24px; }
+.capture .circ svg, .capture .circ .ms { width:24px; height:24px;  font-size:24px; }
 .capture button:active .circ { transform:scale(.94); }
 .capture button:focus-visible .circ { outline:2px solid var(--brand-blue); outline-offset:3px; }
 .capture .circ.btn-note { box-shadow:var(--shadow-soft), inset 0 0 0 1px rgba(255,255,255,.08); }
@@ -486,11 +495,17 @@ tr:last-child td { border-bottom:0; }
 .btn-note { background:var(--type-note); color:var(--on-type-note); }
 
 /* Erweiterter Add-Button (Reiterseiten, rechts über der Navigation) */
-.efab { font:inherit; font-size:15px; font-weight:500; border:0; cursor:pointer; height:54px; padding:0 20px 0 16px; border-radius:18px; display:inline-flex; align-items:center; gap:8px; box-shadow:var(--shadow-float); transition:transform .15s ease; }
-.efab svg { width:22px; height:22px; }
+.efab { font:inherit; font-size:16px; font-weight:500; border:0; cursor:pointer; height:56px; min-width:56px; padding:0 20px 0 16px; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; gap:10px; box-shadow:var(--shadow-float); transition:transform .15s ease, bottom .25s ease, padding .25s ease, gap .25s ease; overflow:hidden; white-space:nowrap; }
+.efab span:not(.ms) { transition:opacity .15s ease, max-width .25s ease; max-width:120px; }
+.phone.collapsed .efab { bottom:16px; padding:0; gap:0; width:56px; }
+.phone.collapsed .efab span:not(.ms) { opacity:0; max-width:0; }
+.phone-nav { transition:transform .25s ease, opacity .2s ease; }
+.phone.collapsed .phone-nav { transform:translateY(96px); opacity:0; pointer-events:none; }
+.fade-bottom { transition:opacity .2s ease; } .phone.collapsed .fade-bottom { opacity:0; }
+.efab svg, .efab .ms { width:22px; height:22px;  font-size:22px; }
 .efab:active { transform:scale(.97); }
 .efab:focus-visible { outline:2px solid var(--brand-blue); outline-offset:3px; }
-.phone .efab { position:absolute; right:16px; bottom:90px; z-index:6; }
+.phone .efab { position:absolute; right:16px; bottom:88px; z-index:6; }
 .phone .efab[hidden] { display:none; }
 
 /* Schalter */
@@ -505,12 +520,12 @@ tr:last-child td { border-bottom:0; }
 .set-row { display:flex; align-items:center; gap:12px; padding:13px 14px; min-height:56px; }
 .set-row + .set-row { border-top:1px solid color-mix(in srgb, var(--border) 60%, transparent); }
 .set-row .ic { width:34px; height:34px; border-radius:11px; display:inline-flex; align-items:center; justify-content:center; flex:none; }
-.set-row .ic svg { width:18px; height:18px; }
+.set-row .ic svg, .set-row .ic .ms { width:18px; height:18px;  font-size:18px; }
 .set-row .tt { flex:1; min-width:0; }
 .set-row .tt b { display:block; font-weight:500; font-size:15px; }
 .set-row .tt span { font-size:12.5px; color:var(--text-soft); }
 .set-row .val { font-size:13.5px; color:var(--text-soft); display:inline-flex; align-items:center; gap:2px; }
-.set-row .val svg { width:16px; height:16px; }
+.set-row .val svg, .set-row .val .ms { width:16px; height:16px;  font-size:16px; }
 
 /* Termine: Wochenleiste ohne Container */
 .days { display:grid; grid-template-columns:repeat(7,1fr); }
@@ -525,7 +540,7 @@ tr:last-child td { border-bottom:0; }
 .ev { background:color-mix(in srgb, var(--c) 13%, var(--surface)); border-left:3px solid var(--c); }
 [data-theme="dark"] .ev { background:color-mix(in srgb, var(--c) 18%, var(--surface)); }
 .monthbtn { font:inherit; border:0; background:transparent; color:var(--text-soft); cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:2px; font-size:12px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; min-height:28px; }
-.monthbtn svg { width:14px; height:14px; transform:rotate(90deg); }
+.monthbtn svg, .monthbtn .ms { width:16px; height:16px; transform:rotate(90deg); font-size:16px; }
 .hint { font-size:13px; color:var(--text-soft); margin:0 4px; }
 .panel { display:none; flex-direction:column; gap:18px; } .panel.on { display:flex; }
 .draft .tt b { font-weight:400; }
@@ -566,7 +581,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
 <div class="topbar">
   <div class="in">
-    <div class="wordmark">Organi<span class="seven">7</span>er<small>Designsystem v0.4</small></div>
+    <div class="wordmark">Organi<span class="seven">7</span>er<small>Designsystem v0.5</small></div>
     <nav class="toc" aria-label="Inhalt">
       <a href="#farben">Farben</a><a href="#tokens">Tokens</a><a href="#kontrast">Kontrast</a><a href="#typo">Typografie</a><a href="#form">Form</a><a href="#komponenten">Komponenten</a><a href="#app">App</a>
     </nav>
@@ -704,15 +719,15 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="row"><button class="btn btn-primary">Speichern</button><button class="btn btn-soft">Abbrechen</button></div>
         <div class="row"><button class="btn btn-dark">Termin anlegen</button><button class="btn btn-ghost btn-sm">Alle</button></div>
         <div class="row">
-          <div class="combo"><button class="knob sm" aria-label="Hinzufügen"><svg><use href="#i-plus"/></svg></button><button class="btn btn-dark" style="min-width:150px">Weiter</button></div>
+          <div class="combo"><button class="knob sm" aria-label="Hinzufügen"><span class="ms" aria-hidden="true">add</span></button><button class="btn btn-dark" style="min-width:150px">Weiter</button></div>
         </div>
       </div>
       <div class="comp">
         <div class="label">Runde Soft-Knöpfe und Schalter</div>
         <div class="row">
-          <button class="knob" aria-label="Einstellungen"><svg><use href="#i-gear"/></svg></button>
-          <button class="knob" aria-label="Suchen"><svg><use href="#i-search"/></svg></button>
-          <button class="knob" aria-label="Kamera"><svg><use href="#i-camera"/></svg></button>
+          <button class="knob" aria-label="Einstellungen"><span class="ms" aria-hidden="true">settings</span></button>
+          <button class="knob" aria-label="Suchen"><span class="ms" aria-hidden="true">search</span></button>
+          <button class="knob" aria-label="Kamera"><span class="ms" aria-hidden="true">photo_camera</span></button>
           <button class="switch" role="switch" aria-checked="true" aria-label="Beispielschalter"></button>
           <button class="switch" role="switch" aria-checked="false" aria-label="Beispielschalter"></button>
         </div>
@@ -724,15 +739,15 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
       </div>
       <div class="comp">
         <div class="label">Suche und Segment</div>
-        <label class="field"><svg><use href="#i-search"/></svg><input placeholder="Notiz, Termin oder Aufgabe suchen" aria-label="Suchen"></label>
+        <label class="field"><span class="ms" aria-hidden="true">search</span><input placeholder="Notiz, Termin oder Aufgabe suchen" aria-label="Suchen"></label>
         <div class="segm" role="tablist"><button role="tab" aria-selected="false">Entwürfe</button><button role="tab" aria-selected="true">Aktiv</button><button role="tab" aria-selected="false">Erledigt</button></div>
         <div class="progress" aria-label="Tagesfortschritt 40 Prozent"><i style="width:40%"></i></div>
       </div>
       <div class="comp">
         <div class="label">Aufgaben</div>
         <div class="list-card glass">
-          <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>Heute · 18:00</span></div><i class="prio" title="Wichtig"></i></div>
-          <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Farbpalette festlegen</b><span>Erledigt</span></div></div>
+          <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>Heute · 18:00</span></div><i class="prio" title="Wichtig"></i></div>
+          <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Farbpalette festlegen</b><span>Erledigt</span></div></div>
         </div>
       </div>
       <div class="comp">
@@ -740,7 +755,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="event-hero">
           <div class="when"><span>Heute · 10:00–10:45</span><span class="tag yellow">in 25 Min</span></div>
           <h4>Sprint-Review</h4>
-          <div class="meta"><span><svg><use href="#i-pin"/></svg>Google Meet</span></div>
+          <div class="meta"><span><span class="ms" aria-hidden="true">location_on</span>Google Meet</span></div>
         </div>
         <div class="list-card glass"><div class="event-row"><div class="time">13:30<small>1 Std</small></div><i class="bar y"></i><div class="tt"><b>Mittag mit Lena</b><span>Café Lindner</span></div></div></div>
       </div>
@@ -748,42 +763,42 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="label">Notiz-Karte (Logbuch-Muster)</div>
         <div class="divider"><svg preserveAspectRatio="none"><use href="#wave"/></svg>Heute<svg preserveAspectRatio="none"><use href="#wave"/></svg></div>
         <div class="note glass">
-          <div class="media img"><span class="count"><svg><use href="#i-image"/></svg>3</span></div>
+          <div class="media img"><span class="count"><span class="ms" aria-hidden="true">image</span>3</span></div>
           <div class="sheet"><div class="back"></div><div class="front"><b>Ideen Startseite</b><p>Heute groß, Datum klein daneben. Danach Termine, Aufgaben und unten der Notiz-Feed.</p></div><span class="pill">2 Notizen</span></div>
         </div>
       </div>
       <div class="comp" style="grid-column:1 / -1">
         <div class="label">Briefing-Kacheln (Übersicht, horizontal wischbar, 16 : 9, 100 px hoch)</div>
         <div class="brief" role="tablist" style="margin:0;padding:4px 0 14px" data-doc-group>
-          <button class="glass" role="tab" aria-selected="true"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
-          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
-          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
+          <button class="glass" role="tab" aria-selected="true"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>3</span><span><span class="ms" aria-hidden="true">checklist</span>5</span><span><span class="ms" aria-hidden="true">description</span>4</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">schedule</span>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
+          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>2</span><span><span class="ms" aria-hidden="true">checklist</span>3</span><span><span class="ms" aria-hidden="true">description</span>1</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">schedule</span>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
+          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>9</span><span><span class="ms" aria-hidden="true">checklist</span>12</span><span><span class="ms" aria-hidden="true">description</span>6</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">calendar_today</span>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
         </div>
         <p class="sub" style="margin:0;font-size:13.5px">Zahlen = Termine, Aufgaben, Notizen mit Erinnerung. Der gelbe Balken erscheint nur, wenn etwas demnächst ansteht (Zeit bis zum Beginn, ab 60 Min vorher).</p>
         <div class="label" style="margin-top:8px">Erfassen (Übersicht) und Add-Buttons (Reiterseiten)</div>
         <div>
           <p class="overline">Erfassen</p>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-plus-thin"/></svg></span>Neuer Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-plus-thin"/></svg></span>Neue Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-plus-thin"/></svg></span>Neue Notiz</button>
+            <button><span class="circ btn-event"><span class="ms" aria-hidden="true">event</span></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><span class="ms" aria-hidden="true">task_alt</span></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><span class="ms" aria-hidden="true">edit_note</span></span>Neue Notiz</button>
           </div>
         </div>
         <div class="row">
-          <button class="efab btn-event"><svg><use href="#i-plus"/></svg>Neuer Termin</button>
-          <button class="efab btn-task"><svg><use href="#i-plus"/></svg>Neue Aufgabe</button>
-          <button class="efab btn-note"><svg><use href="#i-plus"/></svg>Neue Notiz</button>
+          <button class="efab btn-event"><span class="ms" aria-hidden="true">add</span>Termin</button>
+          <button class="efab btn-task"><span class="ms" aria-hidden="true">add</span>Aufgabe</button>
+          <button class="efab btn-note"><span class="ms" aria-hidden="true">add</span>Notiz</button>
         </div>
         <div class="label" style="margin-top:8px">Navigation: 4 Reiter</div>
         <div class="navwrap" style="max-width:420px">
           <div class="tabbar" role="tablist" aria-label="Hauptnavigation (Beispiel)">
-            <button class="tab" role="tab" aria-selected="true"><svg><use href="#i-home"/></svg><span class="lbl">Übersicht</span></button>
-            <button class="tab" role="tab" aria-selected="false" aria-label="Termine"><svg><use href="#i-cal"/></svg><span class="lbl">Termine</span></button>
-            <button class="tab" role="tab" aria-selected="false" aria-label="Aufgaben"><svg><use href="#i-tasks"/></svg><span class="lbl">Aufgaben</span></button>
-            <button class="tab" role="tab" aria-selected="false" aria-label="Notizen"><svg><use href="#i-note"/></svg><span class="lbl">Notizen</span></button>
+            <button class="tab" role="tab" aria-selected="true"><span class="ms" aria-hidden="true">home</span><span class="lbl">Übersicht</span></button>
+            <button class="tab" role="tab" aria-selected="false" aria-label="Termine"><span class="ms" aria-hidden="true">calendar_today</span><span class="lbl">Termine</span></button>
+            <button class="tab" role="tab" aria-selected="false" aria-label="Aufgaben"><span class="ms" aria-hidden="true">checklist</span><span class="lbl">Aufgaben</span></button>
+            <button class="tab" role="tab" aria-selected="false" aria-label="Notizen"><span class="ms" aria-hidden="true">description</span><span class="lbl">Notizen</span></button>
           </div>
         </div>
-        <p class="sub" style="margin:4px 0 0;font-size:13.5px">Navy-Glasleiste, der aktive Reiter ist eine weiße Pille mit Beschriftung, die anderen zeigen nur das Icon (mit Screenreader-Label). Auf der Übersicht gibt es keinen Add-Button, dort steht der Bereich „Erfassen“ mit drei runden Knöpfen. Auf den Reiterseiten sitzt rechts über der Leiste ein Add-Button in der Farbe des Typs, wie bei Gmail.</p>
+        <p class="sub" style="margin:4px 0 0;font-size:13.5px">Navy-Glasleiste, der aktive Reiter ist eine weiße Pille mit Beschriftung, die anderen zeigen nur das Icon (mit Screenreader-Label). Auf der Übersicht gibt es keinen Add-Button, dort steht der Bereich „Erfassen“ mit drei runden Knöpfen. Auf den Reiterseiten sitzt rechts über der Leiste ein Extended FAB nach Material 3 (56 px hoch) in der Farbe des Typs, wie bei Gmail. Beim Runterscrollen klappt die Leiste weg und der Button schrumpft auf das Plus (56 × 56).</p>
       </div>
     </div>
   </div>
@@ -800,7 +815,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 </section>
 
 <footer>
-  Organi7er · Designsystem v0.4 · Stand 23.11.2026 (Überarbeitung 2). Umsetzung in Jetpack Compose nach docs/prompt-android-app.md.
+  Organi7er · Designsystem v0.5 · Stand 23.11.2026 (Überarbeitung 2). Umsetzung in Jetpack Compose nach docs/prompt-android-app.md.
 </footer>
 </div>
 
@@ -815,22 +830,22 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="home-top">
         <div class="apphead">
           <div class="wordmark">Organi<span class="seven">7</span>er</div>
-          <button class="knob sm" aria-label="Einstellungen" data-open-settings><svg><use href="#i-gear"/></svg></button>
+          <button class="knob sm" aria-label="Einstellungen" data-open-settings><span class="ms" aria-hidden="true">settings</span></button>
         </div>
-        <div class="datenav"><button data-day="-1" aria-label="Vorheriger Tag"><svg><use href="#i-back"/></svg></button><span data-date-long aria-live="polite">Montag, 23. November</span><button data-day="1" aria-label="Nächster Tag"><svg><use href="#i-chev"/></svg></button></div>
+        <div class="datenav"><button data-day="-1" aria-label="Vorheriger Tag"><span class="ms" aria-hidden="true">chevron_left</span></button><span data-date-long aria-live="polite">Montag, 23. November</span><button data-day="1" aria-label="Nächster Tag"><span class="ms" aria-hidden="true">chevron_right</span></button></div>
         <div class="brief" role="tablist" aria-label="Briefing">
-          <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
-          <button class="glass" role="tab" aria-selected="false" data-brief="tomorrow"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
-          <button class="glass" role="tab" aria-selected="false" data-brief="week"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
+          <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>3</span><span><span class="ms" aria-hidden="true">checklist</span>5</span><span><span class="ms" aria-hidden="true">description</span>4</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">schedule</span>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
+          <button class="glass" role="tab" aria-selected="false" data-brief="tomorrow"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>2</span><span><span class="ms" aria-hidden="true">checklist</span>3</span><span><span class="ms" aria-hidden="true">description</span>1</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">schedule</span>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
+          <button class="glass" role="tab" aria-selected="false" data-brief="week"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><span class="ms" aria-hidden="true">calendar_today</span>9</span><span><span class="ms" aria-hidden="true">checklist</span>12</span><span><span class="ms" aria-hidden="true">description</span>6</span></span></span><span class="bot"><span class="big"><span class="ms" aria-hidden="true">calendar_today</span>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
         </div>
         </div>
 
         <div>
           <p class="overline">Erfassen</p>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-plus-thin"/></svg></span>Neuer Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-plus-thin"/></svg></span>Neue Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-plus-thin"/></svg></span>Neue Notiz</button>
+            <button><span class="circ btn-event"><span class="ms" aria-hidden="true">event</span></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><span class="ms" aria-hidden="true">task_alt</span></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><span class="ms" aria-hidden="true">edit_note</span></span>Neue Notiz</button>
           </div>
         </div>
 
@@ -842,8 +857,8 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
               <div class="event-hero">
                 <div class="when"><span>10:00–10:45</span><span class="tag yellow">in 25 Min</span></div>
                 <h4>Sprint-Review Organi7er</h4>
-                <div class="meta"><span><svg><use href="#i-pin"/></svg>Google Meet</span><span><svg><use href="#i-clock"/></svg>45 Min</span></div>
-                <div class="foot"><div class="avatars"><i style="background:#93BBFD">L</i><i style="background:#FFD500">M</i><i style="background:#B3C2DB">+2</i></div><span class="join" aria-label="Beitreten"><svg><use href="#i-arrow"/></svg></span></div>
+                <div class="meta"><span><span class="ms" aria-hidden="true">location_on</span>Google Meet</span><span><span class="ms" aria-hidden="true">schedule</span>45 Min</span></div>
+                <div class="foot"><div class="avatars"><i style="background:#93BBFD">L</i><i style="background:#FFD500">M</i><i style="background:#B3C2DB">+2</i></div><span class="join" aria-label="Beitreten"><span class="ms" aria-hidden="true">arrow_outward</span></span></div>
               </div>
               <div class="list-card glass">
                 <div class="event-row"><div class="time">13:30<small>1 Std</small></div><i class="bar y"></i><div class="tt"><b>Mittag mit Lena</b><span>Café Lindner</span></div></div>
@@ -854,9 +869,9 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div>
             <div class="sec-h"><h3>Aufgaben heute</h3><a href="#" data-go="tasks">Alle</a></div>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Steuerunterlagen an Lena erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>18:00 · Privat</span></div><i class="prio" title="Wichtig"></i></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Komponenten-Screenshots sortieren erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Komponenten-Screenshots sortieren</b><span>Organi7er</span></div></div>
-              <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Farbpalette festlegen erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Farbpalette festlegen</b><span>Erledigt</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Steuerunterlagen an Lena erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>18:00 · Privat</span></div><i class="prio" title="Wichtig"></i></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Komponenten-Screenshots sortieren erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Komponenten-Screenshots sortieren</b><span>Organi7er</span></div></div>
+              <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Farbpalette festlegen erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Farbpalette festlegen</b><span>Erledigt</span></div></div>
             </div>
           </div>
         </div>
@@ -872,9 +887,9 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div>
             <div class="sec-h"><h3>Aufgaben morgen</h3><a href="#" data-go="tasks">Alle</a></div>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Compose-Theme anlegen</b><span>Organi7er</span></div></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Rechnung Handy prüfen</b><span>Privat</span></div></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Blumen gießen</b><span>Zuhause</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Compose-Theme anlegen</b><span>Organi7er</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Rechnung Handy prüfen</b><span>Privat</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Blumen gießen</b><span>Zuhause</span></div></div>
             </div>
           </div>
         </div>
@@ -891,8 +906,8 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div>
             <div class="sec-h"><h3>Fällig diese Woche</h3><a href="#" data-go="tasks">Alle</a></div>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Geburtstagsgeschenk Mama</b><span>bis Do</span></div><i class="prio"></i></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Steuererklärung abschicken</b><span>bis Fr</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Geburtstagsgeschenk Mama</b><span>bis Do</span></div><i class="prio"></i></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Steuererklärung abschicken</b><span>bis Fr</span></div></div>
             </div>
           </div>
         </div>
@@ -901,8 +916,8 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div>
             <div class="sec-h"><h3 data-day-title>Aufgaben am Mittwoch</h3><a href="#" data-go="tasks">Alle</a></div>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Wohnungsübergabe vorbereiten</b><span>Privat</span></div></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Mails an Kund:innen</b><span>Arbeit</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Wohnungsübergabe vorbereiten</b><span>Privat</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Mails an Kund:innen</b><span>Arbeit</span></div></div>
             </div>
             <p class="hint" style="margin-top:10px">Keine Termine an diesem Tag.</p>
           </div>
@@ -913,12 +928,12 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div class="stack" style="gap:14px">
             <div class="divider"><svg preserveAspectRatio="none"><use href="#wave"/></svg>Heute<svg preserveAspectRatio="none"><use href="#wave"/></svg></div>
             <div class="note glass">
-              <div class="media img"><span class="count"><svg><use href="#i-image"/></svg>3</span></div>
+              <div class="media img"><span class="count"><span class="ms" aria-hidden="true">image</span>3</span></div>
               <div class="sheet"><div class="back"></div><div class="front"><b>Ideen Startseite</b><p>„Heute“ groß, Datum klein daneben. Darunter Kacheln für heute, morgen und die Woche.</p></div><span class="pill">2 Notizen</span></div>
             </div>
             <div class="divider"><svg preserveAspectRatio="none"><use href="#wave"/></svg>Gestern<svg preserveAspectRatio="none"><use href="#wave"/></svg></div>
             <div class="note glass">
-              <div class="media empty"><span class="knob" aria-hidden="true"><svg><use href="#i-camera"/></svg></span>Foto aufnehmen<br><u>oder aus Galerie</u></div>
+              <div class="media empty"><span class="knob" aria-hidden="true"><span class="ms" aria-hidden="true">photo_camera</span></span>Foto aufnehmen<br><u>oder aus Galerie</u></div>
               <div class="sheet"><div class="back"></div><div class="front"><b>Einkauf Wochenende</b><p>Hafermilch, Brot, Äpfel, Kaffee, Batterien AA, Geschenkpapier.</p></div></div>
             </div>
           </div>
@@ -928,7 +943,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
       <!-- TERMINE -->
       <div class="view" data-view="cal">
         <div class="apphead">
-          <div><button class="monthbtn" aria-label="Monat wählen">November 2026<svg><use href="#i-chev"/></svg></button><div class="page-title">Termine</div></div>
+          <div><button class="monthbtn" aria-label="Monat wählen">November 2026<span class="ms" aria-hidden="true">chevron_right</span></button><div class="page-title">Termine</div></div>
           <button class="btn btn-soft btn-sm">Heute</button>
         </div>
         <div class="segm" role="tablist" data-seg="cal">
@@ -973,7 +988,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
       <!-- AUFGABEN -->
       <div class="view" data-view="tasks">
-        <div class="apphead"><div class="page-title">Aufgaben</div><button class="knob sm" aria-label="Sortieren"><svg><use href="#i-sort"/></svg></button></div>
+        <div class="apphead"><div class="page-title">Aufgaben</div><button class="knob sm" aria-label="Sortieren"><span class="ms" aria-hidden="true">swap_vert</span></button></div>
         <div class="segm" role="tablist" data-panels="tasks">
           <button role="tab" aria-selected="false" data-panel="drafts">Entwürfe</button>
           <button role="tab" aria-selected="true" data-panel="open">Aktiv</button>
@@ -991,31 +1006,31 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div>
             <p class="eyebrow">Heute</p>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>18:00 · Privat</span></div><i class="prio"></i></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Komponenten-Screenshots sortieren</b><span>Organi7er</span></div><span class="tag blue">In Arbeit</span></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Paket zur Post bringen</b><span>bis 17:00</span></div><span class="tag red">Geblockt</span></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Steuerunterlagen an Lena</b><span>18:00 · Privat</span></div><i class="prio"></i></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Komponenten-Screenshots sortieren</b><span>Organi7er</span></div><span class="tag blue">In Arbeit</span></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Paket zur Post bringen</b><span>bis 17:00</span></div><span class="tag red">Geblockt</span></div>
             </div>
           </div>
           <div>
             <p class="eyebrow">Diese Woche</p>
             <div class="list-card glass">
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Compose-Theme anlegen</b><span>Di · Organi7er</span></div><span class="tag blue">Arbeit</span></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Geburtstagsgeschenk Mama</b><span>Do</span></div><i class="prio"></i></div>
-              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Reifen wechseln</b><span>von Mi auf Sa</span></div><span class="tag mute">Verschoben</span></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Compose-Theme anlegen</b><span>Di · Organi7er</span></div><span class="tag blue">Arbeit</span></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Geburtstagsgeschenk Mama</b><span>Do</span></div><i class="prio"></i></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Reifen wechseln</b><span>von Mi auf Sa</span></div><span class="tag mute">Verschoben</span></div>
             </div>
           </div>
         </div>
         <div class="panel" data-task-panel="done">
           <div class="list-card glass">
-            <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Farbpalette festlegen</b><span>heute</span></div></div>
-            <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Repo anlegen</b><span>gestern</span></div></div>
+            <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Farbpalette festlegen</b><span>heute</span></div></div>
+            <div class="task done"><button class="check" role="checkbox" aria-checked="true" aria-label="Erledigt"><span class="ms" aria-hidden="true">check</span></button><div class="tt"><b>Repo anlegen</b><span>gestern</span></div></div>
           </div>
         </div>
       </div>
 
       <!-- NOTIZEN -->
       <div class="view" data-view="notes">
-        <div class="apphead"><div class="page-title">Notizen</div><button class="knob sm" aria-label="Sortieren"><svg><use href="#i-sort"/></svg></button></div>
+        <div class="apphead"><div class="page-title">Notizen</div><button class="knob sm" aria-label="Sortieren"><span class="ms" aria-hidden="true">swap_vert</span></button></div>
         <div class="segm" role="tablist" data-seg="notes">
           <button role="tab" aria-selected="false" data-p="drafts">Entwürfe</button>
           <button role="tab" aria-selected="true" data-p="active">Aktiv</button>
@@ -1029,7 +1044,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           </div>
         </div>
         <div class="panel on" data-pp="active">
-        <label class="field"><svg><use href="#i-search"/></svg><input placeholder="Notiz oder Bild suchen" aria-label="Notizen durchsuchen"></label>
+        <label class="field"><span class="ms" aria-hidden="true">search</span><input placeholder="Notiz oder Bild suchen" aria-label="Notizen durchsuchen"></label>
         <div class="filters" role="tablist">
           <button class="glass" role="tab" aria-selected="true"><span>Alle</span><b>12</b></button>
           <button class="glass" role="tab" aria-selected="false"><span>Mit Bild</span><b>5</b></button>
@@ -1037,23 +1052,23 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         </div>
         <div class="divider"><svg preserveAspectRatio="none"><use href="#wave"/></svg>Heute<svg preserveAspectRatio="none"><use href="#wave"/></svg></div>
         <div class="note glass">
-          <div class="media img"><span class="count"><svg><use href="#i-image"/></svg>3</span></div>
+          <div class="media img"><span class="count"><span class="ms" aria-hidden="true">image</span>3</span></div>
           <div class="sheet"><div class="back"></div><div class="front"><b>Ideen Startseite</b><p>„Heute“ groß, Datum klein daneben. Darunter Kacheln für heute, morgen und die Woche.</p></div><span class="pill">2 Notizen</span></div>
         </div>
         <div class="divider"><svg preserveAspectRatio="none"><use href="#wave"/></svg>Gestern<svg preserveAspectRatio="none"><use href="#wave"/></svg></div>
         <div class="note glass">
-          <div class="media img b"><span class="count"><svg><use href="#i-image"/></svg>1</span></div>
+          <div class="media img b"><span class="count"><span class="ms" aria-hidden="true">image</span>1</span></div>
           <div class="sheet"><div class="back"></div><div class="front"><b>Whiteboard Planung</b><p>Q1: Kalender-Sync, Widgets, Erinnerungen. Danach Teilen von Listen.</p></div></div>
         </div>
         <div class="note glass">
-          <div class="media empty"><span class="knob" aria-hidden="true"><svg><use href="#i-camera"/></svg></span>Foto aufnehmen<br><u>oder aus Galerie</u></div>
+          <div class="media empty"><span class="knob" aria-hidden="true"><span class="ms" aria-hidden="true">photo_camera</span></span>Foto aufnehmen<br><u>oder aus Galerie</u></div>
           <div class="sheet"><div class="back"></div><div class="front"><b>Einkauf Wochenende</b><p>Hafermilch, Brot, Äpfel, Kaffee, Batterien AA, Geschenkpapier.</p></div></div>
         </div>
         </div>
         <div class="panel" data-pp="done">
           <p class="hint">Abgeschlossene Notizen bleiben durchsuchbar.</p>
           <div class="note glass">
-            <div class="media img b"><span class="count"><svg><use href="#i-image"/></svg>2</span></div>
+            <div class="media img b"><span class="count"><span class="ms" aria-hidden="true">image</span>2</span></div>
             <div class="sheet"><div class="back"></div><div class="front"><b>Umzug Checkliste</b><p>Alles erledigt, Kaution zurück.</p></div></div>
           </div>
         </div>
@@ -1061,7 +1076,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
       <!-- EINSTELLUNGEN -->
       <div class="view" data-view="settings">
-        <div class="apphead" style="justify-content:flex-start;gap:12px"><button class="knob sm" aria-label="Zurück" data-close-settings><svg><use href="#i-back"/></svg></button><div class="page-title">Einstellungen</div></div>
+        <div class="apphead" style="justify-content:flex-start;gap:12px"><button class="knob sm" aria-label="Zurück" data-close-settings><span class="ms" aria-hidden="true">chevron_left</span></button><div class="page-title">Einstellungen</div></div>
         <div class="set-group">
           <p class="eyebrow">Darstellung</p>
           <div class="segm" role="tablist" aria-label="Darstellung"><button role="tab" aria-selected="true">System</button><button role="tab" aria-selected="false">Hell</button><button role="tab" aria-selected="false">Dunkel</button></div>
@@ -1069,23 +1084,23 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="set-group">
           <p class="eyebrow">Übersicht</p>
           <div class="list-card glass">
-            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--cal-work) 18%,transparent);color:var(--link)"><svg><use href="#i-home"/></svg></span><div class="tt"><b>Kachel „Morgen“</b><span>im Briefing zeigen</span></div><button class="switch" role="switch" aria-checked="true" aria-label="Kachel Morgen"></button></div>
-            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--cal-work) 18%,transparent);color:var(--link)"><svg><use href="#i-cal"/></svg></span><div class="tt"><b>Woche beginnt am</b></div><span class="val">Montag<svg><use href="#i-chev"/></svg></span></div>
+            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--cal-work) 18%,transparent);color:var(--link)"><span class="ms" aria-hidden="true">home</span></span><div class="tt"><b>Kachel „Morgen“</b><span>im Briefing zeigen</span></div><button class="switch" role="switch" aria-checked="true" aria-label="Kachel Morgen"></button></div>
+            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--cal-work) 18%,transparent);color:var(--link)"><span class="ms" aria-hidden="true">calendar_today</span></span><div class="tt"><b>Woche beginnt am</b></div><span class="val">Montag<span class="ms" aria-hidden="true">chevron_right</span></span></div>
           </div>
         </div>
         <div class="set-group">
           <p class="eyebrow">Erinnerungen</p>
           <div class="list-card glass">
-            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><svg><use href="#i-bell"/></svg></span><div class="tt"><b>Vor Terminen</b></div><span class="val">15 Min<svg><use href="#i-chev"/></svg></span></div>
-            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><svg><use href="#i-sun"/></svg></span><div class="tt"><b>Morgen-Briefing</b><span>jeden Tag um 07:30</span></div><button class="switch" role="switch" aria-checked="true" aria-label="Morgen-Briefing"></button></div>
-            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><svg><use href="#i-tasks"/></svg></span><div class="tt"><b>Entwürfe erinnern</b><span>nach 7 Tagen ohne Plan</span></div><button class="switch" role="switch" aria-checked="false" aria-label="Entwürfe erinnern"></button></div>
+            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><span class="ms" aria-hidden="true">notifications</span></span><div class="tt"><b>Vor Terminen</b></div><span class="val">15 Min<span class="ms" aria-hidden="true">chevron_right</span></span></div>
+            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><span class="ms" aria-hidden="true">light_mode</span></span><div class="tt"><b>Morgen-Briefing</b><span>jeden Tag um 07:30</span></div><button class="switch" role="switch" aria-checked="true" aria-label="Morgen-Briefing"></button></div>
+            <div class="set-row"><span class="ic" style="background:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--text)"><span class="ms" aria-hidden="true">checklist</span></span><div class="tt"><b>Entwürfe erinnern</b><span>nach 7 Tagen ohne Plan</span></div><button class="switch" role="switch" aria-checked="false" aria-label="Entwürfe erinnern"></button></div>
           </div>
         </div>
         <div class="set-group">
           <p class="eyebrow">Konten und Daten</p>
           <div class="list-card glass">
-            <div class="set-row"><span class="ic" style="background:var(--surface-2)"><svg><use href="#i-cal"/></svg></span><div class="tt"><b>Kalender</b><span>Gerätekalender, Farben</span></div><span class="val"><svg><use href="#i-chev"/></svg></span></div>
-            <div class="set-row"><span class="ic" style="background:var(--surface-2)"><svg><use href="#i-note"/></svg></span><div class="tt"><b>Sicherung</b><span>Export und Import</span></div><span class="val"><svg><use href="#i-chev"/></svg></span></div>
+            <div class="set-row"><span class="ic" style="background:var(--surface-2)"><span class="ms" aria-hidden="true">calendar_today</span></span><div class="tt"><b>Kalender</b><span>Gerätekalender, Farben</span></div><span class="val"><span class="ms" aria-hidden="true">chevron_right</span></span></div>
+            <div class="set-row"><span class="ic" style="background:var(--surface-2)"><span class="ms" aria-hidden="true">description</span></span><div class="tt"><b>Sicherung</b><span>Export und Import</span></div><span class="val"><span class="ms" aria-hidden="true">chevron_right</span></span></div>
           </div>
         </div>
         <p class="hint" style="text-align:center">Organi7er 0.1</p>
@@ -1093,13 +1108,13 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
     </div>
     <div class="fade-bottom"></div>
-    <button class="efab btn-event" data-efab hidden><svg><use href="#i-plus"/></svg><span>Neuer Termin</span></button>
+    <button class="efab btn-event" data-efab hidden><span class="ms" aria-hidden="true">add</span><span>Termin</span></button>
     <div class="phone-nav navwrap">
       <div class="tabbar" role="tablist" aria-label="Hauptnavigation">
-        <button class="tab" role="tab" aria-selected="true" data-tab="home" aria-label="Übersicht"><svg><use href="#i-home"/></svg><span class="lbl">Übersicht</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="cal" aria-label="Termine"><svg><use href="#i-cal"/></svg><span class="lbl">Termine</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="tasks" aria-label="Aufgaben"><svg><use href="#i-tasks"/></svg><span class="lbl">Aufgaben</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="notes" aria-label="Notizen"><svg><use href="#i-note"/></svg><span class="lbl">Notizen</span></button>
+        <button class="tab" role="tab" aria-selected="true" data-tab="home" aria-label="Übersicht"><span class="ms" aria-hidden="true">home</span><span class="lbl">Übersicht</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="cal" aria-label="Termine"><span class="ms" aria-hidden="true">calendar_today</span><span class="lbl">Termine</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="tasks" aria-label="Aufgaben"><span class="ms" aria-hidden="true">checklist</span><span class="lbl">Aufgaben</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="notes" aria-label="Notizen"><span class="ms" aria-hidden="true">description</span><span class="lbl">Notizen</span></button>
       </div>
     </div>
   </div>
@@ -1177,7 +1192,7 @@ const long = fmtLong(now);
 
 /* ---------- Telefone ---------- */
 const tpl = document.getElementById('phone-tpl');
-const EFAB = { cal:['btn-event','Neuer Termin'], tasks:['btn-task','Neue Aufgabe'], notes:['btn-note','Neue Notiz'] };
+const EFAB = { cal:['btn-event','Termin'], tasks:['btn-task','Aufgabe'], notes:['btn-note','Notiz'] };
 function wireGroup(g, onPick){ g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
   g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected', String(x===b))); onPick && onPick(b);
 })); }
@@ -1193,11 +1208,19 @@ document.querySelectorAll('[data-phone]').forEach(phone=>{
     views.forEach(v=>v.classList.toggle('on', v.dataset.view===id));
     tabs.forEach(t=>t.setAttribute('aria-selected', String(t.dataset.tab===id)));
     nav.hidden = id==='settings';
-    if (EFAB[id]) { efab.hidden=false; efab.className='efab '+EFAB[id][0]; efab.querySelector('span').textContent=EFAB[id][1]; }
+    if (EFAB[id]) { efab.hidden=false; efab.className='efab '+EFAB[id][0]; efab.querySelector('span:not(.ms)').textContent=EFAB[id][1]; }
     else efab.hidden = true;
-    scroller.scrollTop = 0;
+    scroller.scrollTop = 0; phone.classList.remove('collapsed');
   };
   tabs.forEach(t=>t.addEventListener('click',()=>go(t.dataset.tab)));
+  // Runterscrollen: Leiste klappt weg, Add-Button schrumpft auf das Icon; Hochscrollen: alles kommt zurück
+  let lastY = 0;
+  scroller.addEventListener('scroll',()=>{
+    const y = scroller.scrollTop, d = y - lastY;
+    if (y < 24 || d < -6) phone.classList.remove('collapsed');
+    else if (d > 6) phone.classList.add('collapsed');
+    lastY = y;
+  }, { passive:true });
   phone.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); go(a.dataset.go); }));
   phone.querySelector('[data-open-settings]').addEventListener('click',()=>go('settings'));
   phone.querySelector('[data-close-settings]').addEventListener('click',()=>go('home'));
