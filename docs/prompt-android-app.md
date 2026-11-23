@@ -92,10 +92,10 @@ Kein Fettdruck über 600. Ruhe entsteht durch leichte große Schrift.
 Nachbauen wie in der Vorlage, jeweils mit Preview in Hell und Dunkel:
 
 1. **SoftIconButton** (rund, 40 und 48 dp)
-2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **TypeButton** (Termin/Aufgabe/Notiz in ihrer Typfarbe)
+2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **CaptureButton**: runder Knopf 62 dp in der Typfarbe (Termin blau, Aufgabe gelb, Notiz Navy bzw. im Dunkeln hell) mit Typ-Icon, die Beschriftung steht darunter (wie die runden Shop-Logos in der PayPal-App)
 3. **ExtendedAddButton**: Höhe 54 dp, Radius 18, Plus-Icon + Text („Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“), Typfarbe
 4. **GlassCard** (mit Haze-Blur)
-5. **BriefingTile**: Titel, drei Zähler mit Icons (Termine, Aufgaben, Notizen mit Erinnerung), unten nächste Uhrzeit mit Uhr-Icon. Der **gelbe Fortschrittsbalken** erscheint nur, wenn etwas in den nächsten 60 Minuten beginnt, er füllt sich bis zum Beginn. Gewählte Kachel: hell = Navy mit weißer Schrift, dunkel = `#F4F7FB` mit Navy-Schrift.
+5. **BriefingTile** (Vorbild: Guthaben-Karten oben in der PayPal-App): Karte im Format **16 : 9**, Breite 236 dp, Radius 24, in einer **horizontal wischbaren Liste** (`LazyRow` mit Snap, die nächste Karte schaut am rechten Rand heraus). Oben links der Titel (Heute, Morgen, Diese Woche), oben rechts drei kleine Zähler mit Icons (Termine, Aufgaben, Notizen mit Erinnerung). Unten groß (24 sp, Gewicht 400) die wichtigste Info mit Icon, z. B. „in 25 Min“, „ab 09:00“, „Fr am vollsten“, darunter eine Zeile in Caption, z. B. „Nächster: Sprint-Review · 10:00“. Der **gelbe Fortschrittsbalken** erscheint nur, wenn etwas in den nächsten 60 Minuten beginnt, er füllt sich bis zum Beginn. Gewählte Kachel: hell = Navy mit weißer Schrift, dunkel = `#F4F7FB` mit Navy-Schrift.
 6. **NextEventCard** (große Navy-Karte mit blauem Lichtschein, Zeit, Titel, Ort, Dauer, Teilnehmer-Avatare, Pfeil-Knopf, gelber Chip „in 25 Min“)
 7. **EventRow** (Uhrzeit, farbiger Balken in Kalenderfarbe, Titel, Ort)
 8. **TaskRow** mit rundem Soft-Häkchen, Titel, Meta, gelbem Prioritätspunkt; erledigt = durchgestrichen und gedämpft
@@ -119,8 +119,8 @@ Vier Reiter: **Übersicht**, **Termine**, **Aufgaben**, **Notizen**. Es gibt **k
 Von oben nach unten:
 1. Kopfzeile: Wortmarke „Organi**7**er“ (die 7 mit gelbem Unterstrich) links, Zahnrad (Einstellungen) rechts.
 2. „Heute“ groß (Display) und daneben das Kurzdatum, z. B. „Mo., 23. Nov.“ (aus dem Systemdatum, deutsch formatiert). **Keine** Begrüßung, **keine** Zähler-Chips.
-3. **Drei Briefing-Kacheln** nebeneinander: Heute, Morgen, Woche. Sie funktionieren wie Reiter und steuern den Inhalt darunter.
-4. **Drei Schnell-Knöpfe** in einer Reihe: „+ Termin“ (blau), „+ Aufgabe“ (gelb), „+ Notiz“ (Navy, dunkel hell).
+3. **Briefing-Kacheln** als horizontale, wischbare Liste: Heute, Morgen, Diese Woche (16 : 9, siehe BriefingTile). Sie funktionieren wie Reiter und steuern den Inhalt darunter.
+4. Abschnitt **„Erfassen“** (Überschrift im Title-Stil) mit drei runden CaptureButtons nebeneinander: Termin, Aufgabe, Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
 5. Inhalt der gewählten Kachel:
    - *Heute:* „Als Nächstes“ mit NextEventCard und den weiteren Terminen, danach „Aufgaben heute“.
    - *Morgen:* „Termine morgen“, „Aufgaben morgen“.
@@ -185,3 +185,4 @@ Nach jeder Phase: kurz zusammenfassen, was fertig ist, was offen ist, und Screen
 - Keine Material-Standardfarben (kein Lila), keine Schatten aus der Material-Elevation, nur die zwei definierten.
 - Keine weiße Schrift auf Gelb, kein reines Schwarz.
 - Keine Begrüßungstexte oder Zähler-Chips auf der Übersicht.
+- Keine Briefing-Kacheln im Raster nebeneinander, sie sind eine horizontale Liste.
