@@ -69,7 +69,7 @@ Hell/Dunkel folgt dem System, in den Einstellungen überschreibbar (System / Hel
 
 | Stil | Gewicht | Größe/Zeile | Laufweite |
 |---|---|---|---|
-| Display („Heute“) | 300 | 46/48 sp | −4 % |
+| Wortmarke („Organi7er“) | 600 | 28/34 sp | −3 % |
 | Seitentitel („Termine“) | 300 | 30/34 sp | −3 % |
 | Headline (Karte „Als Nächstes“) | 400 | 22/28 sp | −1 % |
 | Title (Abschnitte) | 500 | 17/24 sp | −1 % |
@@ -117,8 +117,8 @@ Vier Reiter: **Übersicht**, **Termine**, **Aufgaben**, **Notizen**. Es gibt **k
 
 ### Übersicht
 Von oben nach unten:
-1. Kopfzeile: Wortmarke „Organi**7**er“ (die 7 mit gelbem Unterstrich) links, Zahnrad (Einstellungen) rechts.
-2. „Heute“ groß (Display) und daneben das Kurzdatum, z. B. „Mo., 23. Nov.“ (aus dem Systemdatum, deutsch formatiert). **Keine** Begrüßung, **keine** Zähler-Chips.
+1. Kopfzeile: Wortmarke „Organi**7**er“ in 28 sp (die 7 mit gelbem Unterstrich) links, Zahnrad (Einstellungen) rechts.
+2. Darunter mittig das ausgeschriebene Datum, z. B. „Montag, 23. November“, 14 sp in textSoft (aus dem Systemdatum, deutsch formatiert). **Keine** Überschrift „Heute“ (das steht schon in der ersten Kachel), **keine** Begrüßung, **keine** Zähler-Chips.
 3. **Briefing-Kacheln** als horizontale, wischbare Liste: Heute, Morgen, Woche (16 : 9, 100 dp hoch, siehe BriefingTile). Sie funktionieren wie Reiter und steuern den Inhalt darunter.
 4. Abschnitt **„Erfassen“** (Überschrift im Title-Stil) mit drei runden Plus-Knöpfen (CaptureButton) gleichmäßig verteilt: Neuer Termin, Neue Aufgabe, Neue Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
 5. Inhalt der gewählten Kachel:

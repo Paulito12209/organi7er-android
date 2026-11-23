@@ -373,7 +373,9 @@ tr:last-child td { border-bottom:0; }
 .view.on { display:flex; }
 @keyframes fade { from { opacity:0; transform:translateY(6px);} to { opacity:1; transform:none; } }
 .apphead { display:flex; justify-content:space-between; align-items:center; }
-.apphead .wordmark { font-size:18px; }
+.apphead .wordmark { font-size:28px; letter-spacing:-.03em; }
+.apphead .wordmark .seven::after { height:7px; bottom:4px; }
+.dateline { text-align:center; font-size:14px; color:var(--text-soft); margin:-10px 0 -8px; }
 .apphead .r { display:flex; gap:8px; align-items:center; }
 .avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#93BBFD,#2563EB); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; box-shadow:var(--shadow-soft); }
 .today { display:flex; flex-direction:column; gap:14px; }
@@ -643,7 +645,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
   <h2>Typografie</h2>
   <p>Eine Schrift: <b>Outfit</b> (Google Fonts, frei, auch als Android-Font einbindbar). Große Zahlen und Überschriften leicht (300), Fließtext normal (400), Hervorhebungen mittel (500). Kein fettes Schwarz, das ist Teil der Ruhe.</p>
   <div>
-    <div class="type-row"><div class="meta"><b>Display</b>Light 300 · 46/48 · −4 %</div><div style="font-size:46px;font-weight:300;letter-spacing:-.04em;line-height:1">Heute</div></div>
+    <div class="type-row"><div class="meta"><b>Wortmarke</b>SemiBold 600 · 28/34 · −3 %</div><div style="font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1.2">Organi7er</div></div>
     <div class="type-row"><div class="meta"><b>Headline</b>Regular 400 · 28/34 · −2 %</div><div style="font-size:28px;letter-spacing:-.02em;line-height:1.2">Sprint-Review Organi7er</div></div>
     <div class="type-row"><div class="meta"><b>Title</b>Medium 500 · 17/24</div><div style="font-size:17px;font-weight:500">Als Nächstes</div></div>
     <div class="type-row"><div class="meta"><b>Body</b>Regular 400 · 15/22</div><div style="font-size:15px">Steuerunterlagen zusammensuchen und an Lena schicken.</div></div>
@@ -804,7 +806,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
           <div class="wordmark">Organi<span class="seven">7</span>er</div>
           <button class="knob sm" aria-label="Einstellungen" data-open-settings><svg><use href="#i-gear"/></svg></button>
         </div>
-        <div class="today"><div class="d"><h2>Heute</h2><span data-date-short>Mo., 23. Nov.</span></div></div>
+        <p class="dateline" data-date-long>Montag, 23. November</p>
 
         <div class="brief" role="tablist" aria-label="Briefing">
           <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
@@ -1148,7 +1150,7 @@ document.getElementById('pairs').innerHTML = pairs.map(([label,fg,bg])=>{
 
 /* ---------- Relatives Datum ---------- */
 const now = new Date();
-const short = now.toLocaleDateString('de-DE',{ weekday:'short', day:'numeric', month:'short' });
+const long = now.toLocaleDateString('de-DE',{ weekday:'long', day:'numeric', month:'long' });
 
 /* ---------- Telefone ---------- */
 const tpl = document.getElementById('phone-tpl');
@@ -1158,7 +1160,7 @@ function wireGroup(g, onPick){ g.querySelectorAll('button').forEach(b=>b.addEven
 })); }
 document.querySelectorAll('[data-phone]').forEach(phone=>{
   phone.appendChild(tpl.content.cloneNode(true));
-  phone.querySelectorAll('[data-date-short]').forEach(e=>e.textContent = short);
+  phone.querySelectorAll('[data-date-long]').forEach(e=>e.textContent = long);
   const views = phone.querySelectorAll('.view');
   const tabs = phone.querySelectorAll('[data-tab]');
   const scroller = phone.querySelector('.scroller');
