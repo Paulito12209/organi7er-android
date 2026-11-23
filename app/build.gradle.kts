@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -23,13 +25,27 @@ android {
         testInstrumentationRunner = "app.organi7er.HiltTestRunner"
     }
 
+    // Upload-Schlüssel für Google Play: Werte stehen in keystore.properties (nicht im Git).
+    val keystoreFile = rootProject.file("keystore.properties")
+    val keystore = Properties().apply { if (keystoreFile.exists()) keystoreFile.inputStream().use { load(it) } }
+    signingConfigs {
+        if (keystoreFile.exists()) {
+            create("upload") {
+                storeFile = rootProject.file(keystore.getProperty("storeFile"))
+                storePassword = keystore.getProperty("storePassword")
+                keyAlias = keystore.getProperty("keyAlias")
+                keyPassword = keystore.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Nur für lokale Tests auf Emulator/Gerät. Vor einer Veröffentlichung eigenen Upload-Schlüssel eintragen.
-            signingConfig = signingConfigs.getByName("debug")
+            // Mit keystore.properties: Upload-Schlüssel für Google Play. Ohne: Debug-Schlüssel nur für lokale Tests.
+            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
         }
     }
 

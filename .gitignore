@@ -7,3 +7,6 @@ local.properties
 .kotlin/
 /captures
 .vscode/
+keystore.properties
+*.jks
+*.keystore
