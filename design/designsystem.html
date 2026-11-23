@@ -375,7 +375,16 @@ tr:last-child td { border-bottom:0; }
 .apphead { display:flex; justify-content:space-between; align-items:center; }
 .apphead .wordmark { font-size:28px; letter-spacing:-.03em; }
 .apphead .wordmark .seven::after { height:7px; bottom:4px; }
-.dateline { text-align:center; font-size:14px; color:var(--text-soft); margin:-10px 0 -8px; }
+.home-top { display:flex; flex-direction:column; gap:0; }
+.home-top .apphead { padding-top:6px; }
+.datenav { display:flex; align-items:center; justify-content:center; gap:4px; margin:18px 0 14px; }
+.datenav button { width:36px; height:36px; border-radius:50%; border:0; background:transparent; color:var(--text-soft); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.datenav button svg { width:16px; height:16px; }
+.datenav button:hover { background:var(--surface-2); }
+.datenav button:disabled { opacity:.3; cursor:default; background:transparent; }
+.datenav button:focus-visible { outline:2px solid var(--brand-blue); outline-offset:2px; }
+.datenav span { min-width:176px; text-align:center; font-size:14px; color:var(--text-muted); font-weight:400; }
+.overline { font-size:12px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text-soft); margin:0 0 14px; }
 .apphead .r { display:flex; gap:8px; align-items:center; }
 .avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#93BBFD,#2563EB); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; box-shadow:var(--shadow-soft); }
 .today { display:flex; flex-direction:column; gap:14px; }
@@ -466,9 +475,9 @@ tr:last-child td { border-bottom:0; }
 
 /* Schnell anlegen (nur Übersicht) */
 .capture { display:flex; justify-content:space-evenly; }
-.capture button { font:inherit; border:0; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text); font-size:13px; font-weight:500; padding:0; min-width:0; white-space:nowrap; }
-.capture .circ { width:70px; height:70px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); transition:transform .15s ease; }
-.capture .circ svg { width:28px; height:28px; }
+.capture button { font:inherit; border:0; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text-muted); font-size:12.5px; font-weight:400; padding:0; min-width:0; white-space:nowrap; }
+.capture .circ { width:66px; height:66px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); transition:transform .15s ease; }
+.capture .circ svg { width:24px; height:24px; }
 .capture button:active .circ { transform:scale(.94); }
 .capture button:focus-visible .circ { outline:2px solid var(--brand-blue); outline-offset:3px; }
 .capture .circ.btn-note { box-shadow:var(--shadow-soft), inset 0 0 0 1px rgba(255,255,255,.08); }
@@ -550,13 +559,14 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
     <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-plus-thin" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
     <symbol id="wave" viewBox="0 0 120 8"><path d="M0 4 Q 5 0 10 4 T 20 4 T 30 4 T 40 4 T 50 4 T 60 4 T 70 4 T 80 4 T 90 4 T 100 4 T 110 4 T 120 4" fill="none" stroke="currentColor" stroke-width="1.2"/></symbol>
   </defs>
 </svg>
 
 <div class="topbar">
   <div class="in">
-    <div class="wordmark">Organi<span class="seven">7</span>er<small>Designsystem v0.3</small></div>
+    <div class="wordmark">Organi<span class="seven">7</span>er<small>Designsystem v0.4</small></div>
     <nav class="toc" aria-label="Inhalt">
       <a href="#farben">Farben</a><a href="#tokens">Tokens</a><a href="#kontrast">Kontrast</a><a href="#typo">Typografie</a><a href="#form">Form</a><a href="#komponenten">Komponenten</a><a href="#app">App</a>
     </nav>
@@ -752,11 +762,11 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <p class="sub" style="margin:0;font-size:13.5px">Zahlen = Termine, Aufgaben, Notizen mit Erinnerung. Der gelbe Balken erscheint nur, wenn etwas demnächst ansteht (Zeit bis zum Beginn, ab 60 Min vorher).</p>
         <div class="label" style="margin-top:8px">Erfassen (Übersicht) und Add-Buttons (Reiterseiten)</div>
         <div>
-          <div class="sec-h"><h3>Erfassen</h3></div>
+          <p class="overline">Erfassen</p>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-plus"/></svg></span>Neuer Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-plus"/></svg></span>Neue Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-plus"/></svg></span>Neue Notiz</button>
+            <button><span class="circ btn-event"><svg><use href="#i-plus-thin"/></svg></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><svg><use href="#i-plus-thin"/></svg></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><svg><use href="#i-plus-thin"/></svg></span>Neue Notiz</button>
           </div>
         </div>
         <div class="row">
@@ -790,7 +800,7 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 </section>
 
 <footer>
-  Organi7er · Designsystem v0.3 · Stand 23.11.2026 (Überarbeitung 2). Umsetzung in Jetpack Compose nach docs/prompt-android-app.md.
+  Organi7er · Designsystem v0.4 · Stand 23.11.2026 (Überarbeitung 2). Umsetzung in Jetpack Compose nach docs/prompt-android-app.md.
 </footer>
 </div>
 
@@ -802,24 +812,25 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
       <!-- ÜBERSICHT -->
       <div class="view on" data-view="home">
+        <div class="home-top">
         <div class="apphead">
           <div class="wordmark">Organi<span class="seven">7</span>er</div>
           <button class="knob sm" aria-label="Einstellungen" data-open-settings><svg><use href="#i-gear"/></svg></button>
         </div>
-        <p class="dateline" data-date-long>Montag, 23. November</p>
-
+        <div class="datenav"><button data-day="-1" aria-label="Vorheriger Tag"><svg><use href="#i-back"/></svg></button><span data-date-long aria-live="polite">Montag, 23. November</span><button data-day="1" aria-label="Nächster Tag"><svg><use href="#i-chev"/></svg></button></div>
         <div class="brief" role="tablist" aria-label="Briefing">
           <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
           <button class="glass" role="tab" aria-selected="false" data-brief="tomorrow"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
           <button class="glass" role="tab" aria-selected="false" data-brief="week"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
         </div>
+        </div>
 
         <div>
-          <div class="sec-h"><h3>Erfassen</h3></div>
+          <p class="overline">Erfassen</p>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-plus"/></svg></span>Neuer Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-plus"/></svg></span>Neue Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-plus"/></svg></span>Neue Notiz</button>
+            <button><span class="circ btn-event"><svg><use href="#i-plus-thin"/></svg></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><svg><use href="#i-plus-thin"/></svg></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><svg><use href="#i-plus-thin"/></svg></span>Neue Notiz</button>
           </div>
         </div>
 
@@ -883,6 +894,17 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
               <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Geburtstagsgeschenk Mama</b><span>bis Do</span></div><i class="prio"></i></div>
               <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Steuererklärung abschicken</b><span>bis Fr</span></div></div>
             </div>
+          </div>
+        </div>
+
+        <div class="panel" data-brief-panel="day">
+          <div>
+            <div class="sec-h"><h3 data-day-title>Aufgaben am Mittwoch</h3><a href="#" data-go="tasks">Alle</a></div>
+            <div class="list-card glass">
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Wohnungsübergabe vorbereiten</b><span>Privat</span></div></div>
+              <div class="task"><button class="check" role="checkbox" aria-checked="false" aria-label="Erledigt"><svg><use href="#i-check"/></svg></button><div class="tt"><b>Mails an Kund:innen</b><span>Arbeit</span></div></div>
+            </div>
+            <p class="hint" style="margin-top:10px">Keine Termine an diesem Tag.</p>
           </div>
         </div>
 
@@ -1150,7 +1172,8 @@ document.getElementById('pairs').innerHTML = pairs.map(([label,fg,bg])=>{
 
 /* ---------- Relatives Datum ---------- */
 const now = new Date();
-const long = now.toLocaleDateString('de-DE',{ weekday:'long', day:'numeric', month:'long' });
+const fmtLong = d => d.toLocaleDateString('de-DE',{ weekday:'long', day:'numeric', month:'long' });
+const long = fmtLong(now);
 
 /* ---------- Telefone ---------- */
 const tpl = document.getElementById('phone-tpl');
@@ -1183,7 +1206,37 @@ document.querySelectorAll('[data-phone]').forEach(phone=>{
     c.setAttribute('aria-checked', String(on)); c.closest('.task').classList.toggle('done', on);
   }));
   phone.querySelectorAll('.switch').forEach(sw=>sw.addEventListener('click',()=>sw.setAttribute('aria-checked', String(sw.getAttribute('aria-checked')!=='true'))));
-  wireGroup(phone.querySelector('.brief'), b=>phone.querySelectorAll('[data-brief-panel]').forEach(p=>p.classList.toggle('on', p.dataset.briefPanel===b.dataset.brief)));
+  // Briefing: Kacheln und Tages-Pfeile steuern denselben Zustand
+  const briefBtns = phone.querySelectorAll('[data-brief]');
+  const dateLabel = phone.querySelector('.datenav [data-date-long]');
+  const prev = phone.querySelector('[data-day="-1"]'), next = phone.querySelector('[data-day="1"]');
+  let offset = 0, mode = 'day';
+  const showPanel = key => phone.querySelectorAll('[data-brief-panel]').forEach(p=>p.classList.toggle('on', p.dataset.briefPanel===key));
+  const renderBrief = () => {
+    const d = new Date(now); d.setDate(d.getDate()+offset);
+    let key;
+    if (mode==='week') {
+      const end = new Date(now); end.setDate(end.getDate()+6);
+      dateLabel.textContent = `${now.getDate()}.–${end.toLocaleDateString('de-DE',{day:'numeric', month:'long'})}`;
+      key = 'week';
+    } else {
+      dateLabel.textContent = fmtLong(d);
+      key = offset===0 ? 'today' : offset===1 ? 'tomorrow' : 'day';
+      if (key==='day') phone.querySelector('[data-day-title]').textContent = 'Aufgaben am ' + d.toLocaleDateString('de-DE',{weekday:'long'});
+    }
+    briefBtns.forEach(b=>b.setAttribute('aria-selected', String(b.dataset.brief===key)));
+    showPanel(key);
+    const selBtn = [...briefBtns].find(b=>b.dataset.brief===key); if (selBtn) selBtn.parentElement.scrollTo({ left: selBtn.offsetLeft - 18, behavior:'smooth' });
+    prev.disabled = mode==='day' && offset===0;
+    next.disabled = mode==='day' && offset===6;
+  };
+  briefBtns.forEach(b=>b.addEventListener('click',()=>{
+    if (b.dataset.brief==='week') mode='week'; else { mode='day'; offset = b.dataset.brief==='today'?0:1; }
+    renderBrief();
+  }));
+  prev.addEventListener('click',()=>{ if (mode==='week'){ mode='day'; offset=0; } else offset=Math.max(0,offset-1); renderBrief(); });
+  next.addEventListener('click',()=>{ if (mode==='week'){ mode='day'; offset=0; } else offset=Math.min(6,offset+1); renderBrief(); });
+  renderBrief();
   wireGroup(phone.querySelector('[data-panels="tasks"]'), b=>phone.querySelectorAll('[data-task-panel]').forEach(p=>p.classList.toggle('on', p.dataset.taskPanel===b.dataset.panel)));
   phone.querySelectorAll('.filters, .days, [data-view="settings"] .segm').forEach(g=>wireGroup(g));
   phone.querySelectorAll('[data-seg]').forEach(g=>{ const view=g.closest('.view'); wireGroup(g, b=>view.querySelectorAll(':scope > [data-pp]').forEach(p=>p.classList.toggle('on', p.dataset.pp===b.dataset.p))); });

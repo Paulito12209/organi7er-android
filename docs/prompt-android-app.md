@@ -92,7 +92,7 @@ Kein Fettdruck über 600. Ruhe entsteht durch leichte große Schrift.
 Nachbauen wie in der Vorlage, jeweils mit Preview in Hell und Dunkel:
 
 1. **SoftIconButton** (rund, 40 und 48 dp)
-2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **CaptureButton**: runder Knopf 70 dp in der Typfarbe (Termin Navy bzw. im Dunkeln hell, Aufgabe Blau, Notiz Gelb) mit **Plus-Icon** (28 dp), darunter die Beschriftung „Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“ (13 sp). Die drei Knöpfe teilen sich die Breite gleichmäßig (`Arrangement.SpaceEvenly`) und müssen ab 320 dp Bildschirmbreite in eine Zeile passen.
+2. **PillButton** in den Varianten Primary, Soft, Ghost, Dark sowie **CaptureButton**: runder Knopf 66 dp in der Typfarbe (Termin Navy bzw. im Dunkeln hell, Aufgabe Blau, Notiz Gelb) mit dünnem **Plus-Icon** (24 dp, Strich 1,6), darunter die Beschriftung „Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“ (12,5 sp, Gewicht 400, textMuted). Die drei Knöpfe teilen sich die Breite gleichmäßig (`Arrangement.SpaceEvenly`) und müssen ab 320 dp Bildschirmbreite in eine Zeile passen.
 3. **ExtendedAddButton**: Höhe 54 dp, Radius 18, Plus-Icon + Text („Neuer Termin“, „Neue Aufgabe“, „Neue Notiz“), Typfarbe
 4. **GlassCard** (mit Haze-Blur)
 5. **BriefingTile** (Vorbild: Guthaben-Karten oben in der PayPal-App): Karte im Format **16 : 9** mit **100 dp Höhe** (also ca. 178 dp breit), Radius 20, Innenabstand 12, nur ein ganz leichter Schatten (y 2–3, blur 8–10, Navy 5–10 %), in einer **horizontal wischbaren Liste** (`LazyRow` mit Snap, die nächste Karte schaut am rechten Rand heraus). Oben links der Titel (Heute, Morgen, Diese Woche), oben rechts drei kleine Zähler mit Icons (11,5 sp; Termine, Aufgaben, Notizen mit Erinnerung). Unten groß (19 sp, Gewicht 400) die wichtigste Info mit Icon, z. B. „in 25 Min“, „ab 09:00“, „Fr voll“, darunter eine Zeile (11 sp), z. B. „Sprint-Review · 10:00“. Titel kurz halten: Heute, Morgen, Woche. Der **gelbe Fortschrittsbalken** erscheint nur, wenn etwas in den nächsten 60 Minuten beginnt, er füllt sich bis zum Beginn. Gewählte Kachel: hell = Navy mit weißer Schrift, dunkel = `#F4F7FB` mit Navy-Schrift.
@@ -118,13 +118,15 @@ Vier Reiter: **Übersicht**, **Termine**, **Aufgaben**, **Notizen**. Es gibt **k
 ### Übersicht
 Von oben nach unten:
 1. Kopfzeile: Wortmarke „Organi**7**er“ in 28 sp (die 7 mit gelbem Unterstrich) links, Zahnrad (Einstellungen) rechts.
-2. Darunter mittig das ausgeschriebene Datum, z. B. „Montag, 23. November“, 14 sp in textSoft (aus dem Systemdatum, deutsch formatiert). **Keine** Überschrift „Heute“ (das steht schon in der ersten Kachel), **keine** Begrüßung, **keine** Zähler-Chips.
+2. Darunter mittig eine **Datumszeile mit Pfeilen**: `‹  Montag, 23. November  ›` (14 sp, textMuted, Pfeile als dezente 36-dp-Icon-Knöpfe in textSoft). Die Pfeile blättern tageweise (heute bis +6 Tage, zurück vor heute ist deaktiviert). Der Tag steuert Kacheln und Inhalt: heute = Kachel „Heute“, morgen = Kachel „Morgen“, später = keine Kachel markiert, Inhalt für diesen Tag. Tippt man auf die Kachel „Woche“, zeigt die Zeile den Zeitraum („23.–29. November“). Die gewählte Kachel scrollt automatisch ins Bild. Abstände: Kopfzeile → Datum 18 dp, Datum → Kacheln 14 dp, Kacheln → Erfassen 22 dp. **Keine** Überschrift „Heute“, **keine** Begrüßung, **keine** Zähler-Chips.
 3. **Briefing-Kacheln** als horizontale, wischbare Liste: Heute, Morgen, Woche (16 : 9, 100 dp hoch, siehe BriefingTile). Sie funktionieren wie Reiter und steuern den Inhalt darunter.
-4. Abschnitt **„Erfassen“** (Überschrift im Title-Stil) mit drei runden Plus-Knöpfen (CaptureButton) gleichmäßig verteilt: Neuer Termin, Neue Aufgabe, Neue Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
+4. Abschnitt **„Erfassen“** (Überschrift bewusst leise als Overline, 12 sp Versalien in textSoft) mit drei runden Plus-Knöpfen (CaptureButton) gleichmäßig verteilt: Neuer Termin, Neue Aufgabe, Neue Notiz. Jeder öffnet direkt das passende Anlege-Sheet.
 5. Inhalt der gewählten Kachel:
    - *Heute:* „Als Nächstes“ mit NextEventCard und den weiteren Terminen, danach „Aufgaben heute“.
    - *Morgen:* „Termine morgen“, „Aufgaben morgen“.
    - *Woche:* Termine der Woche kompakt nach Tag, „Fällig diese Woche“.
+   - *Anderer Tag (über die Pfeile):* nur die Abschnitte, die an diesem Tag Inhalt haben. Gibt es keine Termine, erscheinen nur „Aufgaben am Mittwoch“ und ein leiser Hinweis „Keine Termine an diesem Tag.“ Leere Abschnitte werden nie als leere Karten gezeigt.
+   - Farbhierarchie: Nur die gewählte Kachel, die NextEventCard und die drei Erfassen-Knöpfe sind farbig. Alles andere bleibt ruhig in text, textMuted und textSoft.
 6. Darunter immer der **Notizen-Feed** nach Tagen gruppiert (DateDivider + NoteCard).
 
 ### Termine
