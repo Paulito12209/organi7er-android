@@ -129,6 +129,7 @@ Von oben nach unten:
 
 ### Termine
 - Kopf: kleine Zeile „November 2026 ⌄“ (öffnet eine Monatsansicht zur Datumswahl), darunter Seitentitel „Termine“. Rechts ein Soft-Knopf „Heute“, der zum heutigen Tag springt.
+- Unter dem Kopf dasselbe Segment wie bei Aufgaben: **Entwürfe · Aktiv · Erledigt** (Standard *Aktiv*). *Entwürfe* sind Termin-Ideen ohne feste Zeit mit Knopf „Planen“. *Aktiv* zeigt die Wochenansicht wie folgt. *Erledigt* listet vergangene Termine, neueste zuerst. Unterstatus aktiver Termine als kleiner Tag: *Vorläufig*, *Verschoben* (mit Hinweis auf die alte Zeit), *Abgesagt*.
 - Wochenleiste **ohne** umgebenden Container: Wochentag klein, darunter Tageszahl im Kreis; gewählter Tag gefüllt (Navy, dunkel invertiert), heutiger Tag mit blauem Ring. Darunter Punkte in den Kalenderfarben des Tages. Wischen wechselt die Woche.
 - Legende der Kalender (Arbeit, Privat, Gesundheit).
 - Liste der Termine des Tages, jeder Termin in **seiner Kalenderfarbe** (getönter Hintergrund + farbiger linker Rand). Eine gelbe „Jetzt“-Linie mit Uhrzeit zwischen vergangenen und kommenden Terminen. Ein Stundenraster ist für später vorgesehen, jetzt noch nicht.
@@ -136,15 +137,16 @@ Von oben nach unten:
 
 ### Aufgaben
 - Seitentitel nur „Aufgaben“ (kein Fortschrittsbalken, kein „2 von 7 erledigt“).
-- Segment: **Entwürfe · Offen · Erledigt**, Standard ist *Offen*.
-  - *Entwürfe:* schnell notierte Gedanken ohne Datum, kurzer Hinweistext oben. „Planen“ öffnet ein Sheet für Datum/Uhrzeit, danach wandert die Aufgabe nach *Offen*. Entwürfe sollen bewusst keinen Druck erzeugen.
-  - *Offen:* gruppiert nach Überfällig, Heute, Diese Woche, Später.
+- Segment: **Entwürfe · Aktiv · Erledigt**, Standard ist *Aktiv*.
+  - *Entwürfe:* schnell notierte Gedanken ohne Datum, kurzer Hinweistext oben. „Planen“ öffnet ein Sheet für Datum/Uhrzeit, danach wandert die Aufgabe nach *Aktiv*. Entwürfe sollen bewusst keinen Druck erzeugen.
+  - *Aktiv:* gruppiert nach Überfällig, Heute, Diese Woche, Später. Aktive Aufgaben haben einen optionalen **Unterstatus**, angezeigt als kleiner Tag rechts: *In Arbeit* (blau), *Geblockt* (rot), *Verschoben* (grau). Ohne Unterstatus kein Tag.
   - *Erledigt:* die letzten 30 Tage, ältere einklappbar.
 - Abhaken mit kurzer Animation und Rückgängig-Snackbar.
 - Neue Aufgabe als Bottom Sheet: Titel, optional Datum/Uhrzeit, Priorität, Liste/Tag. Ohne Datum landet sie in Entwürfe.
 
 ### Notizen
 - Seitentitel nur „Notizen“.
+- Segment **Entwürfe · Aktiv · Erledigt** (Standard *Aktiv*). *Entwürfe* sind schnelle Gedanken ohne Titel oder Ordnung, *Erledigt* sind abgeschlossene Notizen, die durchsuchbar bleiben. Der folgende Aufbau gilt für *Aktiv*.
 - Suchfeld, darunter drei Filterkacheln mit Zähler: Alle, Mit Bild, Nur Text (gewählte Kachel Navy).
 - Feed nach Tagen gruppiert mit DateDivider und NoteCard (Logbuch-Muster). Sortier-Knopf oben rechts (neueste/älteste zuerst).
 - Notiz-Detail: Titel, Text auf liniertem Papier (24 dp Zeilenabstand, Text sitzt auf den Linien), Bilder oben als horizontaler Stapel, Bild antippen öffnet Vollbild mit Zoom. Optionale Erinnerung pro Notiz.
@@ -154,10 +156,10 @@ Gruppen wie in der Vorlage: Darstellung (System/Hell/Dunkel), Übersicht (Kachel
 
 ## Datenmodell (Room)
 
-- `Event`: id, title, start, end, allDay, location, calendarId, reminderMinutes, note, createdAt, updatedAt
+- `Event`: id, title, start (null bei Entwurf), end, allDay, location, calendarId, reminderMinutes, note, status (DRAFT, ACTIVE, DONE), subStatus (null, TENTATIVE, POSTPONED, CANCELLED), createdAt, updatedAt. Vergangene Termine gelten automatisch als DONE.
 - `CalendarEntity`: id, name, colorHex (Standard: Arbeit, Privat, Gesundheit)
-- `Task`: id, title, note, dueAt (null = Entwurf), priority, status (DRAFT, OPEN, DONE), doneAt, listName, createdAt, updatedAt
-- `Note`: id, title, body, reminderAt, createdAt, updatedAt
+- `Task`: id, title, note, dueAt, priority, status (DRAFT, ACTIVE, DONE), subStatus (null, IN_PROGRESS, BLOCKED, POSTPONED), doneAt, listName, createdAt, updatedAt
+- `Note`: id, title, body, reminderAt, status (DRAFT, ACTIVE, DONE), subStatus (null, IN_PROGRESS), createdAt, updatedAt
 - `NoteImage`: id, noteId, filePath, position
 - Zeitangaben als `Instant`/`LocalDateTime` über `java.time`, Zeitzone des Geräts.
 
@@ -172,7 +174,7 @@ Lege beim ersten Start Beispieldaten an (wie in der HTML-Vorlage), mit Schalter 
 3. **Datenschicht:** Room-Entities, DAOs, Repositories, DataStore, Beispieldaten, Tests.
 4. **Übersicht** komplett inklusive Briefing-Kacheln und Notizen-Feed.
 5. **Termine** mit Wochenleiste, Liste, Anlegen/Bearbeiten.
-6. **Aufgaben** mit Entwürfe/Offen/Erledigt, Planen, Anlegen.
+6. **Aufgaben** mit Entwürfe/Aktiv/Erledigt, Unterstatus, Planen, Anlegen.
 7. **Notizen** mit Feed, Filter, Suche, Detail, Bildern.
 8. **Einstellungen und Erinnerungen** (Notifications, Morgen-Briefing).
 9. **Feinschliff:** Animationen (dezent, 200–250 ms), Barrierefreiheit, große Schrift (bis 200 %), Leere-Zustände, Screenshots aller Bildschirme in Hell und Dunkel.
