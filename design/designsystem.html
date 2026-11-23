@@ -56,9 +56,9 @@
   --paper-line:#DBE8FE;
   --paper-margin:#93BBFD;
   --wave:#B3C2DB;
-  --type-event:#2563EB; --on-type-event:#FFFFFF;
-  --type-task:#FFD500; --on-type-task:#061B3A;
-  --type-note:#061B3A; --on-type-note:#FFFFFF;
+  --type-event:#061B3A; --on-type-event:#FFFFFF;
+  --type-task:#2563EB; --on-type-task:#FFFFFF;
+  --type-note:#FFD500; --on-type-note:#061B3A;
   --cal-work:#3B82F6; --cal-private:#FFD500; --cal-health:#22C55E;
   --aura-1:rgba(59,130,246,.22);
   --aura-2:rgba(6,27,58,.10);
@@ -102,7 +102,7 @@
   --shadow-soft:0 1px 0 rgba(147,187,253,.08) inset, 0 8px 24px rgba(0,0,0,.35);
   --shadow-float:0 12px 32px rgba(0,0,0,.5);
   --knob-top:#14305C; --knob-bottom:#0A2248;
-  --type-note:#F4F7FB; --on-type-note:#061B3A;
+  --type-event:#F4F7FB; --on-type-event:#061B3A;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -396,7 +396,7 @@ tr:last-child td { border-bottom:0; }
 .today .chip { height:30px; padding-right:10px; font-size:12.5px; }
 .today .chip .n { min-width:22px; height:22px; }
 [data-theme="dark"] .chip .n { background:#2563EB; }
-.fade-bottom { position:absolute; left:0; right:0; bottom:0; height:120px; z-index:4; pointer-events:none; background:linear-gradient(to top, var(--bg) 30%, transparent); }
+.fade-bottom { position:absolute; left:0; right:0; bottom:0; height:92px; z-index:4; pointer-events:none; background:linear-gradient(to top, color-mix(in srgb, var(--bg) 80%, transparent) 0, color-mix(in srgb, var(--bg) 55%, transparent) 76px, transparent 92px); }
 .addmenu { position:absolute; right:14px; bottom:92px; z-index:7; display:flex; flex-direction:column; gap:8px; align-items:flex-end; pointer-events:none; }
 .addmenu button { pointer-events:auto; opacity:0; transform:translateY(10px) scale(.96); transition:opacity .2s ease, transform .2s ease; }
 .addmenu.open button { opacity:1; transform:none; }
@@ -436,21 +436,22 @@ tr:last-child td { border-bottom:0; }
 
 
 /* Briefing-Kacheln (Heute / Morgen / Diese Woche) */
-.brief { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; margin:0 -18px; padding:4px 18px 14px; scroll-padding:0 18px; }
+.brief { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; margin:0 -18px; padding:2px 18px 6px; scroll-padding:0 18px; }
 .brief::-webkit-scrollbar { display:none; }
-.brief button { flex:0 0 236px; aspect-ratio:16 / 9; scroll-snap-align:start; font:inherit; text-align:left; cursor:pointer; color:var(--text); border-radius:24px; padding:14px 16px; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+.brief button { flex:0 0 auto; height:100px; aspect-ratio:16 / 9; scroll-snap-align:start; font:inherit; text-align:left; cursor:pointer; color:var(--text); border-radius:20px; padding:11px 12px; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
 .brief .top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-.brief .bt { font-size:16px; font-weight:500; letter-spacing:-.01em; }
-.brief .st { display:flex; gap:9px; font-size:12.5px; font-weight:500; color:var(--text-muted); padding-top:2px; }
+.brief .bt { font-size:14.5px; font-weight:500; letter-spacing:-.01em; }
+.brief .st { display:flex; gap:6px; font-size:11.5px; font-weight:500; color:var(--text-muted); padding-top:2px; }
 .brief .st span { display:inline-flex; align-items:center; gap:3px; }
-.brief .st svg { width:13px; height:13px; }
-.brief .bot { display:flex; flex-direction:column; gap:3px; min-width:0; }
-.brief .big { font-size:24px; font-weight:400; letter-spacing:-.02em; line-height:1.1; display:flex; align-items:center; gap:6px; }
-.brief .big svg { width:18px; height:18px; flex:none; opacity:.8; }
-.brief .cap { font-size:12.5px; color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.brief .pb { height:4px; margin-top:6px; border-radius:var(--r-pill); background:color-mix(in srgb, var(--text) 12%, transparent); overflow:hidden; }
+.brief .st svg { width:12px; height:12px; }
+.brief .bot { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.brief .big { font-size:19px; font-weight:400; letter-spacing:-.02em; line-height:1.1; display:flex; align-items:center; gap:6px; }
+.brief .big svg { width:15px; height:15px; flex:none; opacity:.8; }
+.brief .cap { font-size:11px; color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.brief .pb { height:3px; margin-top:5px; border-radius:var(--r-pill); background:color-mix(in srgb, var(--text) 12%, transparent); overflow:hidden; }
 .brief .pb i { display:block; height:100%; border-radius:inherit; background:var(--accent); }
-.brief button[aria-selected="true"] { background:var(--hero); color:var(--on-hero); border-color:transparent; box-shadow:var(--shadow-float); }
+.brief button[aria-selected="true"] { background:var(--hero); color:var(--on-hero); border-color:transparent; box-shadow:0 3px 10px rgba(6,27,58,.10); }
+.brief button.glass { box-shadow:0 2px 8px rgba(6,27,58,.05); }
 .brief button[aria-selected="true"] .st, .brief button[aria-selected="true"] .cap { color:var(--on-hero-muted); }
 .brief button[aria-selected="true"] .pb { background:rgba(255,255,255,.18); }
 [data-theme="dark"] .brief button[aria-selected="true"] { background:#F4F7FB; color:#061B3A; }
@@ -459,10 +460,10 @@ tr:last-child td { border-bottom:0; }
 .brief button:focus-visible { outline:2px solid var(--brand-blue); outline-offset:3px; }
 
 /* Schnell anlegen (nur Übersicht) */
-.capture { display:flex; gap:24px; }
-.capture button { font:inherit; border:0; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text); font-size:13.5px; font-weight:500; padding:0; min-width:64px; }
-.capture .circ { width:62px; height:62px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); transition:transform .15s ease; }
-.capture .circ svg { width:24px; height:24px; }
+.capture { display:flex; justify-content:space-evenly; }
+.capture button { font:inherit; border:0; background:transparent; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--text); font-size:13px; font-weight:500; padding:0; min-width:0; white-space:nowrap; }
+.capture .circ { width:70px; height:70px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); transition:transform .15s ease; }
+.capture .circ svg { width:28px; height:28px; }
 .capture button:active .circ { transform:scale(.94); }
 .capture button:focus-visible .circ { outline:2px solid var(--brand-blue); outline-offset:3px; }
 .capture .circ.btn-note { box-shadow:var(--shadow-soft), inset 0 0 0 1px rgba(255,255,255,.08); }
@@ -576,15 +577,15 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
 
   <div class="core">
     <div class="sw navy">
-      <div><div class="pct">60&nbsp;%</div><p>Dominant: Navigation, große Karten, Text im hellen Modus und Hintergrund im dunklen Modus.</p></div>
+      <div><div class="pct">60&nbsp;%</div><p>Dominant: Termine, Navigation, große Karten, Text im hellen Modus und Hintergrund im dunklen Modus.</p></div>
       <div><div class="nm">Deep Navy</div><div class="hex">#061B3A · rgb(6, 27, 58)</div></div>
     </div>
     <div class="sw blue">
-      <div><div class="pct">30&nbsp;%</div><p>Unterstützend: Termine, Auswahl, Icons, Verläufe.</p></div>
+      <div><div class="pct">30&nbsp;%</div><p>Unterstützend: Aufgaben, Auswahl, Icons, Verläufe.</p></div>
       <div><div class="nm">Electric Blue</div><div class="hex">#3B82F6 · rgb(59, 130, 246)</div></div>
     </div>
     <div class="sw yellow">
-      <div><div class="pct">10&nbsp;%</div><p>Akzent: „Jetzt“, Fortschritt, Priorität, Add Aufgabe.</p></div>
+      <div><div class="pct">10&nbsp;%</div><p>Akzent: Notizen, „Jetzt“, Fortschritt, Priorität.</p></div>
       <div><div class="nm">Bold Yellow</div><div class="hex">#FFD500</div></div>
     </div>
   </div>
@@ -737,20 +738,20 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         </div>
       </div>
       <div class="comp" style="grid-column:1 / -1">
-        <div class="label">Briefing-Kacheln (Übersicht, horizontal wischbar, 16 : 9)</div>
+        <div class="label">Briefing-Kacheln (Übersicht, horizontal wischbar, 16 : 9, 100 px hoch)</div>
         <div class="brief" role="tablist" style="margin:0;padding:4px 0 14px" data-doc-group>
-          <button class="glass" role="tab" aria-selected="true"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Nächster: Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
-          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Erster: Daily und Planung</span></span></button>
-          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Diese Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr am vollsten</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
+          <button class="glass" role="tab" aria-selected="true"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
+          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
+          <button class="glass" role="tab" aria-selected="false"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
         </div>
         <p class="sub" style="margin:0;font-size:13.5px">Zahlen = Termine, Aufgaben, Notizen mit Erinnerung. Der gelbe Balken erscheint nur, wenn etwas demnächst ansteht (Zeit bis zum Beginn, ab 60 Min vorher).</p>
         <div class="label" style="margin-top:8px">Erfassen (Übersicht) und Add-Buttons (Reiterseiten)</div>
         <div>
           <div class="sec-h"><h3>Erfassen</h3></div>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-cal"/></svg></span>Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-tasks"/></svg></span>Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-note"/></svg></span>Notiz</button>
+            <button><span class="circ btn-event"><svg><use href="#i-plus"/></svg></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><svg><use href="#i-plus"/></svg></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><svg><use href="#i-plus"/></svg></span>Neue Notiz</button>
           </div>
         </div>
         <div class="row">
@@ -803,17 +804,17 @@ footer { margin-top:64px; padding-top:24px; border-top:1px solid var(--border); 
         <div class="today"><div class="d"><h2>Heute</h2><span data-date-short>Mo., 23. Nov.</span></div></div>
 
         <div class="brief" role="tablist" aria-label="Briefing">
-          <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Nächster: Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
-          <button class="glass" role="tab" aria-selected="false" data-brief="tomorrow"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Erster: Daily und Planung</span></span></button>
-          <button class="glass" role="tab" aria-selected="false" data-brief="week"><span class="top"><span class="bt">Diese Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr am vollsten</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
+          <button class="glass" role="tab" aria-selected="true" data-brief="today"><span class="top"><span class="bt">Heute</span><span class="st" aria-label="3 Termine, 5 Aufgaben, 4 Notizen"><span><svg><use href="#i-cal"/></svg>3</span><span><svg><use href="#i-tasks"/></svg>5</span><span><svg><use href="#i-note"/></svg>4</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>in 25 Min</span><span class="cap">Sprint-Review · 10:00</span><span class="pb" aria-hidden="true"><i style="width:58%"></i></span></span></button>
+          <button class="glass" role="tab" aria-selected="false" data-brief="tomorrow"><span class="top"><span class="bt">Morgen</span><span class="st" aria-label="2 Termine, 3 Aufgaben, 1 Notizen"><span><svg><use href="#i-cal"/></svg>2</span><span><svg><use href="#i-tasks"/></svg>3</span><span><svg><use href="#i-note"/></svg>1</span></span></span><span class="bot"><span class="big"><svg><use href="#i-clock"/></svg>ab 09:00</span><span class="cap">Daily und Planung</span></span></button>
+          <button class="glass" role="tab" aria-selected="false" data-brief="week"><span class="top"><span class="bt">Woche</span><span class="st" aria-label="9 Termine, 12 Aufgaben, 6 Notizen"><span><svg><use href="#i-cal"/></svg>9</span><span><svg><use href="#i-tasks"/></svg>12</span><span><svg><use href="#i-note"/></svg>6</span></span></span><span class="bot"><span class="big"><svg><use href="#i-cal"/></svg>Fr voll</span><span class="cap">4 Termine · Workshop Q1</span></span></button>
         </div>
 
         <div>
           <div class="sec-h"><h3>Erfassen</h3></div>
           <div class="capture">
-            <button><span class="circ btn-event"><svg><use href="#i-cal"/></svg></span>Termin</button>
-            <button><span class="circ btn-task"><svg><use href="#i-tasks"/></svg></span>Aufgabe</button>
-            <button><span class="circ btn-note"><svg><use href="#i-note"/></svg></span>Notiz</button>
+            <button><span class="circ btn-event"><svg><use href="#i-plus"/></svg></span>Neuer Termin</button>
+            <button><span class="circ btn-task"><svg><use href="#i-plus"/></svg></span>Neue Aufgabe</button>
+            <button><span class="circ btn-note"><svg><use href="#i-plus"/></svg></span>Neue Notiz</button>
           </div>
         </div>
 
@@ -1070,9 +1071,9 @@ const tokens = [
   ['on-accent','#061B3A','#061B3A','Schrift/Icon auf Gelb'],
   ['hero','#061B3A','#0F2A55','große Karte „Als Nächstes“'],
   ['nav','rgba(6,27,58,.86)','rgba(10,34,72,.82)','schwebende Navigation'],
-  ['type-event','#2563EB','#2563EB','Add-Button Termin (weiße Schrift)'],
-  ['type-task','#FFD500','#FFD500','Add-Button Aufgabe (Navy-Schrift)'],
-  ['type-note','#061B3A','#F4F7FB','Add-Button Notiz'],
+  ['type-event','#061B3A','#F4F7FB','Add-Button Termin'],
+  ['type-task','#2563EB','#2563EB','Add-Button Aufgabe (weiße Schrift)'],
+  ['type-note','#FFD500','#FFD500','Add-Button Notiz (Navy-Schrift)'],
   ['paper-line','#DBE8FE','#1A3665','Linien im Notizblatt'],
   ['paper-margin','#93BBFD','#2E4C7E','Randlinie im Notizblatt'],
 ];
