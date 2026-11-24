@@ -10,6 +10,12 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
+// versionCode = Anzahl der Commits: steigt mit jedem Commit automatisch, Google verlangt eine höhere Nummer je Upload.
+val commitCount = providers.exec {
+    commandLine("git", "rev-list", "--count", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }.getOrElse(1)
+
 android {
     namespace = "app.organi7er"
     compileSdk {
@@ -20,8 +26,8 @@ android {
         applicationId = "app.organi7er"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = commitCount
+        versionName = "0.1.$commitCount"
         testInstrumentationRunner = "app.organi7er.HiltTestRunner"
     }
 
@@ -44,8 +50,10 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Mit keystore.properties: Upload-Schlüssel für Google Play. Ohne: Debug-Schlüssel nur für lokale Tests.
-            signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
+            // Bundles bleiben unsigniert: tools/release_bundle.sh signiert sie mit dem Upload-Schlüssel aus dem Schlüsselbund.
+            // Nur für eine lokal installierbare Test-APK: ./gradlew assembleRelease -PsignDebug
+            signingConfig = signingConfigs.findByName("upload")
+                ?: if (providers.gradleProperty("signDebug").isPresent) signingConfigs.getByName("debug") else null
         }
     }
 
