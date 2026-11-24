@@ -49,7 +49,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 private val ArcSize = 288.dp
-private val ArcRadius = 168.dp
+private val ArcRadius = 160.dp
 
 /**
  * „Neuer Eintrag“: Bogen über dem Plus-Knopf (Hintergrund unscharf), Aufgabe · Notiz · Termin auf einem Bogen.
