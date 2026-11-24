@@ -81,6 +81,7 @@ object Ms {
     val download = R.drawable.ms_download
     val alarm = R.drawable.ms_alarm
     val graphicEq = R.drawable.ms_graphic_eq
+    val tune = R.drawable.ms_tune
     val arrowUpward = R.drawable.ms_arrow_upward
     val subject = R.drawable.ms_subject
 }

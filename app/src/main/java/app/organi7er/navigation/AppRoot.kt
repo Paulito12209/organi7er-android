@@ -16,6 +16,31 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.util.lerp
+import androidx.compose.ui.unit.LayoutDirection
+import app.organi7er.core.designsystem.components.liquidGlass
+import app.organi7er.feature.common.SearchAnchor
+import app.organi7er.feature.search.SearchHit
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -148,9 +173,29 @@ fun OrganiAppRoot() {
     val scope = rememberCoroutineScope()
     val contentHaze = rememberHazeState()
     var request by remember { mutableStateOf<EditorRequest?>(null) }
-    // Suche liegt als eigene Ebene über dem Inhalt (samt Dock), damit das Feld die ganze Breite bekommt.
-    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    // Suche liegt als eigene Ebene über dem Inhalt (samt Dock). Sie wächst aus der Such-Pille auf:
+    // searchP 0 = Pille, 1 = ganze Seite. Wird beim Herunterziehen live mitgeführt.
+    var searchP by remember { mutableFloatStateOf(0f) }
+    var searchActive by remember { mutableStateOf(false) }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
     val search: SearchViewModel = hiltViewModel()
+    val haptic = LocalHapticFeedback.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val animateSearch: (Float) -> Unit = { to ->
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            // Öffnen weich mit einem Hauch Nachschwingen, Schließen straff ohne.
+            val spec = if (to > searchP) spring<Float>(dampingRatio = 0.8f, stiffness = 260f) else spring<Float>(dampingRatio = 1f, stiffness = 520f)
+            animate(searchP, to, animationSpec = spec) { v, _ -> searchP = v.coerceIn(0f, 1.02f) }
+        }
+    }
+    val openSearch: () -> Unit = { searchActive = true; animateSearch(1f) }
+    val closeSearch: () -> Unit = {
+        searchActive = false
+        keyboard?.hide()
+        animateSearch(0f)
+        search.query.value = ""
+    }
 
     // Einstellungen als Panel von rechts; links bleibt ein Streifen der Übersicht sichtbar.
     val settings = remember { Animatable(0f) }
@@ -233,7 +278,7 @@ fun OrganiAppRoot() {
             },
             openSettings = { openSettingsPanel() },
             openNotifications = { nav.navigate(NotificationsRoute) { launchSingleTop = true } },
-            openSearch = { searchOpen = true },
+            openSearch = { openSearch() },
             openCatalog = {
                 scope.launch { settings.snapTo(0f) }
                 nav.navigate(CatalogRoute)
@@ -277,9 +322,64 @@ fun OrganiAppRoot() {
                 Box(
                     Modifier
                         .fillMaxSize()
+                        // Während die Suche aufgeht, tritt die Seite dahinter leicht zurück.
+                        .graphicsLayer {
+                            val k = searchP.coerceIn(0f, 1f)
+                            scaleX = 1f - 0.06f * k
+                            scaleY = 1f - 0.06f * k
+                            alpha = 1f - 0.5f * k
+                        }
                         .hazeSource(contentHaze),
                 ) {
                     Box(Modifier.fillMaxSize().aura(glow))
+                    // Oben weiter nach unten ziehen → die Suche wächst aus der Pille auf. Mit Widerstand:
+                    // der Finger legt etwa das 2,5-Fache der sichtbaren Strecke zurück.
+                    val pullTravel = with(LocalDensity.current) { 70.dp.toPx() }
+                    val pullConnection = remember(showBar) {
+                        object : NestedScrollConnection {
+                            var raw = 0f
+                            var passed = false
+                            private fun apply() {
+                                searchJob?.cancel()
+                                searchP = (raw * 0.4f / pullTravel).coerceIn(0f, 1f)
+                                val over = searchP >= 0.5f
+                                if (over != passed) {
+                                    passed = over
+                                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                                }
+                            }
+
+                            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                                if (raw > 0f && available.y < 0f) {
+                                    val used = maxOf(available.y, -raw)
+                                    raw += used
+                                    apply()
+                                    return Offset(0f, used)
+                                }
+                                return Offset.Zero
+                            }
+
+                            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                                if (showBar && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f) {
+                                    raw += available.y
+                                    apply()
+                                    return Offset(0f, available.y)
+                                }
+                                return Offset.Zero
+                            }
+
+                            override suspend fun onPreFling(available: Velocity): Velocity {
+                                if (raw > 0f) {
+                                    val open = searchP >= 0.5f
+                                    raw = 0f
+                                    passed = false
+                                    if (open) openSearch() else animateSearch(0f)
+                                }
+                                return Velocity.Zero
+                            }
+                        }
+                    }
+                    Box(Modifier.fillMaxSize().nestedScroll(pullConnection)) {
                     NavHost(
                         navController = nav,
                         startDestination = OverviewRoute,
@@ -296,6 +396,7 @@ fun OrganiAppRoot() {
                         ) { NotificationsScreen() }
                         composable<CatalogRoute> { CatalogScreen() }
                         composable<NoteDetailRoute> { NoteDetailScreen(it.toRoute<NoteDetailRoute>().id) }
+                    }
                     }
                 }
 
@@ -335,30 +436,21 @@ fun OrganiAppRoot() {
                     )
                 }
 
-                // Suche: blendet über allem ein; Logo und Menüknopf weichen, das Feld läuft über die ganze Breite.
-                AnimatedVisibility(
-                    searchOpen,
-                    Modifier.fillMaxSize(),
-                    enter = fadeIn(tween(180)) + slideInVertically(tween(240)) { -it / 12 },
-                    exit = fadeOut(tween(160)) + slideOutVertically(tween(200)) { -it / 12 },
-                ) {
-                    val closeSearch = {
-                        searchOpen = false
-                        search.query.value = ""
-                    }
-                    SearchScreen(
-                        vm = search,
-                        onOpen = { hit ->
-                            closeSearch()
-                            when (hit.type) {
-                                EntryType.Event -> actions.openEditor(EditorRequest.EditEvent(hit.id))
-                                EntryType.Task -> actions.openEditor(EditorRequest.EditTask(hit.id))
-                                EntryType.Note -> actions.openNote(hit.id)
-                            }
-                        },
-                        onClose = closeSearch,
-                    )
-                }
+                SearchOverlay(
+                    progress = { searchP },
+                    active = searchActive,
+                    vm = search,
+                    onOpen = { hit ->
+                        closeSearch()
+                        when (hit.type) {
+                            EntryType.Event -> actions.openEditor(EditorRequest.EditEvent(hit.id))
+                            EntryType.Task -> actions.openEditor(EditorRequest.EditTask(hit.id))
+                            EntryType.Note -> actions.openNote(hit.id)
+                        }
+                    },
+                    onClose = closeSearch,
+                    onMessage = actions.showMessage,
+                )
 
                 SnackbarHost(
                     snackbar,
@@ -414,6 +506,46 @@ fun OrganiAppRoot() {
             is EditorRequest.NewTask, is EditorRequest.EditTask, is EditorRequest.PlanTask -> TaskSheet(r, editor) { request = null }
             is EditorRequest.NewNote -> NoteSheet(r, editor) { request = null }
         }
+    }
+}
+
+/** Rechteck, das von der Such-Pille ([SearchAnchor]) auf die ganze Seite aufwächst; die Rundung läuft auf 0. */
+private data class ExpandShape(val p: Float, val pill: Rect) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val r = if (pill.isEmpty) Rect(size.width * 0.35f, 0f, size.width * 0.8f, 120f) else pill
+        // Die Pillen-Rundung bleibt lange erhalten und läuft erst am Ende aus.
+        val radius = lerp(r.height / 2f, 0f, p * p)
+        return Outline.Rounded(
+            RoundRect(
+                lerp(r.left, 0f, p), lerp(r.top, 0f, p), lerp(r.right, size.width, p), lerp(r.bottom, size.height, p),
+                CornerRadius(radius, radius),
+            ),
+        )
+    }
+}
+
+/** Die Suche als Ebene: beginnt als Glas-Pille, füllt beim Aufziehen die Seite; Kopf, Treffer und Eingabe blenden gestaffelt ein. */
+@Composable
+private fun SearchOverlay(
+    progress: () -> Float,
+    active: Boolean,
+    vm: SearchViewModel,
+    onOpen: (SearchHit) -> Unit,
+    onClose: () -> Unit,
+    onMessage: (String) -> Unit,
+) {
+    val p = progress()
+    if (p <= 0.001f) return
+    val bg = OrganiTheme.colors.bg
+    Box(
+        Modifier
+            .fillMaxSize()
+            .liquidGlass(ExpandShape(p.coerceIn(0f, 1f), SearchAnchor.bounds))
+            .background(bg.copy(alpha = (p * 1.6f).coerceIn(0f, 1f)))
+            // Nichts darunter bedienbar, solange die Suche offen ist.
+            .pointerInput(Unit) { detectTapGestures { } },
+    ) {
+        SearchScreen(vm, active, progress, onOpen, onClose, onMessage)
     }
 }
 

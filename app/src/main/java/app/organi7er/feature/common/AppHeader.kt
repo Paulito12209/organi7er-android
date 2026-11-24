@@ -53,6 +53,11 @@ data class ShellInfo(val unread: Int = 0, val profileImage: String? = null)
 
 val LocalShell = staticCompositionLocalOf { ShellInfo() }
 
+/** Wo die Such-Pille gerade sitzt; die Suche wächst von dort auf. */
+object SearchAnchor {
+    var bounds: androidx.compose.ui.geometry.Rect = androidx.compose.ui.geometry.Rect.Zero
+}
+
 /**
  * Kopf der Hauptseiten: Logo links, rechts Such-Pille und Profilbild bzw. Einstellungen;
  * darunter groß der Seitentitel.
@@ -115,6 +120,7 @@ private fun SearchPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
             .height(42.dp)
+            .onGloballyPositioned { SearchAnchor.bounds = it.boundsInRoot() }
             // Gleiches Glas wie der Einstellungsknopf daneben.
             .liquidGlass(OrganiShapes.pill)
             .clickable(role = Role.Button, onClickLabel = "Suche öffnen", onClick = onClick)

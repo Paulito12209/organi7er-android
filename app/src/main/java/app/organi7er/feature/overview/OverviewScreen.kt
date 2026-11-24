@@ -108,48 +108,13 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
     val density = LocalDensity.current
     var feedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    // Ganz oben weiter nach unten ziehen → Benachrichtigungen.
-    val pullThreshold = with(density) { 96.dp.toPx() }
-    var pull by remember { mutableFloatStateOf(0f) }
-    val pullConnection = remember(actions) {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (pull > 0f && available.y < 0f) {
-                    val used = maxOf(available.y, -pull)
-                    pull += used
-                    return Offset(0f, used)
-                }
-                return Offset.Zero
-            }
-
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (source == NestedScrollSource.UserInput && available.y > 0f) {
-                    pull = (pull + available.y * 0.5f).coerceAtMost(pullThreshold * 1.4f)
-                    return Offset(0f, available.y)
-                }
-                return Offset.Zero
-            }
-
-            override suspend fun onPreFling(available: Velocity): Velocity {
-                val open = pull >= pullThreshold
-                pull = 0f
-                if (open) actions.openNotifications()
-                return Velocity.Zero
-            }
-        }
-    }
-    val pullShown by animateFloatAsState(pull, spring(stiffness = Spring.StiffnessMedium), label = "pull")
-
     // Von rechts nach links wischen → Einstellungen.
     val swipeThreshold = with(density) { 90.dp.toPx() }
 
     Box(Modifier.fillMaxSize()) {
-        PullHint((pullShown / pullThreshold).coerceIn(0f, 1f), Modifier.align(Alignment.TopCenter))
         LazyColumn(
             Modifier
                 .fillMaxSize()
-                .offset { IntOffset(0, pullShown.roundToInt()) }
-                .nestedScroll(pullConnection)
                 .pointerInput(actions) {
                     var dx = 0f
                     detectHorizontalDragGestures(
@@ -274,29 +239,6 @@ private fun Modifier.bleed() = layout { measurable, constraints ->
     val w = constraints.maxWidth + extra * 2
     val placeable = measurable.measure(constraints.copy(minWidth = w, maxWidth = w))
     layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
-}
-
-@Composable
-private fun PullHint(progress: Float, modifier: Modifier = Modifier) {
-    if (progress <= 0f) return
-    val c = OrganiTheme.colors
-    Row(
-        modifier
-            .statusBarsPadding()
-            .padding(top = 12.dp)
-            .graphicsLayer {
-                alpha = progress
-                scaleX = 0.8f + 0.2f * progress
-                scaleY = 0.8f + 0.2f * progress
-            }
-            .glass(OrganiShapes.pill)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        MsIcon(Ms.notifications, null, tint = c.text, size = 16.dp)
-        Text(if (progress >= 1f) "Loslassen für Benachrichtigungen" else "Benachrichtigungen", style = OrganiTheme.type.label, color = c.text)
-    }
 }
 
 // ------------------------------------------------------------------ Tageskacheln
