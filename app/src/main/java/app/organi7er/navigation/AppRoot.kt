@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -179,7 +178,6 @@ fun OrganiAppRoot() {
         else -> EdgeSilver.inner
     }
     val glow by animateColorAsState(glowTarget, tween(400), label = "tabGlow")
-    val imeVisible = WindowInsets.isImeVisible
 
     // Bilder für Notizen direkt aus dem Feed (Platzhalter „Foto aufnehmen / oder aus Galerie“).
     var imageTarget by remember { mutableStateOf<Long?>(null) }
@@ -300,8 +298,9 @@ fun OrganiAppRoot() {
                 SystemBarBlur(navInset, contentHaze, Modifier.align(Alignment.BottomCenter))
 
                 // Edge-Picker: Navigation am rechten Rand, liegt im Inhalt und rutscht mit ihm weg.
-                // Bei offener Tastatur weicht der Edge-Picker zurück, sonst läge er unter der Tastatur.
-                if (showBar && !imeVisible) {
+                // Immer sichtbar, auf allen Reiterseiten. Das Fenster passt sich der Tastatur an (adjustResize),
+                // der Picker wandert mit dem Dock nach oben.
+                if (showBar) {
                     EdgePicker(
                         // Alle Reiter, der aktive steht in der Mitte.
                         items = Tabs,
