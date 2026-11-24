@@ -48,8 +48,8 @@ import app.organi7er.core.designsystem.OrganiTheme
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val ArcSize = 264.dp
-private val ArcRadius = 160.dp
+private val ArcSize = 288.dp
+private val ArcRadius = 168.dp
 
 /**
  * „Neuer Eintrag“: Bogen über dem Plus-Knopf (Hintergrund unscharf), Aufgabe · Notiz · Termin auf einem Bogen.
@@ -153,7 +153,7 @@ private fun ArcLabel(text: String, color: Color, modifier: Modifier) {
     androidx.compose.foundation.Canvas(modifier.semantics { contentDescription = text }) {
         val cx = size.width - 32.dp.toPx()
         val cy = size.height - 32.dp.toPx()
-        val radius = 206.dp.toPx()
+        val radius = 222.dp.toPx()
         val gap = 3.dp.toPx()
         val glyphs = text.map { measurer.measure(it.toString(), style) }
         val total = glyphs.sumOf { it.size.width.toDouble() + gap } - gap

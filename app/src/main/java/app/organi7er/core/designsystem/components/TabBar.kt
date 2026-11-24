@@ -184,6 +184,8 @@ private fun AddButton(open: Boolean, onClick: () -> Unit, hazeState: HazeState?)
         Modifier
             .size(PlusSize)
             .liquidGlass(OrganiShapes.circle, hazeState)
+            // Geöffnet: gefüllt – hell schwarz mit weißem ×, dunkel weiß mit schwarzem ×.
+            .then(if (open) Modifier.background(c.text) else Modifier)
             .clickable(role = Role.Button, onClickLabel = if (open) "Schließen" else "Neuer Eintrag") {
                 haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.ContextClick)
                 onClick()
@@ -191,6 +193,6 @@ private fun AddButton(open: Boolean, onClick: () -> Unit, hazeState: HazeState?)
             .semantics { contentDescription = if (open) "Neuer Eintrag schließen" else "Neuer Eintrag" },
         contentAlignment = Alignment.Center,
     ) {
-        MsIcon(Ms.add, null, Modifier.rotate(rotation), tint = c.text, size = 26.dp)
+        MsIcon(Ms.add, null, Modifier.rotate(rotation), tint = if (open) c.bg else c.text, size = 26.dp)
     }
 }

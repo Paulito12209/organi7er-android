@@ -441,16 +441,19 @@ fun Legend(items: List<Pair<String, Color>>, modifier: Modifier = Modifier) {
 @Composable
 fun NowLine(time: String, modifier: Modifier = Modifier) {
     val c = OrganiTheme.colors
+    // Hell: Navy mit weißer Zeit; dunkel: das helle Gegenstück (sehr helles Blau) mit dunkler Zeit.
+    val line = if (c.isDark) app.organi7er.core.designsystem.Primitives.Blue100 else app.organi7er.core.designsystem.Primitives.Navy900
+    val onLine = if (c.isDark) app.organi7er.core.designsystem.Primitives.Navy900 else Color.White
     Row(
         modifier.fillMaxWidth().semantics(mergeDescendants = true) { contentDescription = "Jetzt, $time" },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(Modifier.width(44.dp).clip(OrganiShapes.pill).background(c.accent).padding(vertical = 2.dp), contentAlignment = Alignment.Center) {
-            Text(time, style = OrganiTheme.type.tag, color = c.onAccent, textAlign = TextAlign.Center)
+        Box(Modifier.width(44.dp).clip(OrganiShapes.pill).background(line).padding(vertical = 2.dp), contentAlignment = Alignment.Center) {
+            Text(time, style = OrganiTheme.type.tag, color = onLine, textAlign = TextAlign.Center)
         }
-        Box(Modifier.size(8.dp).clip(OrganiShapes.circle).background(c.accent))
-        Box(Modifier.weight(1f).height(2.dp).offset(x = (-4).dp).clip(OrganiShapes.pill).background(c.accent))
+        Box(Modifier.size(8.dp).clip(OrganiShapes.circle).background(line))
+        Box(Modifier.weight(1f).height(2.dp).offset(x = (-4).dp).clip(OrganiShapes.pill).background(line))
     }
 }
 

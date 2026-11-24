@@ -106,7 +106,7 @@ fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: 
                 },
         )
         Row(Modifier.statusBarsPadding().padding(start = startInset).padding(horizontal = 12.dp, vertical = 6.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            GlassCircleButton(Ms.close, "Menü schließen", onBack)
+            Box(Modifier.size(48.dp))
             Text(
                 "Organi7er",
                 Modifier.weight(1f).semantics { heading() },

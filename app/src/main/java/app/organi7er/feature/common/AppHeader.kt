@@ -67,7 +67,14 @@ fun AppHeader(
         // Obere Zeile: Logo links, Glocke und Profil/Einstellungen rechts.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Logo()
-            Box(Modifier.weight(1f))
+            // App-Name dezent neben dem Logo.
+            Text(
+                "Organi7er",
+                Modifier.padding(start = 12.dp).weight(1f),
+                style = OrganiTheme.type.title.copy(fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Normal),
+                color = c.textSoft.copy(alpha = 0.7f),
+                maxLines = 1,
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically, content = actions)
             Box(
                 Modifier

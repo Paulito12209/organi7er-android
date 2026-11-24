@@ -264,7 +264,6 @@ fun CalendarEventItem(
             .heightIn(min = 56.dp)
             .clip(OrganiShapes.medium)
             .background(tint)
-            .drawBehind { drawRect(color, size = Size(3.dp.toPx(), size.height)) }
             .clickable(onClick = onClick)
             .padding(start = 17.dp, end = 14.dp, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

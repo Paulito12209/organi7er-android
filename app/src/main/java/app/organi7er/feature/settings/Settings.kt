@@ -166,7 +166,7 @@ fun SettingsScreen(
             Modifier
                 .padding(start = startInset)
                 .offset(y = (-32).dp)
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp))
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                 .background(c.bg)
                 .padding(horizontal = Spacing.screen)
                 .padding(top = 28.dp),
