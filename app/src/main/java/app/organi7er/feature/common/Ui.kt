@@ -166,18 +166,6 @@ fun EventList(items: List<EventUi>, modifier: Modifier = Modifier) {
     }
 }
 
-/** Notizen-Feed nach Tagen gruppiert (DateDivider + NoteCard). */
-@Composable
-fun NoteFeed(days: List<NoteDay>, today: LocalDate, modifier: Modifier = Modifier) {
-    val actions = LocalAppActions.current
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        days.forEach { day ->
-            DateDivider(day.label)
-            day.notes.forEach { n -> NoteFeedCard(n, today, actions) }
-        }
-    }
-}
-
 @Composable
 fun NoteFeedCard(n: NoteWithImages, today: LocalDate, actions: app.organi7er.feature.editor.AppActions = LocalAppActions.current) {
     val images = n.sortedImages

@@ -144,27 +144,6 @@ fun InsetCard(modifier: Modifier = Modifier, shape: Shape = GlassShapes.inset, p
     )
 }
 
-/** Kopf einer [InsetCard]: Titel links, Aktion („Alle“ / „•••“) rechts. */
-@Composable
-fun InsetHeader(title: String, modifier: Modifier = Modifier, action: String? = null, onAction: (() -> Unit)? = null) {
-    val c = OrganiTheme.colors
-    Row(modifier.fillMaxWidth().padding(bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, Modifier.weight(1f).semantics { heading() }, style = OrganiTheme.type.title, color = c.text, maxLines = 1)
-        if (onAction != null) {
-            Box(
-                Modifier
-                    .heightIn(min = 32.dp)
-                    .clip(GlassShapes.pill)
-                    .clickable(role = Role.Button, onClick = onAction)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(action ?: "•••", style = OrganiTheme.type.buttonSmall, color = if (action == null) c.text else c.link)
-            }
-        }
-    }
-}
-
 /** Runder Icon-Halter wie in der Transaktionsliste. */
 @Composable
 fun LeadingCircle(modifier: Modifier = Modifier, fill: Color = OrganiTheme.colors.leadingFill, size: Dp = 40.dp, content: @Composable () -> Unit) {

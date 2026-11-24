@@ -396,13 +396,6 @@ fun OrganiAppRoot() {
     }
 }
 
-/** Gemeinsame Innenabstände der Reiterseiten. */
-@Composable
-fun screenPadding(top: Dp = 8.dp): PaddingValues {
-    val status = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    return PaddingValues(start = 18.dp, end = 18.dp, top = top, bottom = ContentBottomPadding + status)
-}
-
 /** Unscharfes, getöntes Band hinter einer Systemleiste: feste Kante, kein Verlauf. */
 @Composable
 private fun SystemBarBlur(height: Dp, haze: HazeState, modifier: Modifier = Modifier) {

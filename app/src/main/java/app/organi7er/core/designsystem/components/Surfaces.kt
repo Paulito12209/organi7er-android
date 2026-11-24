@@ -50,9 +50,7 @@ object Ms {
     val homeFilled = R.drawable.ms_home_filled
     val calendarToday = R.drawable.ms_calendar_today
     val calendarTodayFilled = R.drawable.ms_calendar_today_filled
-    val event = R.drawable.ms_event
     val eventLight = R.drawable.ms_event_light
-    val taskAlt = R.drawable.ms_task_alt
     val taskAltLight = R.drawable.ms_task_alt_light
     val editNote = R.drawable.ms_edit_note
     val editNoteLight = R.drawable.ms_edit_note_light
@@ -61,7 +59,6 @@ object Ms {
     val description = R.drawable.ms_description
     val descriptionFilled = R.drawable.ms_description_filled
     val add = R.drawable.ms_add
-    val addLight = R.drawable.ms_add_light
     val search = R.drawable.ms_search
     val check = R.drawable.ms_check
     val schedule = R.drawable.ms_schedule
@@ -75,23 +72,17 @@ object Ms {
     val swapVert = R.drawable.ms_swap_vert
     val settings = R.drawable.ms_settings
     val lightMode = R.drawable.ms_light_mode
-    val darkMode = R.drawable.ms_dark_mode
     val close = R.drawable.ms_close
     val delete = R.drawable.ms_delete
     val expandMore = R.drawable.ms_expand_more
     val flag = R.drawable.ms_flag
     val sell = R.drawable.ms_sell
-    val today = R.drawable.ms_today
     val upload = R.drawable.ms_upload
     val download = R.drawable.ms_download
-    val undo = R.drawable.ms_undo
-    val editCalendar = R.drawable.ms_edit_calendar
     val alarm = R.drawable.ms_alarm
-    val star = R.drawable.ms_star
-    val starFilled = R.drawable.ms_star_filled
     val graphicEq = R.drawable.ms_graphic_eq
     val arrowUpward = R.drawable.ms_arrow_upward
-    val formatListBulleted = R.drawable.ms_format_list_bulleted
+    val subject = R.drawable.ms_subject
 }
 
 @Composable

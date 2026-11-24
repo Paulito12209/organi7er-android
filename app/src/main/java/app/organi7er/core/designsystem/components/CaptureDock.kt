@@ -204,7 +204,7 @@ fun rememberDictation(onResult: (String) -> Unit, onUnavailable: () -> Unit): ()
 
 /**
  * Hochgeklapptes Eingabeblatt über der Tastatur: oben Termin · Aufgabe · Notiz und ×, darunter der Text,
- * unten + (Details), Liste, Erinnerung, Fokus, rechts Diktat und Senden.
+ * unten + (alle Felder), Details, Erinnerung, Fokus, rechts Diktat und Senden.
  */
 @Composable
 fun QuickComposer(
@@ -262,12 +262,15 @@ private fun ComposerCard(
     val haptics = LocalHapticFeedback.current
     val askNotifications = rememberNotificationPermission()
     var field by remember { mutableStateOf(TextFieldValue("")) }
+    var details by remember { mutableStateOf("") }
+    var showDetails by remember { mutableStateOf(false) }
+    val detailsFocus = remember { FocusRequester() }
     var at by remember { mutableStateOf<LocalDateTime?>(null) }
     var focused by remember { mutableStateOf(false) }
     var picker by remember { mutableStateOf<String?>(null) }
     val focus = remember { FocusRequester() }
     val shape = RoundedCornerShape(32.dp)
-    val canSend = field.text.isNotBlank()
+    val canSend = field.text.isNotBlank() || details.isNotBlank()
 
     val dictate = rememberDictation(
         onResult = { spoken ->
@@ -286,7 +289,8 @@ private fun ComposerCard(
         }
     }
 
-    val entry = { QuickEntry(type, field.text.trim(), at, focused) }
+    // Titel und Details werden zu einem Text: erste Zeile Titel, Rest Details.
+    val entry = { QuickEntry(type, listOf(field.text.trim(), details.trim()).filter { it.isNotEmpty() }.joinToString("\n"), at, focused) }
 
     Column(
         Modifier
@@ -318,7 +322,7 @@ private fun ComposerCard(
         }
 
         // Text; erste Zeile wird der Titel, der Rest die Notiz.
-        Box(Modifier.fillMaxWidth().heightIn(min = 88.dp).padding(horizontal = 4.dp)) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 4.dp)) {
             if (field.text.isEmpty()) Text(type.placeholder(), style = OrganiTheme.type.headline.copy(fontSize = 20.sp), color = c.textSoft)
             BasicTextField(
                 value = field,
@@ -329,6 +333,22 @@ private fun ComposerCard(
                 modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics { contentDescription = type.placeholder() },
             )
         }
+
+        // Details-Text unter dem Titel, über das Text-Symbol eingeblendet.
+        AnimatedVisibility(showDetails) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                if (details.isEmpty()) Text("Details hinzufügen", style = OrganiTheme.type.body, color = c.textSoft)
+                BasicTextField(
+                    value = details,
+                    onValueChange = { details = it },
+                    textStyle = OrganiTheme.type.body.copy(color = c.textMuted),
+                    cursorBrush = SolidColor(c.brandBlue),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    modifier = Modifier.fillMaxWidth().focusRequester(detailsFocus).semantics { contentDescription = "Details" },
+                )
+            }
+        }
+        LaunchedEffect(showDetails) { if (showDetails) runCatching { detailsFocus.requestFocus() } }
 
         AnimatedVisibility(at != null) {
             val value = at
@@ -354,12 +374,24 @@ private fun ComposerCard(
             }
         }
 
-        // Werkzeugzeile: + · Liste · Erinnerung · Fokus … Diktat · Senden.
+        // Werkzeugzeile: + · Details · Erinnerung · Fokus … Diktat · Senden.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ToolIcon(Ms.add, "Mit Details öffnen") { if (canSend) onDetails(entry()) else onDetails(entry().copy(text = "")) }
-            ToolIcon(Ms.formatListBulleted, "Aufzählung einfügen") { field = withBullet(field) }
+            // + rund im Stil des Diktat-Knopfs: öffnet das volle Blatt mit allen Feldern.
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .clip(OrganiShapes.circle)
+                    .background(c.surface2)
+                    .clickable(role = Role.Button, onClickLabel = "Mit allen Feldern öffnen") { onDetails(entry()) }
+                    .semantics { contentDescription = "Mit allen Feldern öffnen" },
+                contentAlignment = Alignment.Center,
+            ) { MsIcon(Ms.add, null, tint = c.text, size = 22.dp) }
+            Spacer(Modifier.width(4.dp))
+            ToolIcon(Ms.subject, if (showDetails) "Details ausblenden" else "Details hinzufügen", tint = if (showDetails || details.isNotBlank()) c.brandBlue else c.text) {
+                showDetails = !showDetails || details.isNotBlank()
+            }
             ToolIcon(Ms.notifications, "Erinnerung", tint = if (at != null) c.brandBlue else c.text) { picker = "date" }
-            ToolIcon(if (focused) Ms.starFilled else Ms.star, if (focused) "Nicht mehr im Fokus" else "In den Fokus", tint = if (focused) Primitives.Yellow600 else c.text) { focused = !focused }
+            ToolIcon(Ms.flag, if (focused) "Nicht mehr fokussieren" else "Fokussieren", tint = if (focused) Primitives.Yellow600 else c.text) { focused = !focused }
             Spacer(Modifier.weight(1f))
             Box(
                 Modifier
@@ -433,13 +465,4 @@ private fun ToolIcon(icon: Int, description: String, tint: Color = OrganiTheme.c
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) { MsIcon(icon, null, tint = tint, size = 24.dp) }
-}
-
-/** Fügt „• “ am Anfang der aktuellen Zeile ein (in einer neuen Zeile, falls der Cursor mitten im Text steht). */
-internal fun withBullet(v: TextFieldValue): TextFieldValue {
-    val pos = v.selection.start.coerceIn(0, v.text.length)
-    val before = v.text.substring(0, pos)
-    val after = v.text.substring(pos)
-    val insert = if (before.isEmpty() || before.endsWith("\n")) "• " else "\n• "
-    return TextFieldValue(before + insert + after, TextRange(pos + insert.length))
 }

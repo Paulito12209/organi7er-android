@@ -457,5 +457,3 @@ fun NowLine(time: String, modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun VSpace(height: Dp) = Spacer(Modifier.height(height))
