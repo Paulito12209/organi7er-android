@@ -80,7 +80,7 @@ private fun DrawScope.fluted(drawImage: DrawScope.() -> Unit) {
 }
 
 @Composable
-fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: () -> Unit, modifier: Modifier = Modifier, startInset: androidx.compose.ui.unit.Dp = 0.dp) {
     val c = OrganiTheme.colors
     val context = androidx.compose.ui.platform.LocalContext.current
     val painter: Painter? = imagePath?.let { path ->
@@ -105,7 +105,7 @@ fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: 
                     drawRect(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f)))
                 },
         )
-        Row(Modifier.statusBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.statusBarsPadding().padding(start = startInset).padding(horizontal = 12.dp, vertical = 6.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             GlassCircleButton(Ms.close, "Menü schließen", onBack)
             Text(
                 "Organi7er",
@@ -117,7 +117,7 @@ fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: 
             Box(Modifier.size(48.dp))
         }
         Column(
-            Modifier.align(Alignment.BottomCenter).padding(bottom = 56.dp),
+            Modifier.align(Alignment.BottomCenter).padding(start = startInset, bottom = 56.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(Modifier.size(124.dp).clickable(role = Role.Button, onClickLabel = "Profil bearbeiten", onClick = onEdit)) {

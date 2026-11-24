@@ -6,6 +6,7 @@ import app.organi7er.core.model.NotificationEntry
 import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
 import app.organi7er.feature.overview.OverviewBuilder
+import app.organi7er.feature.overview.normalizeLink
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -21,7 +22,7 @@ class OverviewBuilderTest {
 
     private val events = listOf(
         Event(id = 1, title = "Laufen", start = now.minusHours(1), end = now.minusMinutes(20)),
-        Event(id = 2, title = "Sprint-Review", start = now.plusMinutes(25), end = now.plusMinutes(70), focused = true),
+        Event(id = 2, title = "Sprint-Review", start = now.plusMinutes(25), end = now.plusMinutes(70), focused = true, link = "meet.google.com/abc"),
         Event(id = 3, title = "Zahnarzt", start = now.plusDays(3).withHour(14), end = now.plusDays(3).withHour(15)),
     )
     private val tasks = listOf(
@@ -44,6 +45,21 @@ class OverviewBuilderTest {
         assertEquals("Als Nächstes · 10:00", mon.nextLabel)
         assertEquals("Sprint-Review", mon.nextTitle)
         assertEquals(1, s.days[3].events)
+    }
+
+    @Test
+    fun `naechster Termin traegt seinen Link fuer den Pfeil`() {
+        val mon = build().days.first()
+        assertEquals(2L, mon.nextEventId)
+        assertEquals("meet.google.com/abc", mon.nextLink)
+        assertEquals("", build().days[3].nextLink) // Zahnarzt ohne Link
+    }
+
+    @Test
+    fun `Link ohne Schema bekommt https`() {
+        assertEquals("https://meet.google.com/abc", normalizeLink(" meet.google.com/abc "))
+        assertEquals("https://zoom.us/j/1", normalizeLink("https://zoom.us/j/1"))
+        assertEquals("tel:+491234", normalizeLink("tel:+491234"))
     }
 
     @Test

@@ -59,6 +59,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -455,19 +456,31 @@ private fun BigTileContent(d: DayTileUi, onNext: (Long) -> Unit, modifier: Modif
                 )
             }
             val id = d.nextEventId
+            val uri = LocalUriHandler.current
             if (id != null) {
+                // Mit Link öffnet der Pfeil direkt das Meeting, sonst den Termin.
+                val hasLink = d.nextLink.isNotBlank()
+                val label = if (hasLink) "Link öffnen" else "Termin öffnen"
                 Box(
                     Modifier
                         .padding(start = 10.dp)
                         .size(40.dp)
                         .clip(OrganiShapes.circle)
                         .background(Color.White)
-                        .clickable(role = Role.Button, onClickLabel = "Termin öffnen") { onNext(id) },
+                        .clickable(role = Role.Button, onClickLabel = label) {
+                            if (hasLink) runCatching { uri.openUri(normalizeLink(d.nextLink)) }.onFailure { onNext(id) } else onNext(id)
+                        },
                     contentAlignment = Alignment.Center,
-                ) { MsIcon(Ms.arrowOutward, "Termin öffnen", tint = Primitives.Navy900, size = 18.dp) }
+                ) { MsIcon(Ms.arrowOutward, label, tint = Primitives.Navy900, size = 18.dp) }
             }
         }
     }
+}
+
+/** „meet.google.com/x“ → „https://meet.google.com/x“. */
+internal fun normalizeLink(raw: String): String {
+    val t = raw.trim()
+    return if (Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:").containsMatchIn(t)) t else "https://$t"
 }
 
 @Composable

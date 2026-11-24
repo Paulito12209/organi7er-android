@@ -22,6 +22,7 @@ import app.organi7er.core.data.SystemTimeProvider
 import app.organi7er.core.data.TaskRepository
 import app.organi7er.core.data.TimeProvider
 import app.organi7er.core.data.db.MIGRATION_1_2
+import app.organi7er.core.data.db.MIGRATION_2_3
 import app.organi7er.core.data.db.OrganiDatabase
 import dagger.Binds
 import dagger.Module
@@ -40,7 +41,7 @@ object DataModule {
     @Provides
     @Singleton
     fun database(@ApplicationContext context: Context): OrganiDatabase =
-        Room.databaseBuilder(context, OrganiDatabase::class.java, "organi7er.db").addMigrations(MIGRATION_1_2).build()
+        Room.databaseBuilder(context, OrganiDatabase::class.java, "organi7er.db").addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
 
     @Provides fun calendarDao(db: OrganiDatabase) = db.calendarDao()
 

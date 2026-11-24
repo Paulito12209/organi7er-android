@@ -66,7 +66,7 @@ class SampleData @Inject constructor(
         val friday = today.plusDays(4)
         val events = listOf(
             Event(title = "Laufen", start = now.minusHours(3), end = now.minusHours(3).plusMinutes(40), location = "Stadtpark", calendarId = health),
-            Event(title = "Sprint-Review Organi7er", start = soon, end = soon.plusMinutes(45), location = "Google Meet", calendarId = work, reminderMinutes = 15),
+            Event(title = "Sprint-Review Organi7er", start = soon, end = soon.plusMinutes(45), location = "Google Meet", calendarId = work, reminderMinutes = 15, link = "https://meet.google.com/"),
             Event(title = "Mittag mit Lena", start = soon.plusHours(3), end = soon.plusHours(4), location = "Café Lindner", calendarId = private),
             Event(
                 title = "Zahnarzt",
@@ -164,6 +164,7 @@ data class BackupEvent(
     val previousStart: String?,
     val createdAt: Long,
     val updatedAt: Long,
+    val link: String = "",
 )
 
 @Serializable
@@ -208,7 +209,7 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
             events = db.eventDao().getAll().map {
                 BackupEvent(
                     it.id, it.title, it.start?.toString(), it.end?.toString(), it.allDay, it.location, it.calendarId, it.reminderMinutes,
-                    it.note, it.status.name, it.subStatus?.name, it.previousStart?.toString(), it.createdAt.toEpochMilli(), it.updatedAt.toEpochMilli(),
+                    it.note, it.status.name, it.subStatus?.name, it.previousStart?.toString(), it.createdAt.toEpochMilli(), it.updatedAt.toEpochMilli(), it.link,
                 )
             },
             tasks = db.taskDao().getAll().map {
@@ -241,7 +242,7 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
                         Event(
                             it.id, it.title, dt(it.start), dt(it.end), it.allDay, it.location, it.calendarId, it.reminderMinutes, it.note,
                             Status.valueOf(it.status), it.subStatus?.let(EventSubStatus::valueOf), dt(it.previousStart),
-                            createdAt = Instant.ofEpochMilli(it.createdAt), updatedAt = Instant.ofEpochMilli(it.updatedAt),
+                            createdAt = Instant.ofEpochMilli(it.createdAt), updatedAt = Instant.ofEpochMilli(it.updatedAt), link = it.link,
                         )
                     },
                 )

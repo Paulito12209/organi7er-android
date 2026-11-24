@@ -94,7 +94,7 @@ fun FusedTabBar(
     }
 }
 
-/** Abstand der Plus-Mitte vom rechten Bildschirmrand (für „Schnell erfassen“). */
+/** Abstand der Plus-Mitte vom rechten Bildschirmrand (für „Neuer Eintrag“). */
 fun plusCenterFromEnd(screenWidth: Dp, count: Int): Dp {
     val row = capsuleWidth(count) + PlusGap + PlusSize
     return (screenWidth - row) / 2 + PlusSize / 2
@@ -184,11 +184,11 @@ private fun AddButton(open: Boolean, onClick: () -> Unit, hazeState: HazeState?)
         Modifier
             .size(PlusSize)
             .liquidGlass(OrganiShapes.circle, hazeState)
-            .clickable(role = Role.Button, onClickLabel = if (open) "Schließen" else "Schnell erfassen") {
+            .clickable(role = Role.Button, onClickLabel = if (open) "Schließen" else "Neuer Eintrag") {
                 haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.ContextClick)
                 onClick()
             }
-            .semantics { contentDescription = if (open) "Schnell erfassen schließen" else "Schnell erfassen" },
+            .semantics { contentDescription = if (open) "Neuer Eintrag schließen" else "Neuer Eintrag" },
         contentAlignment = Alignment.Center,
     ) {
         MsIcon(Ms.add, null, Modifier.rotate(rotation), tint = c.text, size = 26.dp)

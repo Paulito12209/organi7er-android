@@ -1,6 +1,7 @@
 package app.organi7er.core.model
 
 import androidx.compose.runtime.Immutable
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -58,6 +59,8 @@ data class Event(
     val openedAt: Instant? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now(),
+    /** Link zum Termin, z. B. Remote-Meeting (Google Meet, Zoom); leer = keiner. */
+    @ColumnInfo(defaultValue = "") val link: String = "",
 ) {
     /** Ende für Berechnungen: ganztägig = Tagesende, sonst Ende oder Start + 1 h. */
     val effectiveEnd: LocalDateTime?

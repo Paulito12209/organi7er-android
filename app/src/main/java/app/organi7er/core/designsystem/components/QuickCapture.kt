@@ -38,6 +38,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.drawText
 import dev.chrisbanes.haze.blur.hazeBlur
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
@@ -48,7 +52,7 @@ private val ArcSize = 264.dp
 private val ArcRadius = 160.dp
 
 /**
- * „Schnell erfassen“: Viertelkreis aus Glas über dem Plus-Knopf, Aufgabe · Notiz · Termin auf einem Bogen.
+ * „Neuer Eintrag“: Bogen über dem Plus-Knopf (Hintergrund unscharf), Aufgabe · Notiz · Termin auf einem Bogen.
  * [plusEnd]/[plusBottom] = Abstand der Plus-Mitte vom rechten bzw. unteren Rand.
  */
 @Composable
@@ -94,14 +98,8 @@ fun QuickCaptureOverlay(
                 Modifier
                     .size(ArcSize),
             ) {
-                Text(
-                    "Schnell erfassen",
-                    Modifier
-                        .offset(x = 38.dp, y = 74.dp)
-                        .rotate(-45f),
-                    style = OrganiTheme.type.label,
-                    color = c.textMuted,
-                )
+                // Beschriftung folgt dem Bogen um den Plus-Knopf, außerhalb der drei Knöpfe.
+                ArcLabel("NEUER EINTRAG", c.textMuted, Modifier.size(ArcSize))
                 // Plus-Mitte liegt in der rechten unteren Ecke (29 dp eingerückt).
                 val items = listOf(EntryType.Task to 168.0, EntryType.Note to 129.0, EntryType.Event to 92.0)
                 items.forEachIndexed { i, (type, angle) ->
@@ -140,6 +138,36 @@ fun QuickCaptureOverlay(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Text auf einem Kreisbogen um die Plus-Mitte (rechts unten, 32 dp eingerückt), Mitte bei 130°,
+ * von unten links nach oben rechts lesbar.
+ */
+@Composable
+private fun ArcLabel(text: String, color: Color, modifier: Modifier) {
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val style = OrganiTheme.type.overline.copy(color = color, fontSize = 13.sp, letterSpacing = 0.em)
+    androidx.compose.foundation.Canvas(modifier.semantics { contentDescription = text }) {
+        val cx = size.width - 32.dp.toPx()
+        val cy = size.height - 32.dp.toPx()
+        val radius = 206.dp.toPx()
+        val gap = 3.dp.toPx()
+        val glyphs = text.map { measurer.measure(it.toString(), style) }
+        val total = glyphs.sumOf { it.size.width.toDouble() + gap } - gap
+        // Winkel in Bogenmaß; Text läuft von großem zu kleinem Winkel (im Uhrzeigersinn).
+        var angle = Math.toRadians(130.0) + total / 2 / radius
+        glyphs.forEach { g ->
+            val half = (g.size.width + gap) / 2.0 / radius
+            angle -= half
+            val x = cx + radius * kotlin.math.cos(angle).toFloat()
+            val y = cy - radius * kotlin.math.sin(angle).toFloat()
+            rotate(degrees = (90.0 - Math.toDegrees(angle)).toFloat(), pivot = androidx.compose.ui.geometry.Offset(x, y)) {
+                drawText(g, topLeft = androidx.compose.ui.geometry.Offset(x - g.size.width / 2f, y - g.size.height / 2f))
+            }
+            angle -= half
         }
     }
 }

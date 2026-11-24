@@ -84,6 +84,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
     var endTime by remember { mutableStateOf(defaultStart.toLocalTime().plusHours(1)) }
     var allDay by remember { mutableStateOf(false) }
     var location by remember { mutableStateOf("") }
+    var link by remember { mutableStateOf("") }
     var calendarId by remember { mutableLongStateOf(0L) }
     var reminder by remember { mutableStateOf<Int?>(null) }
     var subStatus by remember { mutableStateOf<EventSubStatus?>(null) }
@@ -106,6 +107,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
                 }
                 allDay = e.allDay
                 location = e.location
+                link = e.link
                 calendarId = e.calendarId
                 reminder = e.reminderMinutes ?: if (planning) settings.reminderLeadMinutes else null
                 subStatus = e.subStatus
@@ -165,6 +167,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
         }
 
         FormField(location, { location = it }, "Ort", icon = Ms.locationOn)
+        FormField(link, { link = it }, "Link, z. B. Meeting-Link", icon = Ms.arrowOutward)
 
         if (calendars.isNotEmpty()) {
             FieldLabel("Kalender")
@@ -208,6 +211,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
                     },
                     allDay = allDay && !draft,
                     location = location.trim(),
+                    link = link.trim(),
                     calendarId = calendarId,
                     reminderMinutes = if (draft) null else reminder,
                     note = note.trim(),

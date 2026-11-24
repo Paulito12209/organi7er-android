@@ -39,6 +39,8 @@ data class DayTileUi(
     val nextTitle: String,
     /** Termin hinter „Als Nächstes“ (für den Pfeil-Knopf). */
     val nextEventId: Long? = null,
+    /** Link des nächsten Termins (Remote-Meeting); leer = keiner. */
+    val nextLink: String = "",
     val a11y: String,
 )
 
@@ -137,6 +139,7 @@ object OverviewBuilder {
                 nextLabel = label,
                 nextTitle = title,
                 nextEventId = next?.id,
+                nextLink = next?.link.orEmpty(),
                 a11y = "${Dates.longDay(day)}: ${dayEvents.size} Termine, ${dayTasks.size} Aufgaben" +
                     if (title.isNotBlank()) ". $label $title" else "",
             )

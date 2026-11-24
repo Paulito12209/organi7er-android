@@ -129,7 +129,12 @@ class SettingsViewModel @Inject constructor(
 private val LeadOptions = listOf(5, 10, 15, 30, 60)
 
 @Composable
-fun SettingsScreen(onBack: (() -> Unit)? = null, vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    onBack: (() -> Unit)? = null,
+    /** Links verdeckter Streifen (Menü hinter dem Inhalt): Hintergrundbild läuft darunter, Inhalte beginnen danach. */
+    startInset: androidx.compose.ui.unit.Dp = 0.dp,
+    vm: SettingsViewModel = hiltViewModel(),
+) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val calendars by vm.calendars.collectAsStateWithLifecycle()
     val actions = LocalAppActions.current
@@ -155,10 +160,11 @@ fun SettingsScreen(onBack: (() -> Unit)? = null, vm: SettingsViewModel = hiltVie
             .navigationBarsPadding()
             .padding(bottom = 32.dp),
     ) {
-        ProfileHeader(s.profileName, s.profileImage, onBack ?: actions.back, { dialog = "profile" })
+        ProfileHeader(s.profileName, s.profileImage, onBack ?: actions.back, { dialog = "profile" }, startInset = startInset)
         // Einstellungen liegen auf einer Fläche, die oben links abgerundet über das Profilbild ragt.
         Column(
             Modifier
+                .padding(start = startInset)
                 .offset(y = (-32).dp)
                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp))
                 .background(c.bg)

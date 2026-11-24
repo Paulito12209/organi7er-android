@@ -269,17 +269,19 @@ fun OrganiAppRoot() {
     CompositionLocalProvider(LocalAppActions provides actions, LocalShell provides shell) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val screenWidth = maxWidth
+            val travel = with(LocalDensity.current) { (screenWidth - SettingsPeek).toPx() }
+            // Menü liegt hinten; der Inhalt rutscht darüber nach links weg (nicht verkleinert, nicht abgedunkelt).
+            SettingsPanel(settings, closeSettingsPanel)
             Box(
                 Modifier
                     .fillMaxSize()
                     .graphicsLayer {
                         val p = settings.value
-                        scaleX = 1f - 0.06f * p
-                        scaleY = 1f - 0.06f * p
-                        transformOrigin = TransformOrigin(0f, 0.5f)
-                        // Hauptinhalt wird beim Öffnen des Menüs zur abgerundeten Karte.
-                        shape = RoundedCornerShape((36f * p).coerceAtLeast(0f).dp)
+                        translationX = -p * travel
+                        // Rechte Kante des Inhalts oben und unten abgerundet, mit Schatten aufs Menü.
+                        shape = RoundedCornerShape(topEnd = 40.dp, bottomEnd = 40.dp)
                         clip = p > 0f
+                        shadowElevation = 24.dp.toPx() * p
                     },
             ) {
                 Box(
@@ -368,12 +370,21 @@ fun OrganiAppRoot() {
                         },
                     ) { Text(data.visuals.message, style = OrganiTheme.type.body) }
                 }
-                // Abdunkeln der Übersicht hinter dem Einstellungs-Panel.
-                if (settings.value > 0f) {
-                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = settings.value }.background(Color.Black.copy(alpha = 0.35f)))
+                // Offenes Menü: Inhalt nicht bedienbar; Antippen schließt, Ziehen nach rechts auch.
+                if (settings.value > 0f || settings.isRunning) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .draggable(
+                                rememberDraggableState { dx -> scope.launch { settings.snapTo((settings.value - dx / travel).coerceIn(0f, 1f)) } },
+                                Orientation.Horizontal,
+                                onDragStopped = { v -> if (settings.value < 0.7f || v > 1200f) closeSettingsPanel() else openSettingsPanel() },
+                            )
+                            .clickable(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClickLabel = "Menü schließen", onClick = closeSettingsPanel)
+                            .semantics { contentDescription = "Menü schließen" },
+                    )
                 }
             }
-            SettingsPanel(settings, screenWidth, openSettingsPanel, closeSettingsPanel)
         }
 
         when (val r = request) {
@@ -415,40 +426,14 @@ private fun SystemBarBlur(height: Dp, haze: HazeState, modifier: Modifier = Modi
 private val SettingsPeek = 64.dp
 
 /**
- * Einstellungen als Panel: schiebt sich von rechts herein und lässt links [SettingsPeek] der Übersicht frei.
- * Antippen des Streifens oder Wischen nach rechts schließt es.
+ * Menü (Profil + Einstellungen) liegt hinter dem Inhalt. Sichtbar ist es rechts von [SettingsPeek],
+ * dem Streifen, auf dem der weggeschobene Inhalt liegen bleibt.
  */
 @Composable
-private fun SettingsPanel(progress: Animatable<Float, AnimationVector1D>, screenWidth: Dp, open: () -> Unit, close: () -> Unit) {
+private fun SettingsPanel(progress: Animatable<Float, AnimationVector1D>, close: () -> Unit) {
     if (progress.value <= 0f && !progress.isRunning) return
-    val density = LocalDensity.current
-    val travel = with(density) { (screenWidth - SettingsPeek).toPx() }
-    val scope = rememberCoroutineScope()
     BackHandler(progress.targetValue > 0f, close)
-    val shape = RoundedCornerShape(topStart = 40.dp, bottomStart = 40.dp)
-    Box(Modifier.fillMaxSize()) {
-        Box(
-            Modifier
-                .fillMaxHeight()
-                .width(SettingsPeek)
-                .clickable(onClickLabel = "Zur Übersicht", onClick = close)
-                .semantics { contentDescription = "Einstellungen schließen" },
-        )
-        Box(
-            Modifier
-                .padding(start = SettingsPeek)
-                .fillMaxSize()
-                .graphicsLayer { translationX = (1f - progress.value) * travel }
-                .draggable(
-                    rememberDraggableState { dx -> scope.launch { progress.snapTo((progress.value - dx / travel).coerceIn(0f, 1f)) } },
-                    Orientation.Horizontal,
-                    onDragStopped = { v -> if (progress.value < 0.7f || v > 1200f) close() else open() },
-                )
-                .floatShadow(shape, OrganiTheme.colors.shadowFloat)
-                .clip(shape)
-                .background(OrganiTheme.colors.bg),
-        ) {
-            SettingsScreen(onBack = close)
-        }
+    Box(Modifier.fillMaxSize().background(OrganiTheme.colors.bg)) {
+        SettingsScreen(onBack = close, startInset = SettingsPeek)
     }
 }
