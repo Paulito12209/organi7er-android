@@ -40,8 +40,11 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 
+/** So lange (ms) steht „Organi7er“ vollständig da (Aufblitzen + Ruhe), bevor es weggeradiert wird. */
+private const val HoldMs = 700L
+
 /** Wort, das nach der „7“ eingetippt und danach silbern weggeradiert wird. */
-private const val SplashWord = "Organiser"
+private const val SplashWord = "Organi7er"
 
 /** Größe der großen „7“ beim Start (Zeichenfläche 108 × 108 wie das Icon). */
 private val MarkSize = 200.dp
@@ -69,24 +72,24 @@ private val MarkDots = listOf(
 private val MarkNecks = listOf(0 to 1, 3 to 4, 5 to 6)
 
 // Zeitachse in ms (Summe unter 4 s).
-private const val PulseCycle = 950L
-private const val PulseEnd = 2 * PulseCycle // 1,9 s: zwei langsame Atemzüge
+private const val PulseCycle = 750L
+private const val PulseEnd = 2 * PulseCycle // 1,5 s: zwei ruhige Atemzüge
 private const val TypeMsPerLetter = 35L
 private const val EraseMsPerLetter = 20L
 private const val FadeMs = 220L
 private val SplashTotalMs: Long =
-    PulseEnd + 800 + SplashWord.length * TypeMsPerLetter + 100 + 260 +
+    PulseEnd + 800 + SplashWord.length * TypeMsPerLetter + 100 + HoldMs +
         SplashWord.length * EraseMsPerLetter + 40 + FadeMs // ≈ 3,8 s
 
 private fun seg(t: Long, from: Long, dur: Long): Float = ((t - from).toFloat() / dur).coerceIn(0f, 1f)
 
 /**
  * Ladebildschirm, insgesamt unter 4 Sekunden:
- * 0 – 1,9 s   die „7“ pulsiert in der Mitte (langsam, ruhig),
- * 1,9 – 2,7 s sie wandert nach oben und dann nach links an die gemessene Position des
+ * 0 – 1,5 s   die „7“ pulsiert in der Mitte (langsam, ruhig),
+ * 1,5 – 2,3 s sie wandert nach oben und dann nach links an die gemessene Position des
  *             Kopfzeilen-Logos und schrumpft; dort bekommt sie die abgerundete Kachel,
  *             die Kugeln werden gegenfarbig,
- * danach      „Organiser“ wird getippt, silbern aufgeblitzt und weggeradiert,
+ * danach      „Organi7er“ wird getippt, silbern aufgeblitzt und weggeradiert,
  * zuletzt     blendet der Bildschirm aus; die Kachel liegt deckungsgleich auf dem Logo.
  *
  * Hell: silbernes Glas-Gradient, schwarze Kugeln, dann schwarze Kachel mit weißen Kugeln.
@@ -119,7 +122,7 @@ fun OrganiSplash(dark: Boolean, onFinished: () -> Unit) {
     val typeStart = PulseEnd + 800
     val typeEnd = typeStart + n * TypeMsPerLetter
     val flashStart = typeEnd + 100
-    val eraseStart = flashStart + 260
+    val eraseStart = flashStart + HoldMs
     val eraseEnd = eraseStart + n * EraseMsPerLetter
     val typed = when {
         t < typeStart -> 0
@@ -129,7 +132,7 @@ fun OrganiSplash(dark: Boolean, onFinished: () -> Unit) {
     val flash = when {
         t < flashStart -> 0f
         t < flashStart + 120 -> seg(t, flashStart, 120)
-        t < eraseStart -> 1f - seg(t, flashStart + 120, 140)
+        t < flashStart + 260 -> 1f - seg(t, flashStart + 120, 140)
         else -> 0f
     }
     val fade = 1f - seg(t, eraseEnd + 40, FadeMs)
