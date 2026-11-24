@@ -78,8 +78,9 @@ class SampleData @Inject constructor(
             )
         }
         birthday("Piros Geburtstag", 11, 20, R.raw.photo_piro, "photo_piro.jpg")
-        birthday("Günters Geburtstag", 12, 6, R.raw.photo_guenter, "photo_guenter.jpg", focus = true)
+        // „Im Fokus“ zeigt das zuletzt Angelegte zuerst: Paul vor Günter anlegen, damit Günter vorne steht.
         birthday("Pauls Geburtstag", 12, 13, R.raw.photo_paul, "photo_paul.jpg", focus = true)
+        birthday("Günters Geburtstag", 12, 6, R.raw.photo_guenter, "photo_guenter.jpg", focus = true)
 
         // Einzige Notiz: ein Entwurf als Augenzwinkern.
         db.noteDao().insert(

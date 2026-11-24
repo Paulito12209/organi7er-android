@@ -53,7 +53,7 @@ data class WeekUi(val start: LocalDate, val number: Int, val isCurrent: Boolean)
 
 /** Kurzer Eintrag für „Im Fokus“ und den Verlauf. */
 @Immutable
-data class EntryUi(val type: EntryType, val id: Long, val title: String, val meta: String, val whenLabel: String = "")
+data class EntryUi(val type: EntryType, val id: Long, val title: String, val meta: String, val whenLabel: String = "", val image: String? = null)
 
 @Immutable
 data class OverviewState(
@@ -160,7 +160,7 @@ object OverviewBuilder {
 
         val nowInstant = now.atZone(java.time.ZoneId.systemDefault()).toInstant()
         val all = buildList {
-            events.forEach { e -> add(Item(EntryType.Event, e.id, e.title, eventMeta(e, today), e.focused, e.openedAt, e.createdAt)) }
+            events.forEach { e -> add(Item(EntryType.Event, e.id, e.title, eventMeta(e, today), e.focused, e.openedAt, e.createdAt, e.imagePath)) }
             tasks.forEach { t -> add(Item(EntryType.Task, t.id, t.title, taskMeta(t, today), t.focused && t.status != Status.DONE, t.openedAt, t.createdAt)) }
             notes.forEach { n -> add(Item(EntryType.Note, n.note.id, n.note.title.ifBlank { n.note.body.lineSequence().firstOrNull().orEmpty().take(40).ifBlank { "Ohne Titel" } }, if (n.note.status == Status.DRAFT) "Notiz · Entwurf" else "Notiz", n.note.focused, n.note.openedAt, n.note.createdAt)) }
         }
@@ -181,8 +181,8 @@ object OverviewBuilder {
         )
     }
 
-    private data class Item(val type: EntryType, val id: Long, val title: String, val meta: String, val focused: Boolean, val opened: Instant?, val created: Instant) {
-        fun ui(whenLabel: String) = EntryUi(type, id, title, meta, whenLabel)
+    private data class Item(val type: EntryType, val id: Long, val title: String, val meta: String, val focused: Boolean, val opened: Instant?, val created: Instant, val image: String? = null) {
+        fun ui(whenLabel: String) = EntryUi(type, id, title, meta, whenLabel, image)
     }
 
     private fun eventMeta(e: Event, today: LocalDate): String {

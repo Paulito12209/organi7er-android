@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -730,27 +731,43 @@ private fun NotificationRow(unread: Int, onClick: () -> Unit, modifier: Modifier
 private fun FocusCard(e: EntryUi, onClick: () -> Unit) {
     val c = OrganiTheme.colors
     val shape = RoundedCornerShape(22.dp)
-    Column(
+    val photo = e.image
+    // Mit Bild: wie die aktive Tageskachel – Foto unter weißem Halo, Schrift weiß.
+    val ink = if (photo != null) Color.White else c.text
+    val soft = if (photo != null) Color.White.copy(alpha = 0.8f) else c.textSoft
+    Box(
         Modifier
-            .width(148.dp)
-            .heightIn(min = 112.dp)
-            .glass(shape)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
+            // Mit Bild: festes Querformat 16:9 bei gleicher Höhe wie die übrigen Kacheln (112 dp).
+            .then(if (photo != null) Modifier.width(199.dp).aspectRatio(16f / 9f) else Modifier.width(148.dp).heightIn(min = 112.dp))
+            .then(if (photo != null) Modifier.floatShadow(shape, c.shadowFloat).clip(shape) else Modifier.glass(shape))
+            .clickable(onClick = onClick),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            MsIcon(e.type.icon, null, tint = c.textSoft, size = 13.dp)
-            Text(e.type.shortLabel, style = OrganiTheme.type.tileCaption, color = c.textSoft)
+        if (photo != null) {
+            // Bild an der Oberkante ausgerichtet, nicht verzerrt: volle Breite, unten abgeschnitten.
+            coil3.compose.AsyncImage(
+                model = java.io.File(photo),
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
+                alignment = Alignment.TopCenter,
+                modifier = Modifier.matchParentSize(),
+            )
+            Box(Modifier.matchParentSize().photoHalo(shape))
         }
-        Text(
-            e.title,
-            Modifier.padding(top = 6.dp),
-            style = OrganiTheme.type.rowTitle.copy(fontSize = 14.5.sp, lineHeight = 18.sp),
-            color = c.text,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.weight(1f))
-        Text(e.meta.substringAfter(" · ", ""), style = OrganiTheme.type.tileCaption, color = c.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.matchParentSize().padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                MsIcon(e.type.icon, null, tint = soft, size = 13.dp)
+                Text(e.type.shortLabel, style = OrganiTheme.type.tileCaption, color = soft)
+            }
+            Text(
+                e.title,
+                Modifier.padding(top = 6.dp),
+                style = OrganiTheme.type.rowTitle.copy(fontSize = 14.5.sp, lineHeight = 18.sp),
+                color = ink,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(e.meta.substringAfter(" · ", ""), style = OrganiTheme.type.tileCaption, color = soft, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
