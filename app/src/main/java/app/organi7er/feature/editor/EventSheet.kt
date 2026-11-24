@@ -77,7 +77,8 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
 
     var original by remember { mutableStateOf<Event?>(null) }
     var loaded by remember { mutableStateOf(editId == null) }
-    var title by remember { mutableStateOf("") }
+    val prefill = request as? EditorRequest.NewEvent
+    var title by remember { mutableStateOf(prefill?.title.orEmpty()) }
     var draft by remember { mutableStateOf(false) }
     var date by remember { mutableStateOf(defaultStart.toLocalDate()) }
     var startTime by remember { mutableStateOf(defaultStart.toLocalTime()) }
@@ -88,8 +89,8 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
     var calendarId by remember { mutableLongStateOf(0L) }
     var reminder by remember { mutableStateOf<Int?>(null) }
     var subStatus by remember { mutableStateOf<EventSubStatus?>(null) }
-    var note by remember { mutableStateOf("") }
-    var focused by remember { mutableStateOf(false) }
+    var note by remember { mutableStateOf(prefill?.note.orEmpty()) }
+    var focused by remember { mutableStateOf(prefill?.focused == true) }
     var picker by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
 

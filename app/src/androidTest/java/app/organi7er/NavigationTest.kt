@@ -22,24 +22,31 @@ class NavigationTest {
 
     @Before fun init() = hilt.inject()
 
-    @Test
-    fun reiterUndEinstellungenSindErreichbar() {
-        compose.onNodeWithContentDescription("Termine").performClick()
-        compose.onAllNodesWithText("Termine").onFirst().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Aufgaben").performClick()
-        compose.onAllNodesWithText("Aufgaben").onFirst().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Notizen").performClick()
-        compose.onAllNodesWithText("Notizen").onFirst().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Übersicht").performClick()
-        compose.onNodeWithContentDescription("Einstellungen").performClick()
-        compose.onAllNodesWithText("Einstellungen").onFirst().assertIsDisplayed()
-        compose.onNodeWithContentDescription("Zurück").performClick()
-        compose.onAllNodesWithText("Erfassen".uppercase()).onFirst().assertIsDisplayed()
+    /** Edge-Picker: erst antippen (klappt auf), dann das Ziel wählen. Die Uhr steht still, damit er nicht vorher zuklappt. */
+    private fun pick(label: String) {
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithContentDescription("Navigation").performClick()
+        compose.mainClock.advanceTimeBy(600)
+        compose.onNodeWithContentDescription(label).performClick()
+        compose.mainClock.advanceTimeBy(600)
+        compose.mainClock.autoAdvance = true
     }
 
     @Test
-    fun erfassenOeffnetDasPassendeSheet() {
-        compose.onAllNodesWithText("Neue Aufgabe").onFirst().performClick()
-        compose.onAllNodesWithText("Was ist zu tun?").onFirst().assertIsDisplayed()
+    fun reiterSindUeberDenEdgePickerErreichbar() {
+        pick("Termine")
+        compose.onAllNodesWithText("Termine").onFirst().assertIsDisplayed()
+        pick("Aufgaben")
+        compose.onAllNodesWithText("Aufgaben").onFirst().assertIsDisplayed()
+        pick("Notizen")
+        compose.onAllNodesWithText("Notizen").onFirst().assertIsDisplayed()
+    }
+
+    @Test
+    fun dockOeffnetDenComposerMitTypWahl() {
+        compose.onAllNodesWithText("Neue Notiz").onFirst().performClick()
+        // Termin · Aufgabe · Notiz stehen im Composer zur Wahl.
+        compose.onNodeWithContentDescription("Aufgabe").performClick()
+        compose.onAllNodesWithText("Neue Aufgabe").onFirst().assertIsDisplayed()
     }
 }

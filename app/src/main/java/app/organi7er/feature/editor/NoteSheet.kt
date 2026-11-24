@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -59,13 +60,13 @@ private sealed interface PendingImage {
 
 /** Neue Notiz: Titel, Text auf Papier, Fotos, optionale Erinnerung. */
 @Composable
-fun NoteSheet(vm: EditorViewModel, onDismiss: () -> Unit) {
+fun NoteSheet(request: EditorRequest.NewNote, vm: EditorViewModel, onDismiss: () -> Unit) {
     val c = OrganiTheme.colors
     val askNotifications = rememberNotificationPermission()
-    var title by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(request.title) }
+    var body by remember { mutableStateOf(request.body) }
     var draft by remember { mutableStateOf(false) }
-    var focused by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(request.focused) }
     var reminder by remember { mutableStateOf<LocalDateTime?>(null) }
     var picker by remember { mutableStateOf<String?>(null) }
     val images = remember { mutableStateListOf<PendingImage>() }
@@ -82,6 +83,15 @@ fun NoteSheet(vm: EditorViewModel, onDismiss: () -> Unit) {
     val dismiss = {
         images.filterIsInstance<PendingImage.FromFile>().forEach { vm.discardFile(it.path) }
         onDismiss()
+    }
+
+    // Aus dem Dock: gleich die Kamera öffnen.
+    LaunchedEffect(Unit) {
+        if (request.startCamera) {
+            val (file, uri) = vm.newCameraTarget()
+            cameraTarget = file
+            camera.launch(uri)
+        }
     }
 
     OrganiSheet(dismiss) {

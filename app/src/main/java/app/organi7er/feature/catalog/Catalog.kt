@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -31,7 +32,8 @@ import app.organi7er.core.designsystem.components.DraftRow
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.EventRow
 import app.organi7er.core.designsystem.components.FilterTile
-import app.organi7er.core.designsystem.components.FusedTabBar
+import app.organi7er.core.designsystem.components.EdgePicker
+import app.organi7er.core.designsystem.components.EdgeTab
 import app.organi7er.core.designsystem.components.GlassCard
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.NextEventCard
@@ -47,7 +49,6 @@ import app.organi7er.core.designsystem.components.SegmentedList
 import app.organi7er.core.designsystem.components.SoftIconButton
 import app.organi7er.core.designsystem.components.SoftSwitch
 import app.organi7er.core.designsystem.components.StatusTag
-import app.organi7er.core.designsystem.components.TabItem
 import app.organi7er.core.designsystem.components.TagTone
 import app.organi7er.core.designsystem.components.TaskRow
 import app.organi7er.core.designsystem.components.TileStats
@@ -135,15 +136,16 @@ fun CatalogContent() {
     NoteCard("Einkauf Wochenende", "Hafermilch, Brot, Äpfel, Kaffee", null, 0, "Morgen, 09:00", {}, {}, {})
     GlassCard(Modifier.fillMaxWidth()) { Text("GlassCard", Modifier.padding(18.dp), style = OrganiTheme.type.body, color = OrganiTheme.colors.text) }
     Overline("Navigation")
-    FusedTabBar(
-        listOf(
-            TabItem("Übersicht", Ms.home, Ms.homeFilled),
-            TabItem("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
-            TabItem("Aufgaben", Ms.checklist, Ms.checklistFilled),
-            TabItem("Notizen", Ms.description, Ms.descriptionFilled),
-        ),
-        tab,
-        { tab = it },
-        onAdd = {},
-    )
+    Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.CenterEnd) {
+        EdgePicker(
+            listOf(
+                EdgeTab("Übersicht", Ms.home, Ms.homeFilled),
+                EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
+                EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled),
+                EdgeTab("Notizen", Ms.description, Ms.descriptionFilled),
+            ),
+            tab,
+            { tab = it },
+        )
+    }
 }

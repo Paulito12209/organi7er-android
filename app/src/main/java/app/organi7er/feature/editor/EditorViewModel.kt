@@ -12,10 +12,14 @@ import app.organi7er.core.data.NotificationRepository
 import app.organi7er.core.data.SettingsRepository
 import app.organi7er.core.data.TaskRepository
 import app.organi7er.core.designsystem.components.EntryType
+import app.organi7er.core.designsystem.components.QuickEntry
+import app.organi7er.core.designsystem.components.rest
+import app.organi7er.core.designsystem.components.title
 import app.organi7er.core.model.AppSettings
 import app.organi7er.core.model.CalendarEntity
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.Note
+import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
 import app.organi7er.feature.common.ShellInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,13 +36,13 @@ import kotlinx.coroutines.launch
 /** Was das gemeinsame Anlege-/Bearbeiten-Sheet öffnen soll. */
 @Immutable
 sealed interface EditorRequest {
-    data class NewEvent(val date: LocalDate? = null) : EditorRequest
+    data class NewEvent(val date: LocalDate? = null, val title: String = "", val note: String = "", val focused: Boolean = false) : EditorRequest
     data class EditEvent(val id: Long) : EditorRequest
     data class PlanEvent(val id: Long) : EditorRequest
-    data class NewTask(val date: LocalDate? = null) : EditorRequest
+    data class NewTask(val date: LocalDate? = null, val title: String = "", val note: String = "", val focused: Boolean = false) : EditorRequest
     data class EditTask(val id: Long) : EditorRequest
     data class PlanTask(val id: Long) : EditorRequest
-    data object NewNote : EditorRequest
+    data class NewNote(val title: String = "", val body: String = "", val focused: Boolean = false, val startCamera: Boolean = false) : EditorRequest
 }
 
 /**
@@ -96,6 +100,41 @@ class EditorViewModel @Inject constructor(
         if (uris.isNotEmpty()) notes.addImages(id, uris)
         files.forEach { notes.addImageFile(id, it) }
         onCreated(id)
+    }
+
+    /**
+     * Schnelles Erfassen: erste Zeile = Titel, Rest = Notiz. Ohne Zeitpunkt wird ein Termin oder eine Aufgabe
+     * ein Entwurf, mit Zeitpunkt aktiv.
+     */
+    fun quickAdd(entry: QuickEntry) = viewModelScope.launch {
+        val title = entry.title
+        val rest = entry.rest
+        val at = entry.at
+        when (entry.type) {
+            EntryType.Event -> events.save(
+                Event(
+                    title = title,
+                    note = rest,
+                    start = at,
+                    end = at?.plusHours(1),
+                    calendarId = calendars.value.firstOrNull()?.id ?: 0L,
+                    reminderMinutes = if (at != null) settings.value.reminderLeadMinutes else null,
+                    status = if (at == null) Status.DRAFT else Status.ACTIVE,
+                    focused = entry.focused,
+                ),
+            )
+            EntryType.Task -> tasks.save(
+                Task(
+                    title = title,
+                    note = rest,
+                    dueAt = at,
+                    dueHasTime = at != null,
+                    status = if (at == null) Status.DRAFT else Status.ACTIVE,
+                    focused = entry.focused,
+                ),
+            )
+            EntryType.Note -> notes.save(Note(title = title, body = rest, reminderAt = at, focused = entry.focused))
+        }
     }
 
     fun addImages(noteId: Long, uris: List<Uri>) = viewModelScope.launch { notes.addImages(noteId, uris) }

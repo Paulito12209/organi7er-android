@@ -11,6 +11,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -46,17 +47,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -74,15 +72,17 @@ import androidx.navigation.toRoute
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Primitives
+import app.organi7er.core.designsystem.components.CaptureDock
+import app.organi7er.core.designsystem.components.DockMinHeight
+import app.organi7er.core.designsystem.components.EdgePicker
+import app.organi7er.core.designsystem.components.EdgeTab
 import app.organi7er.core.designsystem.components.EntryType
-import app.organi7er.core.designsystem.components.FusedTabBar
 import app.organi7er.core.designsystem.components.Ms
-import app.organi7er.core.designsystem.components.QuickCaptureOverlay
-import app.organi7er.core.designsystem.components.TabBarHeight
-import app.organi7er.core.designsystem.components.TabItem
+import app.organi7er.core.designsystem.components.QuickComposer
 import app.organi7er.core.designsystem.components.aura
-import app.organi7er.core.designsystem.components.floatShadow
-import app.organi7er.core.designsystem.components.plusCenterFromEnd
+import app.organi7er.core.designsystem.components.rest
+import app.organi7er.core.designsystem.components.shortLabel
+import app.organi7er.core.designsystem.components.title
 import app.organi7er.feature.calendar.CalendarScreen
 import app.organi7er.feature.catalog.CatalogScreen
 import app.organi7er.feature.common.LocalShell
@@ -124,15 +124,15 @@ import kotlinx.serialization.Serializable
 @Serializable data object NotificationsRoute
 
 private val Tabs = listOf(
-    TabItem("Übersicht", Ms.home, Ms.homeFilled),
-    TabItem("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
-    TabItem("Aufgaben", Ms.checklist, Ms.checklistFilled),
-    TabItem("Notizen", Ms.description, Ms.descriptionFilled),
+    EdgeTab("Übersicht", Ms.home, Ms.homeFilled),
+    EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
+    EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled),
+    EdgeTab("Notizen", Ms.description, Ms.descriptionFilled),
 )
 private val TabRoutes: List<Any> = listOf(OverviewRoute, CalendarRoute, TasksRoute, NotesRoute)
 
-/** Platz, den Inhalte unten freihalten müssen (Leiste + Add-Button). */
-val ContentBottomPadding: Dp = TabBarHeight + 16.dp + 48.dp
+/** Platz, den Inhalte unten freihalten müssen (angedocktes Eingabefeld, beim Scrollen ohne Begrüßung). */
+val ContentBottomPadding: Dp = 160.dp
 
 @Composable
 fun OrganiAppRoot() {
@@ -158,41 +158,12 @@ fun OrganiAppRoot() {
         dest.hasRoute(NotesRoute::class) -> 3
         else -> -1
     }
-    var captureOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(dest?.id) { captureOpen = false }
+    // Schnelles Erfassen: Dock unten, hochgeklappt der Composer.
+    var composerOpen by remember { mutableStateOf(false) }
+    var composerDictate by remember { mutableStateOf(false) }
+    var composerType by rememberSaveable { mutableStateOf(EntryType.Note) }
+    LaunchedEffect(dest?.id) { composerOpen = false }
     val shell by editor.shell.collectAsStateWithLifecycle()
-
-    // Einklappen beim Scrollen: Leiste weg, nur der Anlege-Knopf bleibt (Schwelle ~8 dp gegen Flackern).
-    var collapsed by remember { mutableStateOf(false) }
-    LaunchedEffect(dest?.id) { collapsed = false }
-    val threshold = with(LocalDensity.current) { 8.dp.toPx() }
-    val scrollConnection = remember(threshold) {
-        object : NestedScrollConnection {
-            var acc = 0f
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (available.y != 0f && (acc == 0f || (acc > 0) == (available.y > 0))) acc += available.y else acc = available.y
-                if (acc < -threshold) {
-                    collapsed = true
-                    acc = 0f
-                } else if (acc > threshold) {
-                    collapsed = false
-                    acc = 0f
-                }
-                return Offset.Zero
-            }
-
-            // Ganz oben angekommen (Restbewegung nach unten wird nicht mehr verbraucht): Leiste zurückholen.
-            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                if (available.y > 0f) collapsed = false
-                return Offset.Zero
-            }
-
-            override suspend fun onPostFling(consumed: androidx.compose.ui.unit.Velocity, available: androidx.compose.ui.unit.Velocity): androidx.compose.ui.unit.Velocity {
-                if (available.y > 0f) collapsed = false
-                return androidx.compose.ui.unit.Velocity.Zero
-            }
-        }
-    }
 
     // Bilder für Notizen direkt aus dem Feed (Platzhalter „Foto aufnehmen / oder aus Galerie“).
     var imageTarget by remember { mutableStateOf<Long?>(null) }
@@ -264,7 +235,6 @@ fun OrganiAppRoot() {
 
     val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val showBar = tabIndex >= 0
-    val barVisible = showBar && !collapsed
 
     CompositionLocalProvider(LocalAppActions provides actions, LocalShell provides shell) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -287,8 +257,7 @@ fun OrganiAppRoot() {
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .hazeSource(contentHaze)
-                        .nestedScroll(scrollConnection),
+                        .hazeSource(contentHaze),
                 ) {
                     Box(Modifier.fillMaxSize().aura())
                     NavHost(
@@ -314,41 +283,64 @@ fun OrganiAppRoot() {
                 SystemBarBlur(WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), contentHaze, Modifier.align(Alignment.TopCenter))
                 SystemBarBlur(navInset, contentHaze, Modifier.align(Alignment.BottomCenter))
 
-                QuickCaptureOverlay(
-                    visible = captureOpen,
-                    onDismiss = { captureOpen = false },
-                    onPick = { type ->
-                        captureOpen = false
-                        request = when (type) {
-                            EntryType.Event -> EditorRequest.NewEvent()
-                            EntryType.Task -> EditorRequest.NewTask()
-                            EntryType.Note -> EditorRequest.NewNote
-                        }
-                    },
-                    plusEnd = plusCenterFromEnd(screenWidth - 32.dp, Tabs.size) + 16.dp,
-                    plusBottom = navInset + 16.dp + TabBarHeight / 2,
-                    hazeState = contentHaze,
-                )
-
+                // Edge-Picker: Navigation am rechten Rand, liegt im Inhalt und rutscht mit ihm weg.
                 if (showBar) {
-                    FusedTabBar(
+                    EdgePicker(
                         items = Tabs,
                         selected = tabIndex,
-                        onSelect = { i ->
-                            captureOpen = false
-                            if (i == tabIndex) collapsed = false else actions.openTab(i)
-                        },
-                        onAdd = { captureOpen = !captureOpen },
-                        addOpen = captureOpen,
-                        showTabs = barVisible && !captureOpen,
-                        hazeState = contentHaze,
-                        modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = navInset + 16.dp),
+                        onSelect = { i -> if (i != tabIndex) actions.openTab(i) },
+                        onSwipeLeft = openSettingsPanel,
+                        // Hängt am Dock: das untere Ende der Kerbe läuft genau an dessen Oberkante in den Rand aus. Bleibt beim Composer stehen.
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = navInset + DockMinHeight),
                     )
                 }
 
+                AnimatedVisibility(
+                    showBar,
+                    Modifier.align(Alignment.BottomCenter),
+                    enter = slideInVertically(tween(240)) { it } + fadeIn(tween(160)),
+                    exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(120)),
+                ) {
+                    CaptureDock(
+                        type = composerType,
+                        onOpen = {
+                            composerDictate = false
+                            composerOpen = true
+                        },
+                        onCamera = { request = EditorRequest.NewNote(startCamera = true) },
+                        onDictate = {
+                            composerDictate = true
+                            composerOpen = true
+                        },
+                    )
+                }
+
+                QuickComposer(
+                    visible = composerOpen,
+                    type = composerType,
+                    onTypeChange = { composerType = it },
+                    startDictation = composerDictate,
+                    onDismiss = { composerOpen = false },
+                    onSave = { e ->
+                        composerOpen = false
+                        editor.quickAdd(e)
+                        actions.showMessage("${e.type.shortLabel} gespeichert")
+                    },
+                    onDetails = { e ->
+                        composerOpen = false
+                        request = when (e.type) {
+                            EntryType.Event -> EditorRequest.NewEvent(e.at?.toLocalDate(), e.title, e.rest, e.focused)
+                            EntryType.Task -> EditorRequest.NewTask(e.at?.toLocalDate(), e.title, e.rest, e.focused)
+                            EntryType.Note -> EditorRequest.NewNote(e.title, e.rest, e.focused)
+                        }
+                    },
+                    onMessage = actions.showMessage,
+                    hazeState = contentHaze,
+                )
+
                 SnackbarHost(
                     snackbar,
-                    Modifier.align(Alignment.BottomCenter).padding(bottom = if (showBar) navInset + TabBarHeight + 28.dp else navInset + 16.dp),
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = if (showBar) navInset + DockMinHeight + 12.dp else navInset + 16.dp),
                 ) { data ->
                     val c = OrganiTheme.colors
                     val actionColor = if (c.isDark) androidx.compose.ui.graphics.Color(0xFF0A0A0B) else c.accent
@@ -372,6 +364,13 @@ fun OrganiAppRoot() {
                 }
                 // Offenes Menü: Inhalt nicht bedienbar; Antippen schließt, Ziehen nach rechts auch.
                 if (settings.value > 0f || settings.isRunning) {
+                    // Erst wenn das Menü fast ganz offen ist, wird der Inhalt ausgegraut.
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { alpha = ((settings.value - 0.88f) / 0.12f).coerceIn(0f, 1f) * 0.5f }
+                            .background(Color.Black),
+                    )
                     Box(
                         Modifier
                             .fillMaxSize()
@@ -391,7 +390,7 @@ fun OrganiAppRoot() {
             null -> Unit
             is EditorRequest.NewEvent, is EditorRequest.EditEvent, is EditorRequest.PlanEvent -> EventSheet(r, editor) { request = null }
             is EditorRequest.NewTask, is EditorRequest.EditTask, is EditorRequest.PlanTask -> TaskSheet(r, editor) { request = null }
-            EditorRequest.NewNote -> NoteSheet(editor) { request = null }
+            is EditorRequest.NewNote -> NoteSheet(r, editor) { request = null }
         }
     }
 }
@@ -433,7 +432,10 @@ private val SettingsPeek = 64.dp
 private fun SettingsPanel(progress: Animatable<Float, AnimationVector1D>, close: () -> Unit) {
     if (progress.value <= 0f && !progress.isRunning) return
     BackHandler(progress.targetValue > 0f, close)
-    Box(Modifier.fillMaxSize().background(OrganiTheme.colors.bg)) {
-        SettingsScreen(onBack = close, startInset = SettingsPeek)
+    // Das Menü ist immer hell, auch wenn die App dunkel ist.
+    OrganiTheme(darkTheme = false) {
+        Box(Modifier.fillMaxSize().background(OrganiTheme.colors.bg)) {
+            SettingsScreen(onBack = close, startInset = SettingsPeek)
+        }
     }
 }

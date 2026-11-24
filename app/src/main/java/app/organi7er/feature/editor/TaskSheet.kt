@@ -48,14 +48,15 @@ fun TaskSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Unit
 
     var original by remember { mutableStateOf<Task?>(null) }
     var loaded by remember { mutableStateOf(editId == null) }
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    val prefill = request as? EditorRequest.NewTask
+    var title by remember { mutableStateOf(prefill?.title.orEmpty()) }
+    var note by remember { mutableStateOf(prefill?.note.orEmpty()) }
     var date by remember { mutableStateOf((request as? EditorRequest.NewTask)?.date ?: if (planning) today else null) }
     var time by remember { mutableStateOf<LocalTime?>(null) }
     var priority by remember { mutableStateOf(Priority.NORMAL) }
     var listName by remember { mutableStateOf("") }
     var subStatus by remember { mutableStateOf<TaskSubStatus?>(null) }
-    var focused by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(prefill?.focused == true) }
     var picker by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
 

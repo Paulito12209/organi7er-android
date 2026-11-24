@@ -10,6 +10,13 @@
         android:name="android.permission.SCHEDULE_EXACT_ALARM"
         android:maxSdkVersion="32" />
 
+    <!-- Diktat im Schnell-Erfassen: Spracherkennung des Geräts -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:name=".OrganiApplication"
         android:allowBackup="true"

@@ -158,7 +158,7 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                         onHorizontalDrag = { _, d -> dx += d },
                     )
                 },
-            contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, bottom = ContentBottomPadding),
+            contentPadding = PaddingValues(start = Spacing.page, end = Spacing.page, bottom = ContentBottomPadding),
         ) {
             item(key = "head", contentType = "head") { AppHeader("Übersicht") }
             item(key = "tiles", contentType = "tiles") {
@@ -183,7 +183,7 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                         SectionTitle("Im Fokus")
                         LazyRow(
                             Modifier.fillMaxWidth().bleed(),
-                            contentPadding = PaddingValues(horizontal = Spacing.screen, vertical = 4.dp),
+                            contentPadding = PaddingValues(horizontal = Spacing.page, vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             items(state.focus, key = { "${it.type}-${it.id}" }) { FocusCard(it) { open(actions, it) } }
@@ -270,7 +270,7 @@ private fun open(actions: AppActions, e: EntryUi) = when (e.type) {
 
 /** Lässt eine Zeile über den Seitenrand bis an die Bildschirmkante laufen. */
 private fun Modifier.bleed() = layout { measurable, constraints ->
-    val extra = Spacing.screen.roundToPx()
+    val extra = Spacing.page.roundToPx()
     val w = constraints.maxWidth + extra * 2
     val placeable = measurable.measure(constraints.copy(minWidth = w, maxWidth = w))
     layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }

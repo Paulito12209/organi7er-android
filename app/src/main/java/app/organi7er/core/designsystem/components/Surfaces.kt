@@ -87,6 +87,11 @@ object Ms {
     val undo = R.drawable.ms_undo
     val editCalendar = R.drawable.ms_edit_calendar
     val alarm = R.drawable.ms_alarm
+    val star = R.drawable.ms_star
+    val starFilled = R.drawable.ms_star_filled
+    val graphicEq = R.drawable.ms_graphic_eq
+    val arrowUpward = R.drawable.ms_arrow_upward
+    val formatListBulleted = R.drawable.ms_format_list_bulleted
 }
 
 @Composable

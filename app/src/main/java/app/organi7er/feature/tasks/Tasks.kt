@@ -150,7 +150,7 @@ fun TasksScreen(vm: TasksViewModel = hiltViewModel()) {
 
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = Spacing.screen, end = Spacing.screen, bottom = ContentBottomPadding),
+        contentPadding = PaddingValues(start = Spacing.page, end = Spacing.page, bottom = ContentBottomPadding),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         item(key = "head") {
