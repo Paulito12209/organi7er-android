@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -128,15 +129,15 @@ class SettingsViewModel @Inject constructor(
 private val LeadOptions = listOf(5, 10, 15, 30, 60)
 
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onBack: (() -> Unit)? = null, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val calendars by vm.calendars.collectAsStateWithLifecycle()
     val actions = LocalAppActions.current
     val c = OrganiTheme.colors
     val askNotifications = rememberNotificationPermission()
     var dialog by remember { mutableStateOf<String?>(null) }
-    val blueBg = c.calWork.copy(alpha = 0.18f)
-    val yellowBg = c.accent.copy(alpha = 0.30f)
+    val blueBg = c.surface2
+    val yellowBg = c.surface2
 
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { vm.export(it, actions.showMessage) }
@@ -154,9 +155,15 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
             .navigationBarsPadding()
             .padding(bottom = 32.dp),
     ) {
-        ProfileHeader(s.profileName, s.profileImage, actions.back, { dialog = "profile" })
+        ProfileHeader(s.profileName, s.profileImage, onBack ?: actions.back, { dialog = "profile" })
+        // Einstellungen liegen auf einer Fläche, die oben links abgerundet über das Profilbild ragt.
         Column(
-            Modifier.padding(horizontal = Spacing.screen).padding(top = Spacing.section),
+            Modifier
+                .offset(y = (-32).dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp))
+                .background(c.bg)
+                .padding(horizontal = Spacing.screen)
+                .padding(top = 28.dp),
             verticalArrangement = Arrangement.spacedBy(Spacing.section),
         ) {
             Group("Darstellung") {
@@ -165,7 +172,7 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
 
             Group("Übersicht") {
                 SegmentedList {
-                    SettingsRow(Ms.calendarToday, blueBg, c.link, "Woche beginnt am", "Reihenfolge der Tageskacheln", 0, 1, onClick = { dialog = "week" }) {
+                    SettingsRow(Ms.calendarToday, blueBg, c.text, "Woche beginnt am", "Reihenfolge der Tageskacheln", 0, 1, onClick = { dialog = "week" }) {
                         SettingsValue(if (s.weekStart == 7) "Sonntag" else "Montag")
                     }
                 }

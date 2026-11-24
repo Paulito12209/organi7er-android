@@ -80,7 +80,7 @@ fun GlassCircleButton(
             Modifier
                 .size(size)
                 .clip(GlassShapes.pill)
-                .background(if (filled) c.glassSolid else c.glassChip)
+                .background(if (filled) c.glassSolid else if (c.isDark) c.glassChip else Color.Black.copy(alpha = 0.05f))
                 .border(1.dp, c.glassEdge, GlassShapes.pill)
                 .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick)
                 .semantics { this.contentDescription = contentDescription },

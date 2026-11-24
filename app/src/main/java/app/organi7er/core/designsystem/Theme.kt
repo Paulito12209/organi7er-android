@@ -37,9 +37,9 @@ fun OrganiTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
     val scheme = if (darkTheme) {
         darkColorScheme(
             primary = c.primary, onPrimary = c.onPrimary,
-            primaryContainer = Primitives.Navy700, onPrimaryContainer = c.text,
-            secondary = c.brandBlue, onSecondary = Primitives.Navy900,
-            secondaryContainer = Primitives.Navy700, onSecondaryContainer = c.text,
+            primaryContainer = c.surface2, onPrimaryContainer = c.text,
+            secondary = c.brandBlue, onSecondary = c.onPrimary,
+            secondaryContainer = c.surface2, onSecondaryContainer = c.text,
             tertiary = c.accent, onTertiary = c.onAccent,
             tertiaryContainer = Primitives.Yellow800, onTertiaryContainer = c.text,
             background = c.bg, onBackground = c.text,
@@ -55,9 +55,9 @@ fun OrganiTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
     } else {
         lightColorScheme(
             primary = c.primary, onPrimary = c.onPrimary,
-            primaryContainer = Primitives.Blue100, onPrimaryContainer = Primitives.Navy900,
+            primaryContainer = c.surface2, onPrimaryContainer = Primitives.Navy900,
             secondary = c.brandBlue, onSecondary = Color.White,
-            secondaryContainer = Primitives.Blue50, onSecondaryContainer = Primitives.Navy900,
+            secondaryContainer = c.surface2, onSecondaryContainer = Primitives.Navy900,
             tertiary = c.accent, onTertiary = c.onAccent,
             tertiaryContainer = Primitives.Yellow100, onTertiaryContainer = Primitives.Navy900,
             background = c.bg, onBackground = c.text,

@@ -21,6 +21,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -29,6 +30,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import app.organi7er.R
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
@@ -48,8 +50,8 @@ data class ShellInfo(val unread: Int = 0, val profileImage: String? = null)
 val LocalShell = staticCompositionLocalOf { ShellInfo() }
 
 /**
- * Kopf der Hauptseiten: oben klein Logo + „Organi7er“, rechts Glocke (nur Icon) und
- * Profilbild bzw. Einstellungen. Darunter groß der Seitentitel.
+ * Kopf der Hauptseiten: Logo und daneben groß der Seitentitel, rechts Glocke (nur Icon)
+ * und Profilbild bzw. Einstellungen.
  */
 @Composable
 fun AppHeader(
@@ -61,10 +63,12 @@ fun AppHeader(
     val c = OrganiTheme.colors
     val shell = LocalShell.current
     val app = LocalAppActions.current
-    Column(modifier.statusBarsPadding().padding(top = 4.dp)) {
+    Column(modifier.statusBarsPadding().padding(top = 8.dp)) {
+        // Obere Zeile: Logo links, Glocke und Profil/Einstellungen rechts.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Logo()
-            Text("Organi7er", Modifier.padding(start = 8.dp).weight(1f), style = OrganiTheme.type.label.copy(fontSize = 15.sp), color = c.text)
+            Box(Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically, content = actions)
             Box(
                 Modifier
                     .size(Spacing.touch)
@@ -91,9 +95,9 @@ fun AppHeader(
                 Box(Modifier.size(Spacing.touch), contentAlignment = Alignment.Center) {
                     AsyncImage(
                         File(image),
-                        "Einstellungen",
+                        "Menü",
                         Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clip(OrganiShapes.circle)
                             .border(1.5.dp, c.glassEdge, OrganiShapes.circle)
                             .clickable(role = Role.Button, onClick = app.openSettings),
@@ -101,14 +105,18 @@ fun AppHeader(
                     )
                 }
             } else {
-                GlassCircleButton(Ms.settings, "Einstellungen", app.openSettings, size = 40.dp)
+                GlassCircleButton(Ms.settings, "Menü", app.openSettings, size = 42.dp)
             }
         }
-        if (eyebrow != null) Box(Modifier.padding(top = 10.dp)) { eyebrow() }
-        Row(Modifier.fillMaxWidth().padding(top = if (eyebrow != null) 0.dp else 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, Modifier.weight(1f).semantics { heading() }, style = OrganiTheme.type.pageTitle.copy(fontSize = 32.sp, lineHeight = 38.sp), color = c.text)
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically, content = actions)
-        }
+        // Darunter groß und kräftig der Seitentitel; optional eine Zeile darüber (z. B. Monat), bündig links.
+        if (eyebrow != null) Box(Modifier.padding(top = 26.dp)) { eyebrow() }
+        Text(
+            title,
+            Modifier.padding(top = if (eyebrow != null) 4.dp else 26.dp).semantics { heading() },
+            style = OrganiTheme.type.pageTitle.copy(fontSize = 40.sp, lineHeight = 44.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = (-0.035).em),
+            color = c.text,
+            maxLines = 1,
+        )
     }
 }
 
@@ -116,14 +124,14 @@ fun AppHeader(
 private fun Logo() {
     val c = OrganiTheme.colors
     Box(
-        Modifier.size(24.dp).clip(RoundedCornerShape(7.dp)).background(if (c.isDark) Primitives.Paper else Primitives.Navy900),
+        Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(if (c.isDark) Color.White else Color(0xFF0A0A0B)),
         contentAlignment = Alignment.Center,
     ) {
         androidx.compose.foundation.Image(
             painterResource(R.drawable.ic_stat_organi7er),
             null,
-            Modifier.fillMaxSize().padding(3.dp),
-            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(if (c.isDark) Primitives.Navy900 else c.accent),
+            Modifier.fillMaxSize().padding(5.dp),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(if (c.isDark) Color(0xFF0A0A0B) else Color.White),
         )
     }
 }

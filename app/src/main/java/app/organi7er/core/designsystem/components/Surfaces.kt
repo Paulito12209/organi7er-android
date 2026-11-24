@@ -125,15 +125,10 @@ fun Modifier.knob(shape: Shape): Modifier {
 @Composable
 fun Modifier.aura(): Modifier {
     val c = OrganiTheme.colors
-    return background(c.bg).drawBehind {
-        val w = size.width
-        val h = size.height
-        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(w * 0.95f, h * 0.06f), radius = w * 0.95f))
-        drawRect(Brush.radialGradient(listOf(c.aura3, Color.Transparent), center = Offset(w * 0.15f, h * 0.22f), radius = w * 0.7f))
-        drawRect(Brush.radialGradient(listOf(c.aura2, Color.Transparent), center = Offset(-w * 0.1f, h * 0.55f), radius = w * 0.9f))
-        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(w * 1.05f, h * 0.78f), radius = w * 0.85f))
-        drawRect(Brush.radialGradient(listOf(c.aura3, Color.Transparent), center = Offset(w * 0.4f, h * 1.02f), radius = w * 0.6f))
-    }
+    // Schwarz-Weiß: ruhiger Verlauf, oben minimal heller (hell) bzw. leicht aufgehellt (dunkel).
+    val top = if (c.isDark) Color(0xFF16161A) else Color.White
+    return background(Brush.verticalGradient(0f to top, 0.45f to c.bg, 1f to c.bg))
+
 }
 
 /** Optionale Unschärfe-Quelle für einzelne, ruhende Glasflächen. */

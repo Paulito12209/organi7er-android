@@ -1,27 +1,37 @@
 package app.organi7er.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -39,11 +49,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,10 +78,11 @@ import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.FusedTabBar
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.QuickCaptureOverlay
-import app.organi7er.core.designsystem.components.TabBarFade
 import app.organi7er.core.designsystem.components.TabBarHeight
 import app.organi7er.core.designsystem.components.TabItem
 import app.organi7er.core.designsystem.components.aura
+import app.organi7er.core.designsystem.components.floatShadow
+import app.organi7er.core.designsystem.components.plusCenterFromEnd
 import app.organi7er.feature.calendar.CalendarScreen
 import app.organi7er.feature.catalog.CatalogScreen
 import app.organi7er.feature.common.LocalShell
@@ -82,6 +99,10 @@ import app.organi7er.feature.notifications.NotificationsScreen
 import app.organi7er.feature.overview.OverviewScreen
 import app.organi7er.feature.settings.SettingsScreen
 import app.organi7er.feature.tasks.TasksScreen
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import java.io.File
@@ -95,8 +116,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object TasksRoute
 
 @Serializable data object NotesRoute
-
-@Serializable data object SettingsRoute
 
 @Serializable data object CatalogRoute
 
@@ -123,6 +142,11 @@ fun OrganiAppRoot() {
     val scope = rememberCoroutineScope()
     val contentHaze = rememberHazeState()
     var request by remember { mutableStateOf<EditorRequest?>(null) }
+
+    // Einstellungen als Panel von rechts; links bleibt ein Streifen der Übersicht sichtbar.
+    val settings = remember { Animatable(0f) }
+    val openSettingsPanel: () -> Unit = { scope.launch { settings.animateTo(1f, spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) } }
+    val closeSettingsPanel: () -> Unit = { scope.launch { settings.animateTo(0f, spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) } }
 
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
@@ -217,9 +241,12 @@ fun OrganiAppRoot() {
                     restoreState = true
                 }
             },
-            openSettings = { nav.navigate(SettingsRoute) { launchSingleTop = true } },
+            openSettings = { openSettingsPanel() },
             openNotifications = { nav.navigate(NotificationsRoute) { launchSingleTop = true } },
-            openCatalog = { nav.navigate(CatalogRoute) },
+            openCatalog = {
+                scope.launch { settings.snapTo(0f) }
+                nav.navigate(CatalogRoute)
+            },
             back = { nav.popBackStack() },
             takePhoto = { id ->
                 val (file, uri) = editor.newCameraTarget()
@@ -240,103 +267,113 @@ fun OrganiAppRoot() {
     val barVisible = showBar && !collapsed
 
     CompositionLocalProvider(LocalAppActions provides actions, LocalShell provides shell) {
-        Box(Modifier.fillMaxSize()) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val screenWidth = maxWidth
             Box(
                 Modifier
                     .fillMaxSize()
-                    .hazeSource(contentHaze)
-                    .nestedScroll(scrollConnection),
-            ) {
-                Box(Modifier.fillMaxSize().aura())
-                NavHost(
-                    navController = nav,
-                    startDestination = OverviewRoute,
-                    enterTransition = { fadeIn(tween(220)) },
-                    exitTransition = { fadeOut(tween(180)) },
-                ) {
-                    composable<OverviewRoute> { OverviewScreen() }
-                    composable<CalendarRoute> { CalendarScreen() }
-                    composable<TasksRoute> { TasksScreen() }
-                    composable<NotesRoute> { NotesScreen() }
-                    composable<SettingsRoute>(
-                        enterTransition = { slideInHorizontally(tween(280)) { it } },
-                        popExitTransition = { slideOutHorizontally(tween(240)) { it } },
-                    ) { SettingsScreen() }
-                    composable<NotificationsRoute>(
-                        enterTransition = { slideInVertically(tween(280)) { -it } },
-                        popExitTransition = { slideOutVertically(tween(240)) { -it } },
-                    ) { NotificationsScreen() }
-                    composable<CatalogRoute> { CatalogScreen() }
-                    composable<NoteDetailRoute> { NoteDetailScreen(it.toRoute<NoteDetailRoute>().id) }
-                }
-            }
-
-            StatusBarScrim(Modifier.align(Alignment.TopCenter))
-
-            AnimatedVisibility(
-                visible = barVisible,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                enter = fadeIn(tween(200)),
-                exit = fadeOut(tween(200)),
-            ) {
-                TabBarFade(navInset + 16.dp + TabBarHeight + 16.dp)
-            }
-
-            QuickCaptureOverlay(
-                visible = captureOpen,
-                onDismiss = { captureOpen = false },
-                onPick = { type ->
-                    captureOpen = false
-                    request = when (type) {
-                        EntryType.Event -> EditorRequest.NewEvent()
-                        EntryType.Task -> EditorRequest.NewTask()
-                        EntryType.Note -> EditorRequest.NewNote
-                    }
-                },
-                plusEnd = 16.dp + 29.dp,
-                plusBottom = navInset + 16.dp + TabBarHeight / 2,
-            )
-
-            if (showBar) {
-                FusedTabBar(
-                    items = Tabs,
-                    selected = tabIndex,
-                    onSelect = { i ->
-                        captureOpen = false
-                        if (i == tabIndex) collapsed = false else actions.openTab(i)
+                    .graphicsLayer {
+                        val p = settings.value
+                        scaleX = 1f - 0.06f * p
+                        scaleY = 1f - 0.06f * p
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                        // Hauptinhalt wird beim Öffnen des Menüs zur abgerundeten Karte.
+                        shape = RoundedCornerShape((36f * p).coerceAtLeast(0f).dp)
+                        clip = p > 0f
                     },
-                    onAdd = { captureOpen = !captureOpen },
-                    addOpen = captureOpen,
-                    showTabs = barVisible && !captureOpen,
-                    hazeState = contentHaze,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = navInset + 16.dp),
-                )
-            }
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .hazeSource(contentHaze)
+                        .nestedScroll(scrollConnection),
+                ) {
+                    Box(Modifier.fillMaxSize().aura())
+                    NavHost(
+                        navController = nav,
+                        startDestination = OverviewRoute,
+                        enterTransition = { fadeIn(tween(220)) },
+                        exitTransition = { fadeOut(tween(180)) },
+                    ) {
+                        composable<OverviewRoute> { OverviewScreen() }
+                        composable<CalendarRoute> { CalendarScreen() }
+                        composable<TasksRoute> { TasksScreen() }
+                        composable<NotesRoute> { NotesScreen() }
+                        composable<NotificationsRoute>(
+                            enterTransition = { slideInVertically(tween(280)) { -it } },
+                            popExitTransition = { slideOutVertically(tween(240)) { -it } },
+                        ) { NotificationsScreen() }
+                        composable<CatalogRoute> { CatalogScreen() }
+                        composable<NoteDetailRoute> { NoteDetailScreen(it.toRoute<NoteDetailRoute>().id) }
+                    }
+                }
 
-            SnackbarHost(
-                snackbar,
-                Modifier.align(Alignment.BottomCenter).padding(bottom = if (showBar) navInset + TabBarHeight + 28.dp else navInset + 16.dp),
-            ) { data ->
-                val c = OrganiTheme.colors
-                val actionColor = if (c.isDark) Primitives.Blue600 else c.accent
-                val label = data.visuals.actionLabel
-                Snackbar(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    shape = OrganiShapes.medium,
-                    containerColor = if (c.isDark) Primitives.Paper else c.hero,
-                    contentColor = if (c.isDark) c.onAccent else c.onHero,
-                    actionContentColor = actionColor,
-                    action = if (label == null) {
-                        null
-                    } else {
-                        {
-                            TextButton(onClick = { data.performAction() }) {
-                                Text(label, style = OrganiTheme.type.buttonSmall, color = actionColor)
-                            }
+                // Fester Blur-Bereich hinter Status- und Navigationsleiste, ohne Verlauf.
+                SystemBarBlur(WindowInsets.statusBars.asPaddingValues().calculateTopPadding(), contentHaze, Modifier.align(Alignment.TopCenter))
+                SystemBarBlur(navInset, contentHaze, Modifier.align(Alignment.BottomCenter))
+
+                QuickCaptureOverlay(
+                    visible = captureOpen,
+                    onDismiss = { captureOpen = false },
+                    onPick = { type ->
+                        captureOpen = false
+                        request = when (type) {
+                            EntryType.Event -> EditorRequest.NewEvent()
+                            EntryType.Task -> EditorRequest.NewTask()
+                            EntryType.Note -> EditorRequest.NewNote
                         }
                     },
-                ) { Text(data.visuals.message, style = OrganiTheme.type.body) }
+                    plusEnd = plusCenterFromEnd(screenWidth - 32.dp, Tabs.size) + 16.dp,
+                    plusBottom = navInset + 16.dp + TabBarHeight / 2,
+                    hazeState = contentHaze,
+                )
+
+                if (showBar) {
+                    FusedTabBar(
+                        items = Tabs,
+                        selected = tabIndex,
+                        onSelect = { i ->
+                            captureOpen = false
+                            if (i == tabIndex) collapsed = false else actions.openTab(i)
+                        },
+                        onAdd = { captureOpen = !captureOpen },
+                        addOpen = captureOpen,
+                        showTabs = barVisible && !captureOpen,
+                        hazeState = contentHaze,
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = navInset + 16.dp),
+                    )
+                }
+
+                SnackbarHost(
+                    snackbar,
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = if (showBar) navInset + TabBarHeight + 28.dp else navInset + 16.dp),
+                ) { data ->
+                    val c = OrganiTheme.colors
+                    val actionColor = if (c.isDark) androidx.compose.ui.graphics.Color(0xFF0A0A0B) else c.accent
+                    val label = data.visuals.actionLabel
+                    Snackbar(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        shape = OrganiShapes.medium,
+                        containerColor = if (c.isDark) Primitives.Paper else c.hero,
+                        contentColor = if (c.isDark) c.onAccent else c.onHero,
+                        actionContentColor = actionColor,
+                        action = if (label == null) {
+                            null
+                        } else {
+                            {
+                                TextButton(onClick = { data.performAction() }) {
+                                    Text(label, style = OrganiTheme.type.buttonSmall, color = actionColor)
+                                }
+                            }
+                        },
+                    ) { Text(data.visuals.message, style = OrganiTheme.type.body) }
+                }
+                // Abdunkeln der Übersicht hinter dem Einstellungs-Panel.
+                if (settings.value > 0f) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { alpha = settings.value }.background(Color.Black.copy(alpha = 0.35f)))
+                }
             }
+            SettingsPanel(settings, screenWidth, openSettingsPanel, closeSettingsPanel)
         }
 
         when (val r = request) {
@@ -355,15 +392,63 @@ fun screenPadding(top: Dp = 8.dp): PaddingValues {
     return PaddingValues(start = 18.dp, end = 18.dp, top = top, bottom = ContentBottomPadding + status)
 }
 
-/** Weicher Verlauf hinter der Statusleiste, damit scrollender Inhalt nicht mit der Uhr kollidiert. */
+/** Unscharfes, getöntes Band hinter einer Systemleiste: feste Kante, kein Verlauf. */
 @Composable
-private fun StatusBarScrim(modifier: Modifier = Modifier) {
+private fun SystemBarBlur(height: Dp, haze: HazeState, modifier: Modifier = Modifier) {
+    if (height <= 0.dp) return
     val bg = OrganiTheme.colors.bg
-    val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val style = remember {
+        HazeBlurStyle {
+            blurRadius(20.dp)
+            noiseFactor(0f)
+        }
+    }
     Box(
         modifier
             .fillMaxWidth()
-            .height(top + 12.dp)
-            .background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to bg.copy(alpha = 0.92f), 0.7f to bg.copy(alpha = 0.75f), 1f to androidx.compose.ui.graphics.Color.Transparent)),
+            .height(height)
+            .hazeBlur(HazeInput.Sources(haze), style)
+            .background(bg.copy(alpha = 0.55f)),
     )
+}
+
+private val SettingsPeek = 64.dp
+
+/**
+ * Einstellungen als Panel: schiebt sich von rechts herein und lässt links [SettingsPeek] der Übersicht frei.
+ * Antippen des Streifens oder Wischen nach rechts schließt es.
+ */
+@Composable
+private fun SettingsPanel(progress: Animatable<Float, AnimationVector1D>, screenWidth: Dp, open: () -> Unit, close: () -> Unit) {
+    if (progress.value <= 0f && !progress.isRunning) return
+    val density = LocalDensity.current
+    val travel = with(density) { (screenWidth - SettingsPeek).toPx() }
+    val scope = rememberCoroutineScope()
+    BackHandler(progress.targetValue > 0f, close)
+    val shape = RoundedCornerShape(topStart = 40.dp, bottomStart = 40.dp)
+    Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .width(SettingsPeek)
+                .clickable(onClickLabel = "Zur Übersicht", onClick = close)
+                .semantics { contentDescription = "Einstellungen schließen" },
+        )
+        Box(
+            Modifier
+                .padding(start = SettingsPeek)
+                .fillMaxSize()
+                .graphicsLayer { translationX = (1f - progress.value) * travel }
+                .draggable(
+                    rememberDraggableState { dx -> scope.launch { progress.snapTo((progress.value - dx / travel).coerceIn(0f, 1f)) } },
+                    Orientation.Horizontal,
+                    onDragStopped = { v -> if (progress.value < 0.7f || v > 1200f) close() else open() },
+                )
+                .floatShadow(shape, OrganiTheme.colors.shadowFloat)
+                .clip(shape)
+                .background(OrganiTheme.colors.bg),
+        ) {
+            SettingsScreen(onBack = close)
+        }
+    }
 }

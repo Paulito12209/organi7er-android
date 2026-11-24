@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.blur.hazeBlur
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import kotlin.math.cos
@@ -58,6 +59,7 @@ fun QuickCaptureOverlay(
     plusEnd: Dp,
     plusBottom: Dp,
     modifier: Modifier = Modifier,
+    hazeState: dev.chrisbanes.haze.HazeState? = null,
 ) {
     val c = OrganiTheme.colors
     val haptics = LocalHapticFeedback.current
@@ -67,22 +69,30 @@ fun QuickCaptureOverlay(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(if (c.isDark) Color(0x99010814) else Color(0x66061B3A))
+                    .then(
+                        if (hazeState != null) {
+                            Modifier.hazeBlur(
+                                dev.chrisbanes.haze.HazeInput.Sources(hazeState),
+                                remember { dev.chrisbanes.haze.blur.HazeBlurStyle { blurRadius(28.dp); noiseFactor(0f) } },
+                            )
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .background(if (c.isDark) Color(0x80000000) else Color(0x59FFFFFF))
                     .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
             )
         }
         val origin = TransformOrigin(1f, 1f)
         AnimatedVisibility(
             visible,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = plusEnd - 29.dp, bottom = plusBottom - 29.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = plusEnd - 32.dp, bottom = plusBottom - 32.dp),
             enter = scaleIn(tween(220), initialScale = 0.4f, transformOrigin = origin) + fadeIn(tween(160)),
             exit = scaleOut(tween(180), targetScale = 0.4f, transformOrigin = origin) + fadeOut(tween(140)),
         ) {
-            val shape = RoundedCornerShape(topStart = ArcSize, topEnd = 0.dp, bottomEnd = 30.dp, bottomStart = 0.dp)
             Box(
                 Modifier
-                    .size(ArcSize)
-                    .glass(shape),
+                    .size(ArcSize),
             ) {
                 Text(
                     "Schnell erfassen",
@@ -96,8 +106,8 @@ fun QuickCaptureOverlay(
                 val items = listOf(EntryType.Task to 168.0, EntryType.Note to 129.0, EntryType.Event to 92.0)
                 items.forEachIndexed { i, (type, angle) ->
                     val rad = Math.toRadians(angle)
-                    val cx = ArcSize - 29.dp + ArcRadius * cos(rad).toFloat()
-                    val cy = ArcSize - 29.dp - ArcRadius * sin(rad).toFloat()
+                    val cx = ArcSize - 32.dp + ArcRadius * cos(rad).toFloat()
+                    val cy = ArcSize - 32.dp - ArcRadius * sin(rad).toFloat()
                     val appear by animateFloatAsState(if (visible) 1f else 0f, tween(200, delayMillis = 40 * i), label = "qc$i")
                     Column(
                         Modifier

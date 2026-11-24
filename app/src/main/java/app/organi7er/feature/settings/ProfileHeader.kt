@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Primitives
@@ -86,7 +87,8 @@ fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: 
         val request = remember(path) { coil3.request.ImageRequest.Builder(context).data(File(path)).size(1080).build() }
         rememberAsyncImagePainter(request, contentScale = ContentScale.Crop)
     }
-    Box(modifier.fillMaxWidth().height(360.dp)) {
+    Box(modifier.fillMaxWidth().height(380.dp)) {
+        // Riffelglas-Hintergrund aus dem Profilbild (oder neutralem Verlauf), unten abgedunkelt.
         Box(
             Modifier
                 .fillMaxSize()
@@ -95,77 +97,70 @@ fun ProfileHeader(name: String, imagePath: String?, onBack: () -> Unit, onEdit: 
                         if (painter != null) {
                             with(painter) { draw(size) }
                         } else {
-                            drawRect(Brush.linearGradient(listOf(Primitives.Navy200, Primitives.Blue400, Primitives.Navy700), end = Offset(size.width, size.height)))
-                            drawCircle(Brush.radialGradient(listOf(Primitives.Blue200, Color.Transparent), center = Offset(size.width * 0.3f, size.height * 0.25f), radius = size.width * 0.6f))
-                            drawCircle(Brush.radialGradient(listOf(Primitives.Yellow300.copy(alpha = 0.7f), Color.Transparent), center = Offset(size.width * 0.72f, size.height * 0.5f), radius = size.width * 0.45f))
+                            drawRect(Brush.linearGradient(listOf(Color(0xFF3A3A40), Color(0xFF8E8E96), Color(0xFF1A1A1E)), end = Offset(size.width, size.height)))
+                            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.35f), Color.Transparent), center = Offset(size.width * 0.35f, size.height * 0.3f), radius = size.width * 0.6f))
                         }
                     }
-                    // Unten in den Seitenhintergrund auslaufen.
-                    drawRect(Brush.verticalGradient(0.45f to Color.Transparent, 1f to c.bg))
+                    drawRect(Color.Black.copy(alpha = 0.28f))
+                    drawRect(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f)))
                 },
         )
-        if (painter == null) {
-            Text(
-                name.initials(),
-                Modifier.align(Alignment.Center).padding(bottom = 40.dp),
-                style = OrganiTheme.type.pageTitle.copy(fontSize = 72.sp, lineHeight = 80.sp),
-                color = Color.White.copy(alpha = 0.85f),
-            )
-        }
         Row(Modifier.statusBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            GlassCircleButton(Ms.chevronLeft, "Zurück", onBack)
+            GlassCircleButton(Ms.close, "Menü schließen", onBack)
             Text(
-                "Einstellungen",
+                "Organi7er",
                 Modifier.weight(1f).semantics { heading() },
-                style = OrganiTheme.type.title,
+                style = OrganiTheme.type.title.copy(fontSize = 22.sp, letterSpacing = 0.12.em),
                 color = Color.White,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
             Box(Modifier.size(48.dp))
         }
-        ProfileCard(name, imagePath, onEdit, Modifier.align(Alignment.BottomCenter).padding(horizontal = 14.dp))
-    }
-}
-
-@Composable
-private fun ProfileCard(name: String, imagePath: String?, onEdit: () -> Unit, modifier: Modifier = Modifier) {
-    val c = OrganiTheme.colors
-    val shape = RoundedCornerShape(26.dp)
-    Row(
-        modifier
-            .fillMaxWidth()
-            .softShadow(shape, c.shadowFloat)
-            .clip(shape)
-            .background(Brush.verticalGradient(listOf(c.glassStrong, c.glass)))
-            .background(if (c.isDark) Color(0xCC0A1224) else Color.White.copy(alpha = 0.55f))
-            .border(1.dp, c.glassEdge, shape)
-            .clickable(role = Role.Button, onClickLabel = "Profil bearbeiten", onClick = onEdit)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(
-            Modifier.size(58.dp).clip(RoundedCornerShape(16.dp)).background(Primitives.Blue500).border(1.dp, c.glassEdge, RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center,
+        Column(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 56.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (imagePath != null) {
-                AsyncImage(File(imagePath), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            } else {
-                Text(name.initials(), style = OrganiTheme.type.title, color = Color.White)
+            Box(Modifier.size(124.dp).clickable(role = Role.Button, onClickLabel = "Profil bearbeiten", onClick = onEdit)) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .clip(OrganiShapes.circle)
+                        .background(Color(0xFF2A2A2F))
+                        .border(3.dp, Color.White.copy(alpha = 0.85f), OrganiShapes.circle),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (imagePath != null) {
+                        AsyncImage(File(imagePath), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    } else {
+                        Text(name.initials(), style = OrganiTheme.type.pageTitle.copy(fontSize = 44.sp), color = Color.White)
+                    }
+                }
+                Box(
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(38.dp)
+                        .clip(OrganiShapes.circle)
+                        .background(Color(0xFF1C1C20))
+                        .border(2.dp, Color.White.copy(alpha = 0.85f), OrganiShapes.circle)
+                        .semantics { contentDescription = "Profil bearbeiten" },
+                    contentAlignment = Alignment.Center,
+                ) { MsIcon(Ms.editNote, null, tint = Color.White, size = 18.dp) }
             }
+            Text(
+                name.ifBlank { "Dein Profil" },
+                Modifier.padding(top = 14.dp),
+                style = OrganiTheme.type.pageTitle.copy(fontSize = 32.sp, lineHeight = 36.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                if (imagePath == null) "Profilbild hinzufügen" else "Profil bearbeiten",
+                Modifier.padding(top = 2.dp),
+                style = OrganiTheme.type.body,
+                color = Color.White.copy(alpha = 0.78f),
+            )
         }
-        Column(Modifier.weight(1f)) {
-            Text(name.ifBlank { "Dein Profil" }, style = OrganiTheme.type.title, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(if (imagePath == null) "Profilbild hinzufügen" else "Profil bearbeiten", style = OrganiTheme.type.rowMeta, color = c.textSoft)
-        }
-        Box(
-            Modifier
-                .size(50.dp)
-                .clip(OrganiShapes.circle)
-                .background(c.glassSolid)
-                .semantics { contentDescription = "Profil bearbeiten" },
-            contentAlignment = Alignment.Center,
-        ) { MsIcon(Ms.editNote, null, tint = c.onGlassSolid, size = 20.dp) }
     }
 }
 

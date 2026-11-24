@@ -37,6 +37,8 @@ data class DayTileUi(
     /** „Als Nächstes · 10:00“, „Aufgabe“ oder leer. */
     val nextLabel: String,
     val nextTitle: String,
+    /** Termin hinter „Als Nächstes“ (für den Pfeil-Knopf). */
+    val nextEventId: Long? = null,
     val a11y: String,
 )
 
@@ -134,6 +136,7 @@ object OverviewBuilder {
                 isToday = day == today,
                 nextLabel = label,
                 nextTitle = title,
+                nextEventId = next?.id,
                 a11y = "${Dates.longDay(day)}: ${dayEvents.size} Termine, ${dayTasks.size} Aufgaben" +
                     if (title.isNotBlank()) ". $label $title" else "",
             )
@@ -150,7 +153,7 @@ object OverviewBuilder {
         val all = buildList {
             events.forEach { e -> add(Item(EntryType.Event, e.id, e.title, eventMeta(e, today), e.focused, e.openedAt, e.createdAt)) }
             tasks.forEach { t -> add(Item(EntryType.Task, t.id, t.title, taskMeta(t, today), t.focused && t.status != Status.DONE, t.openedAt, t.createdAt)) }
-            notes.forEach { n -> add(Item(EntryType.Note, n.note.id, n.note.title.ifBlank { n.note.body.lineSequence().firstOrNull().orEmpty().take(40).ifBlank { "Ohne Titel" } }, "Notiz", n.note.focused, n.note.openedAt, n.note.createdAt)) }
+            notes.forEach { n -> add(Item(EntryType.Note, n.note.id, n.note.title.ifBlank { n.note.body.lineSequence().firstOrNull().orEmpty().take(40).ifBlank { "Ohne Titel" } }, if (n.note.status == Status.DRAFT) "Notiz · Entwurf" else "Notiz", n.note.focused, n.note.openedAt, n.note.createdAt)) }
         }
         val focus = all.filter { it.focused }.sortedByDescending { it.opened ?: it.created }.map { it.ui("") }
         val opened = all.filter { it.opened != null }.sortedByDescending { it.opened }.take(FEED_LIMIT).map { it.ui(ago(it.opened!!, nowInstant, today)) }
