@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -31,7 +30,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.em
-import app.organi7er.R
+import app.organi7er.core.designsystem.components.LogoAnchor
+import app.organi7er.core.designsystem.components.drawOrganiSeven
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Primitives
@@ -67,14 +69,8 @@ fun AppHeader(
         // Obere Zeile: Logo links, Glocke und Profil/Einstellungen rechts.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Logo()
-            // App-Name dezent neben dem Logo.
-            Text(
-                "Organi7er",
-                Modifier.padding(start = 12.dp).weight(1f),
-                style = OrganiTheme.type.title.copy(fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Normal),
-                color = c.textSoft.copy(alpha = 0.7f),
-                maxLines = 1,
-            )
+            // Kein App-Name mehr im Kopf: der Name erscheint nur im Ladebildschirm.
+            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically, content = actions)
             Box(
                 Modifier
@@ -131,14 +127,17 @@ fun AppHeader(
 private fun Logo() {
     val c = OrganiTheme.colors
     Box(
-        Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(if (c.isDark) Color.White else Color(0xFF0A0A0B)),
+        Modifier
+            .size(40.dp)
+            // Meldet die Position an den Ladebildschirm; ändert die Lage nicht.
+            .onGloballyPositioned { LogoAnchor.bounds = it.boundsInRoot() }
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (c.isDark) Color.White else Color(0xFF0A0A0B)),
         contentAlignment = Alignment.Center,
     ) {
-        androidx.compose.foundation.Image(
-            painterResource(R.drawable.ic_stat_organi7er),
-            null,
-            Modifier.fillMaxSize().padding(5.dp),
-            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(if (c.isDark) Color(0xFF0A0A0B) else Color.White),
-        )
+        // Dieselbe „7“ wie im Ladebildschirm, damit dessen Kachel nahtlos hier landet.
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            drawOrganiSeven(if (c.isDark) Color(0xFF0A0A0B) else Color.White)
+        }
     }
 }
