@@ -110,35 +110,36 @@ private fun EntryType.placeholder(): String = when (this) {
 
 // ------------------------------------------------------------------ Einstellbare Werte
 
-/** Rundung der aufgeklappten Composer-Karte. */
-private val ComposerRadius = 32.dp
+/** Abstand der inneren Composer-Karte zum Glas-Rahmen (links, rechts, oben, unten). */
+private val SheetGap = 12.dp
 
-/** Rundung der oberen Ecken des Glas-Rahmens (unten läuft er bis zum Gerätrand). */
-private val SheetRadius = 34.dp
+/** Rundung der inneren Composer-Karte. */
+private val ComposerRadius = 24.dp
+
+/** Rundung des Glas-Rahmens = Karte + Abstand, damit beide Rundungen überall gleich weit auseinander liegen. */
+private val SheetRadius = ComposerRadius + SheetGap
 
 /** Glanz im Glas-Rahmen (Deckkraft Weiß), fällt von oben links ein wie bei den Glasknöpfen. */
-private const val SheenDark = 0.16f
-private const val SheenLight = 0.55f
+private const val SheenDark = 0.14f
+private const val SheenLight = 0.60f
 
 /** Lichtkante des Glas-Rahmens: oben links hell, unten rechts ein schwacher Gegenschein. */
-private const val RimDark = 0.42f
-private const val RimLight = 0.95f
+private const val RimDark = 0.55f
+private const val RimLight = 1f
+
+/** Unschärfe hinter dem Rahmen (klein = Hintergrund bleibt erkennbar, wirkt mehr wie Glas) und hinter der Karte. */
+private val SheetBlurRadius = 14.dp
+private val CardBlurRadius = 34.dp
 
 /**
- * Farbe des Glas-Rahmens je Typ, Verlauf von oben links (Top) nach unten rechts (Bottom).
+ * Farbe des Glas-Rahmens je Typ. Gleichmäßig über die ganze Fläche, damit unten kein Schatten entsteht.
  * Notiz: dunkles Gelb, Aufgabe: Blau, Termin: dunkleres Blau. Hell jeweils zart getönt.
  * Der Alphawert = wie durchsichtig das Glas ist (kleiner = mehr vom unscharfen Hintergrund sichtbar).
  */
 private fun EntryType.glassTop(dark: Boolean): Color = when (this) {
-    EntryType.Note -> if (dark) Color(0xFF4A3E0C).copy(alpha = 0.66f) else Color(0xFFFFEC9A).copy(alpha = 0.55f)
-    EntryType.Task -> if (dark) Color(0xFF1E3A66).copy(alpha = 0.66f) else Color(0xFFCFE0FA).copy(alpha = 0.58f)
-    EntryType.Event -> if (dark) Color(0xFF132645).copy(alpha = 0.70f) else Color(0xFFB7CAEA).copy(alpha = 0.60f)
-}
-
-private fun EntryType.glassBottom(dark: Boolean): Color = when (this) {
-    EntryType.Note -> if (dark) Color(0xFF1C190E).copy(alpha = 0.84f) else Color(0xFFFFF8DC).copy(alpha = 0.72f)
-    EntryType.Task -> if (dark) Color(0xFF0D1524).copy(alpha = 0.84f) else Color(0xFFEEF4FD).copy(alpha = 0.72f)
-    EntryType.Event -> if (dark) Color(0xFF090F1B).copy(alpha = 0.86f) else Color(0xFFE4EBF7).copy(alpha = 0.74f)
+    EntryType.Note -> if (dark) Color(0xFF4E4110).copy(alpha = 0.50f) else Color(0xFFFFE680).copy(alpha = 0.30f)
+    EntryType.Task -> if (dark) Color(0xFF1F4280).copy(alpha = 0.48f) else Color(0xFFB8D2FA).copy(alpha = 0.34f)
+    EntryType.Event -> if (dark) Color(0xFF142E5E).copy(alpha = 0.52f) else Color(0xFF9DB8E6).copy(alpha = 0.36f)
 }
 
 /** Aktives Typ-Symbol: in der Farbe des Glases, nur kräftiger, damit es lesbar bleibt. */
@@ -148,11 +149,12 @@ private fun EntryType.activeIcon(dark: Boolean): Color = when (this) {
     EntryType.Event -> if (dark) Color(0xFF5C8FE6) else Color(0xFF1E4A99)
 }
 
-/** Innere Composer-Karte: dunkles Silber (Verlauf oben links → unten rechts) bzw. helles Silber. */
-private val SilverDarkA = Color(0xFF34363B)
-private val SilverDarkB = Color(0xFF1C1D21)
-private val SilverLightA = Color(0xFFFFFFFF)
-private val SilverLightB = Color(0xFFE9EBEF)
+/** Deckkraft der inaktiven Werkzeug-Symbole (Details, Erinnerung, Fokus): zwischen Weiß (aktiv) und den grauen Typ-Symbolen (0,42). */
+private const val ToolIdleAlpha = 0.6f
+
+/** Innere Composer-Karte: durchsichtig und stark unscharf, nur leicht getönt (Deckkraft der Tönung). */
+private val CardFillDark = Color(0xFF141518).copy(alpha = 0.57f)
+private val CardFillLight = Color.White.copy(alpha = 0.65f)
 
 // ------------------------------------------------------------------ Dock
 
@@ -231,9 +233,15 @@ fun CaptureDock(
         }
     }
     // Unschärfe hinter dem Glas-Rahmen des aufgeklappten Composers: gleichmäßig, ohne Verlauf.
+    val cardBlur = remember {
+        HazeBlurStyle {
+            blurRadius(CardBlurRadius)
+            noiseFactor(0f)
+        }
+    }
     val sheetBlur = remember {
         HazeBlurStyle {
-            blurRadius(24.dp)
+            blurRadius(SheetBlurRadius)
             noiseFactor(0f)
         }
     }
@@ -270,7 +278,6 @@ fun CaptureDock(
         } else {
             val dark = c.isDark
             val glassA by animateColorAsState(chosen.glassTop(dark), tween(300), label = "glassTop")
-            val glassB by animateColorAsState(chosen.glassBottom(dark), tween(300), label = "glassBottom")
             val sheetShape = RoundedCornerShape(topStart = SheetRadius, topEnd = SheetRadius)
             LaunchedEffect(Unit) {
                 delay(60)
@@ -297,8 +304,9 @@ fun CaptureDock(
                             start = Offset.Zero,
                             end = Offset(size.width, size.height),
                         )
-                        val body = Brush.linearGradient(listOf(glassA, glassB), start = Offset.Zero, end = Offset(size.width, size.height))
-                        val stroke = 1.2.dp.toPx()
+                        val body = glassA
+                        val stroke = 1.3.dp.toPx()
+                        // Unten unsichtbar verlängert: die Rundung gibt es nur oben, unten läuft das Glas aus dem Bild.
                         val outline = sheetShape.createOutline(Size(size.width - stroke, size.height + SheetRadius.toPx()), layoutDirection, this)
                         onDrawBehind {
                             drawRect(body)
@@ -306,20 +314,29 @@ fun CaptureDock(
                             translate(stroke / 2f, stroke / 2f) { drawOutline(outline, rim, style = Stroke(stroke)) }
                         }
                     }
-                    .padding(start = 14.dp, end = 14.dp, top = 16.dp)
+                    .padding(start = SheetGap, end = SheetGap, top = SheetGap)
                     // Inhalt über Tastatur bzw. Navigationsleiste, der Glas-Hintergrund läuft darunter weiter.
                     .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
-                    .padding(bottom = 14.dp),
+                    .padding(bottom = SheetGap),
             ) {
-                // Innere Composer-Karte: dunkles bzw. helles Silber.
+                // Innere Composer-Karte: durchsichtig, stark unscharf, leicht getönt.
                 val cardShape = RoundedCornerShape(ComposerRadius)
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .softShadow(cardShape, c.shadowSoft)
                         .clip(cardShape)
-                        .background(Brush.linearGradient(if (dark) listOf(SilverDarkA, SilverDarkB) else listOf(SilverLightA, SilverLightB)))
-                        .border(1.dp, if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.9f), cardShape)
+                        .hazeBlur(HazeInput.Sources(haze), cardBlur)
+                        .background(if (dark) CardFillDark else CardFillLight)
+                        .background(Brush.linearGradient(0f to Color.White.copy(alpha = if (dark) 0.06f else 0.35f), 0.6f to Color.Transparent))
+                        .border(
+                            1.dp,
+                            Brush.linearGradient(
+                                0f to Color.White.copy(alpha = if (dark) 0.22f else 0.95f),
+                                0.5f to Color.White.copy(alpha = if (dark) 0.05f else 0.4f),
+                                1f to Color.White.copy(alpha = if (dark) 0.10f else 0.7f),
+                            ),
+                            cardShape,
+                        )
                         .padding(start = 10.dp, end = 14.dp, top = 8.dp, bottom = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -395,8 +412,8 @@ fun CaptureDock(
                         ToolIcon(Ms.subject, if (showDetails) "Details ausblenden" else "Details hinzufügen", active = showDetails || details.isNotBlank()) {
                             showDetails = !showDetails || details.isNotBlank()
                         }
-                        ToolIcon(Ms.notifications, "Erinnerung", active = at != null) { picker = "date" }
-                        ToolIcon(Ms.flag, if (focused) "Nicht mehr fokussieren" else "Fokussieren", active = focused, activeTint = Primitives.Yellow500) { focused = !focused }
+                        ToolIcon(Ms.notifications, "Erinnerung", active = at != null, activeIcon = Ms.notificationsFilled) { picker = "date" }
+                        ToolIcon(Ms.flag, if (focused) "Nicht mehr fokussieren" else "Fokussieren", active = focused, activeIcon = Ms.flagFilled) { focused = !focused }
                         Spacer(Modifier.weight(1f))
                         RoundIcon(Ms.graphicEq, "Diktieren", size = 44.dp, iconSize = 22.dp, onClick = dictate)
                         Spacer(Modifier.width(8.dp))
@@ -511,7 +528,7 @@ private fun TypeIcon(type: EntryType, active: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ToolIcon(icon: Int, description: String, active: Boolean = false, activeTint: Color? = null, onClick: () -> Unit) {
+private fun ToolIcon(icon: Int, description: String, active: Boolean = false, activeTint: Color? = null, activeIcon: Int = icon, onClick: () -> Unit) {
     val c = OrganiTheme.colors
     Box(
         Modifier
@@ -520,7 +537,7 @@ private fun ToolIcon(icon: Int, description: String, active: Boolean = false, ac
             .clickable(role = Role.Button, onClickLabel = description, onClick = onClick)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
-    ) { MsIcon(icon, null, tint = if (active) activeTint ?: c.text else c.text.copy(alpha = 0.8f), size = 24.dp) }
+    ) { MsIcon(if (active) activeIcon else icon, null, tint = if (active) activeTint ?: c.text else c.text.copy(alpha = ToolIdleAlpha), size = 24.dp) }
 }
 
 // ------------------------------------------------------------------ Diktat

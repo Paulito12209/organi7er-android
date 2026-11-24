@@ -67,6 +67,7 @@ object Ms {
     val photoCamera = R.drawable.ms_photo_camera
     val image = R.drawable.ms_image
     val notifications = R.drawable.ms_notifications
+    val notificationsFilled = R.drawable.ms_notifications_filled
     val chevronLeft = R.drawable.ms_chevron_left
     val chevronRight = R.drawable.ms_chevron_right
     val swapVert = R.drawable.ms_swap_vert
@@ -76,6 +77,7 @@ object Ms {
     val delete = R.drawable.ms_delete
     val expandMore = R.drawable.ms_expand_more
     val flag = R.drawable.ms_flag
+    val flagFilled = R.drawable.ms_flag_filled
     val sell = R.drawable.ms_sell
     val upload = R.drawable.ms_upload
     val download = R.drawable.ms_download
