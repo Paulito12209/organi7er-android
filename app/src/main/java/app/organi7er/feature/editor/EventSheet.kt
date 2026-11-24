@@ -23,6 +23,7 @@ import app.organi7er.core.designsystem.components.ConfirmDialog
 import app.organi7er.core.designsystem.components.DatePickerSheet
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.FieldLabel
+import app.organi7er.core.designsystem.components.FocusToggle
 import app.organi7er.core.designsystem.components.FormField
 import app.organi7er.core.designsystem.components.Hint
 import app.organi7er.core.designsystem.components.Ms
@@ -87,6 +88,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
     var reminder by remember { mutableStateOf<Int?>(null) }
     var subStatus by remember { mutableStateOf<EventSubStatus?>(null) }
     var note by remember { mutableStateOf("") }
+    var focused by remember { mutableStateOf(false) }
     var picker by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -95,6 +97,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
             vm.event(editId)?.let { e ->
                 original = e
                 title = e.title
+                focused = e.focused
                 draft = e.status == Status.DRAFT && !planning
                 e.start?.let { s ->
                     date = s.toLocalDate()
@@ -184,6 +187,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
         }
 
         FormField(note, { note = it }, "Notiz", icon = Ms.editNote, singleLine = false, minLines = 2)
+        FocusToggle(focused) { focused = it }
 
         SheetActions(
             primary = if (planning) "Planen" else "Speichern",
@@ -207,6 +211,7 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
                     calendarId = calendarId,
                     reminderMinutes = if (draft) null else reminder,
                     note = note.trim(),
+                    focused = focused,
                     status = if (draft) Status.DRAFT else Status.ACTIVE,
                     subStatus = if (draft) null else subStatus,
                     previousStart = when {

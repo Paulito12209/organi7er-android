@@ -121,14 +121,18 @@ fun Modifier.knob(shape: Shape): Modifier {
         .border(1.dp, edge, shape)
 }
 
-/** Hintergrund-Aura aus der Vorlage (drei weiche Farbhöfe). */
+/** Hintergrund: weiche, große Farbschlieren, damit die Glasflächen Tiefe bekommen. */
 @Composable
 fun Modifier.aura(): Modifier {
     val c = OrganiTheme.colors
     return background(c.bg).drawBehind {
-        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(size.width * 0.9f, 0f), radius = size.width * 0.75f))
-        drawRect(Brush.radialGradient(listOf(c.aura2, Color.Transparent), center = Offset(0f, size.height * 0.45f), radius = size.width * 0.65f))
-        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(size.width, size.height * 0.85f), radius = size.width * 0.7f))
+        val w = size.width
+        val h = size.height
+        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(w * 0.95f, h * 0.06f), radius = w * 0.95f))
+        drawRect(Brush.radialGradient(listOf(c.aura3, Color.Transparent), center = Offset(w * 0.15f, h * 0.22f), radius = w * 0.7f))
+        drawRect(Brush.radialGradient(listOf(c.aura2, Color.Transparent), center = Offset(-w * 0.1f, h * 0.55f), radius = w * 0.9f))
+        drawRect(Brush.radialGradient(listOf(c.aura1, Color.Transparent), center = Offset(w * 1.05f, h * 0.78f), radius = w * 0.85f))
+        drawRect(Brush.radialGradient(listOf(c.aura3, Color.Transparent), center = Offset(w * 0.4f, h * 1.02f), radius = w * 0.6f))
     }
 }
 
@@ -157,7 +161,17 @@ fun Modifier.glass(shape: Shape = OrganiShapes.card, fill: Color = OrganiTheme.c
     if (shadow) m = m.softShadow(shape, c.shadowSoft)
     m = m.clip(shape)
     if (haze != null) m = m.hazeBlur(HazeInput.Sources(haze), style)
-    return m.background(fill).border(1.dp, c.glassLine, shape)
+    val sheen = remember(c) {
+        Brush.verticalGradient(0f to Color.White.copy(alpha = if (c.isDark) 0.07f else 0.32f), 0.55f to Color.Transparent)
+    }
+    val edge = remember(c) {
+        Brush.linearGradient(
+            0f to c.glassEdge,
+            0.45f to c.glassLine.copy(alpha = c.glassLine.alpha * 0.35f),
+            1f to c.glassEdge.copy(alpha = c.glassEdge.alpha * 0.6f),
+        )
+    }
+    return m.background(fill).background(sheen).border(1.dp, edge, shape)
 }
 
 @Composable
@@ -187,7 +201,7 @@ fun SegmentedList(modifier: Modifier = Modifier, content: @Composable ColumnScop
 
 /** Fläche eines Listeneintrags. 16 dp seitlich, 14 dp oben/unten, mind. 64 dp hoch. */
 @Composable
-fun Modifier.segmentItem(index: Int, count: Int, color: Color = OrganiTheme.colors.surface, minHeight: Dp = 64.dp): Modifier {
+fun Modifier.segmentItem(index: Int, count: Int, color: Color = OrganiTheme.colors.insetFill, minHeight: Dp = 64.dp): Modifier {
     val shape = segmentShape(index, count)
     return this
         .fillMaxWidth()

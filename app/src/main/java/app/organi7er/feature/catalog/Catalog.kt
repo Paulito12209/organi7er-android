@@ -30,9 +30,8 @@ import app.organi7er.core.designsystem.components.DateDivider
 import app.organi7er.core.designsystem.components.DraftRow
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.EventRow
-import app.organi7er.core.designsystem.components.ExtendedAddButton
 import app.organi7er.core.designsystem.components.FilterTile
-import app.organi7er.core.designsystem.components.FloatingTabBar
+import app.organi7er.core.designsystem.components.FusedTabBar
 import app.organi7er.core.designsystem.components.GlassCard
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.NextEventCard
@@ -84,7 +83,6 @@ fun CatalogContent() {
     var check by remember { mutableStateOf(false) }
     var q by remember { mutableStateOf("") }
     var tab by remember { mutableIntStateOf(0) }
-    var expanded by remember { mutableStateOf(true) }
 
     Overline("Knöpfe")
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
@@ -101,7 +99,6 @@ fun CatalogContent() {
         EntryType.entries.forEach { CaptureButton(it, {}) }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        ExtendedAddButton(EntryType.Task, expanded, { expanded = !expanded })
         SoftSwitch(sw, { sw = it })
         StatusTag("In Arbeit", TagTone.Blue)
         StatusTag("Geblockt", TagTone.Red)
@@ -138,7 +135,7 @@ fun CatalogContent() {
     NoteCard("Einkauf Wochenende", "Hafermilch, Brot, Äpfel, Kaffee", null, 0, "Morgen, 09:00", {}, {}, {})
     GlassCard(Modifier.fillMaxWidth()) { Text("GlassCard", Modifier.padding(18.dp), style = OrganiTheme.type.body, color = OrganiTheme.colors.text) }
     Overline("Navigation")
-    FloatingTabBar(
+    FusedTabBar(
         listOf(
             TabItem("Übersicht", Ms.home, Ms.homeFilled),
             TabItem("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
@@ -147,6 +144,6 @@ fun CatalogContent() {
         ),
         tab,
         { tab = it },
-        hazeState = null,
+        onAdd = {},
     )
 }

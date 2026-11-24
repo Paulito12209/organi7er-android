@@ -53,6 +53,7 @@ import app.organi7er.core.designsystem.components.ChoiceChips
 import app.organi7er.core.designsystem.components.ConfirmDialog
 import app.organi7er.core.designsystem.components.DatePickerSheet
 import app.organi7er.core.designsystem.components.FieldLabel
+import app.organi7er.core.designsystem.components.GlassCircleButton
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.MsIcon
 import app.organi7er.core.designsystem.components.PaperTextField
@@ -122,6 +123,8 @@ class NoteDetailViewModel @AssistedInject constructor(
         if (current.title != title || current.body != body) repo.save(current.copy(title = title, body = body))
     }
 
+    fun setFocused(focused: Boolean) = viewModelScope.launch { repo.setFocused(id, focused) }
+
     fun flush() = viewModelScope.launch { edits.value?.let { (t, b) -> persistText(t, b) } }
 
     fun update(transform: (Note) -> Note) = viewModelScope.launch {
@@ -186,6 +189,8 @@ fun NoteDetailScreen(id: Long) {
                 style = OrganiTheme.type.label,
                 color = c.textSoft,
             )
+            val focused = note?.focused == true
+            GlassCircleButton(Ms.flag, if (focused) "Nicht mehr fokussieren" else "Fokussieren", { vm.setFocused(!focused) }, size = 40.dp, filled = focused)
             SoftIconButton(Ms.delete, "Notiz löschen", { confirmDelete = true })
         }
 

@@ -1,15 +1,10 @@
 package app.organi7er.core.designsystem.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -226,36 +221,6 @@ fun CaptureButton(type: EntryType, onClick: () -> Unit, modifier: Modifier = Mod
     }
 }
 
-/** Erweiterter Add-Button nach M3: 56 dp, Radius 16, „+ Aufgabe“; eingeklappt quadratisch nur mit Plus. */
-@Composable
-fun ExtendedAddButton(type: EntryType, expanded: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val c = OrganiTheme.colors
-    val fill = type.fill()
-    val onFill = type.onFill()
-    val bg by animateColorAsState(fill, tween(ANIM), label = "fabColor")
-    Row(
-        modifier
-            .height(56.dp)
-            .floatShadow(OrganiShapes.fab, c.shadowFloat)
-            .clip(OrganiShapes.fab)
-            .background(bg)
-            .clickable(role = Role.Button, onClickLabel = type.newLabel, onClick = onClick)
-            .semantics(mergeDescendants = true) { contentDescription = type.newLabel }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MsIcon(Ms.add, null, tint = onFill, size = 24.dp)
-        AnimatedVisibility(
-            visible = expanded,
-            enter = fadeIn(tween(ANIM)) + expandHorizontally(tween(ANIM)),
-            exit = fadeOut(tween(150)) + shrinkHorizontally(tween(ANIM)),
-        ) {
-            Text(type.shortLabel, Modifier.padding(start = 10.dp, end = 4.dp), style = OrganiTheme.type.button.copy(fontSize = OrganiTheme.type.title.fontSize), color = onFill, maxLines = 1)
-        }
-    }
-}
-
-/** Schalter im Soft-Stil (48 × 28). */
 @Composable
 fun SoftSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, contentDescription: String? = null) {
     val c = OrganiTheme.colors

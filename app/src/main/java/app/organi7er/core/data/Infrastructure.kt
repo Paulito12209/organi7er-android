@@ -78,6 +78,8 @@ class DataStoreSettingsRepository @Inject constructor(private val store: DataSto
         val briefingTime = intPreferencesKey("briefing_time")
         val drafts = booleanPreferencesKey("draft_reminders")
         val seeded = booleanPreferencesKey("seeded")
+        val profileName = stringPreferencesKey("profile_name")
+        val profileImage = stringPreferencesKey("profile_image")
     }
 
     override val settings: Flow<AppSettings> = store.data.map { p ->
@@ -91,6 +93,8 @@ class DataStoreSettingsRepository @Inject constructor(private val store: DataSto
             morningBriefingTime = p[Keys.briefingTime] ?: d.morningBriefingTime,
             draftReminders = p[Keys.drafts] ?: d.draftReminders,
             sampleDataSeeded = p[Keys.seeded] ?: d.sampleDataSeeded,
+            profileName = p[Keys.profileName] ?: d.profileName,
+            profileImage = p[Keys.profileImage],
         )
     }.distinctUntilChanged()
 
@@ -105,6 +109,8 @@ class DataStoreSettingsRepository @Inject constructor(private val store: DataSto
                 morningBriefingTime = p[Keys.briefingTime] ?: (7 * 60 + 30),
                 draftReminders = p[Keys.drafts] ?: false,
                 sampleDataSeeded = p[Keys.seeded] ?: false,
+                profileName = p[Keys.profileName] ?: "",
+                profileImage = p[Keys.profileImage],
             )
             val n = transform(current)
             p[Keys.theme] = n.themeMode.name
@@ -115,6 +121,8 @@ class DataStoreSettingsRepository @Inject constructor(private val store: DataSto
             p[Keys.briefingTime] = n.morningBriefingTime
             p[Keys.drafts] = n.draftReminders
             p[Keys.seeded] = n.sampleDataSeeded
+            p[Keys.profileName] = n.profileName
+            if (n.profileImage != null) p[Keys.profileImage] = n.profileImage else p.remove(Keys.profileImage)
         }
     }
 }

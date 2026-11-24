@@ -218,6 +218,19 @@ fun <T> ChoiceChips(options: List<T>, selected: T, label: (T) -> String, onSelec
 @Composable
 fun FieldLabel(text: String) = Overline(text)
 
+/** „Fokussieren“: Eintrag erscheint auf der Übersicht unter „Im Fokus“. */
+@Composable
+fun FocusToggle(checked: Boolean, onChange: (Boolean) -> Unit) {
+    val c = OrganiTheme.colors
+    androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
+            Text("Fokussieren", style = OrganiTheme.type.rowTitle, color = c.text)
+            Text("Auf der Übersicht unter „Im Fokus“ zeigen", style = OrganiTheme.type.rowMeta, color = c.textSoft)
+        }
+        SoftSwitch(checked, onChange, contentDescription = "Fokussieren")
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerSheet(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit, minDate: LocalDate? = null) {

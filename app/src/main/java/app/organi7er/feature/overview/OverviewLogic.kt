@@ -1,181 +1,200 @@
 package app.organi7er.feature.overview
 
 import androidx.compose.runtime.Immutable
-import app.organi7er.core.data.Briefing
 import app.organi7er.core.data.BriefingCalculator
-import app.organi7er.core.data.BriefingKind
-import app.organi7er.core.model.CalendarEntity
+import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.model.Dates
 import app.organi7er.core.model.Dates.toLocal
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.NoteWithImages
+import app.organi7er.core.model.NotificationEntry
 import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
-import app.organi7er.feature.common.EventUi
-import app.organi7er.feature.common.NoteDay
-import app.organi7er.feature.common.TaskUi
-import app.organi7er.feature.common.UiMapper
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
+import java.time.temporal.WeekFields
 
-/** Auswahl über Datumspfeile oder Kacheln: Tag (0 = heute … 6) oder die ganze Woche. */
+/** Eine Tageskachel. Die gewählte ist groß und quadratisch, die übrigen schmale Streifen. */
 @Immutable
-data class OverviewSelection(val dayOffset: Int = 0, val week: Boolean = false) {
-    fun prev() = if (week) OverviewSelection() else copy(dayOffset = (dayOffset - 1).coerceAtLeast(0))
-    fun next() = if (week) OverviewSelection() else copy(dayOffset = (dayOffset + 1).coerceAtMost(MAX_OFFSET))
-
-    companion object {
-        const val MAX_OFFSET = 6
-    }
-}
+data class DayTileUi(
+    val date: LocalDate,
+    /** „M“, „D“, „M“, „D“, „F“, „S“, „S“. */
+    val letter: String,
+    /** „Di 24“ in der großen Kachel. */
+    val short: String,
+    val number: String,
+    /** „Heute“, „Morgen“, „Mittwoch“ … */
+    val headline: String,
+    val events: Int,
+    val tasks: Int,
+    val notes: Int,
+    val isToday: Boolean,
+    /** „Als Nächstes · 10:00“, „Aufgabe“ oder leer. */
+    val nextLabel: String,
+    val nextTitle: String,
+    val a11y: String,
+)
 
 @Immutable
-sealed interface OverviewSection {
-    val key: String
+data class WeekUi(val start: LocalDate, val number: Int, val isCurrent: Boolean)
 
-    /** „Als Nächstes“: große Karte + weitere Termine des Tages. */
-    data class Next(val hero: EventUi, val until: String, val rest: List<EventUi>) : OverviewSection {
-        override val key = "next"
-    }
-
-    data class Events(val title: String, val items: List<EventUi>) : OverviewSection {
-        override val key = "events-$title"
-    }
-
-    data class Tasks(val title: String, val items: List<TaskUi>, val more: Int) : OverviewSection {
-        override val key = "tasks-$title"
-    }
-
-    data class Hint(val text: String) : OverviewSection {
-        override val key = "hint-$text"
-    }
-}
+/** Kurzer Eintrag für „Im Fokus“ und den Verlauf. */
+@Immutable
+data class EntryUi(val type: EntryType, val id: Long, val title: String, val meta: String, val whenLabel: String = "")
 
 @Immutable
 data class OverviewState(
-    val dateLabel: String = "",
-    val canPrev: Boolean = false,
-    val canNext: Boolean = true,
-    val tiles: List<Briefing> = emptyList(),
-    val selectedTile: BriefingKind? = BriefingKind.TODAY,
-    val sections: List<OverviewSection> = emptyList(),
-    val notes: List<NoteDay> = emptyList(),
     val today: LocalDate = LocalDate.now(),
+    val selected: LocalDate = LocalDate.now(),
+    val days: List<DayTileUi> = emptyList(),
+    val weeks: List<WeekUi> = emptyList(),
+    val selectedWeek: Int = 0,
+    val unread: Int = 0,
+    val focus: List<EntryUi> = emptyList(),
+    val opened: List<EntryUi> = emptyList(),
+    val created: List<EntryUi> = emptyList(),
 )
 
-/** Reine Ableitung des Übersichts-Inhalts. Leere Abschnitte werden nie als leere Karten gezeigt. */
+/** Reine Ableitung der Übersicht. */
 object OverviewBuilder {
-    private const val TASK_LIMIT = 6
-    private const val NOTE_LIMIT = 4
+    private const val WEEKS_BACK = 8
+    private const val WEEKS_AHEAD = 16
+    private const val FEED_LIMIT = 8
+    private val LETTERS = mapOf(
+        DayOfWeek.MONDAY to "M",
+        DayOfWeek.TUESDAY to "D",
+        DayOfWeek.WEDNESDAY to "M",
+        DayOfWeek.THURSDAY to "D",
+        DayOfWeek.FRIDAY to "F",
+        DayOfWeek.SATURDAY to "S",
+        DayOfWeek.SUNDAY to "S",
+    )
+
+    fun weekFields(weekStart: Int): WeekFields = if (weekStart == 7) WeekFields.SUNDAY_START else WeekFields.ISO
+
+    fun weekStartOf(date: LocalDate, weekStart: Int): LocalDate =
+        date.with(TemporalAdjusters.previousOrSame(weekFields(weekStart).firstDayOfWeek))
 
     fun build(
         now: LocalDateTime,
-        selection: OverviewSelection,
+        selected: LocalDate,
+        weekStart: Int,
         events: List<Event>,
-        calendars: List<CalendarEntity>,
         tasks: List<Task>,
         notes: List<NoteWithImages>,
-        tiles: List<Briefing>,
+        log: List<NotificationEntry>,
     ): OverviewState {
         val today = now.toLocalDate()
         val active = BriefingCalculator.relevantEvents(events)
-        val ui = { e: Event -> UiMapper.event(e, calendars) }
-        val sections = mutableListOf<OverviewSection>()
+        val fields = weekFields(weekStart)
+        val monday = weekStartOf(selected, weekStart)
 
-        val dateLabel: String
-        val selected: BriefingKind?
-        if (selection.week) {
-            val end = today.plusDays(6)
-            dateLabel = Dates.range(today, end)
-            selected = BriefingKind.WEEK
-            val rows = (0L..6L).map { today.plusDays(it) }.mapNotNull { day ->
-                val dayEvents = active.filter { it.occursOn(day) && it.effectiveEnd!!.isAfter(now) }.sortedBy { it.start }
-                if (dayEvents.isEmpty()) return@mapNotNull null
-                val main = if (dayEvents.size >= 3) dayEvents.maxBy { java.time.Duration.between(it.start, it.effectiveEnd).toMinutes() } else dayEvents.first()
-                EventUi(
-                    event = main,
-                    time = Dates.weekdayShort(day),
-                    timeSub = if (dayEvents.size >= 3) {
-                        "${dayEvents.size} Termine"
-                    } else if (main.allDay) {
-                        "ganzt."
-                    } else {
-                        Dates.time(main.start!!)
-                    },
-                    meta = if (dayEvents.size > 1 && dayEvents.size < 3) "+ ${dayEvents.size - 1} weiterer Termin" else UiMapper.eventRangeMeta(main),
-                    colorHex = UiMapper.calendarColor(main, calendars),
-                    tag = main.subStatus?.label,
-                )
-            }
-            if (rows.isNotEmpty()) sections += OverviewSection.Events("Diese Woche", rows)
-            val due = tasks.filter { it.status == Status.ACTIVE && it.dueAt != null && !it.dueAt.toLocalDate().isAfter(end) }
-                .sortedWith(compareBy({ it.dueAt }, { it.priority.ordinal * -1 }))
-            if (due.isNotEmpty()) sections += OverviewSection.Tasks("Fällig diese Woche", due.take(TASK_LIMIT).map { UiMapper.task(it, today, showDate = true, now) }, due.size - TASK_LIMIT)
-            if (sections.isEmpty()) sections += OverviewSection.Hint("Diese Woche ist noch nichts geplant.")
-        } else {
-            val day = today.plusDays(selection.dayOffset.toLong())
-            dateLabel = Dates.longDay(day)
-            selected = when (selection.dayOffset) {
-                0 -> BriefingKind.TODAY
-                1 -> if (tiles.any { it.kind == BriefingKind.TOMORROW }) BriefingKind.TOMORROW else null
-                else -> null
-            }
+        val days = (0L..6L).map { o ->
+            val day = monday.plusDays(o)
             val dayEvents = active.filter { it.occursOn(day) }.sortedWith(compareBy({ !it.allDay }, { it.start }))
             val dayTasks = tasks.filter { t ->
                 val due = t.dueAt?.toLocalDate() ?: return@filter false
                 when (t.status) {
-                    Status.ACTIVE -> if (selection.dayOffset == 0) !due.isAfter(day) else due == day
-                    Status.DONE -> due == day && t.doneAt?.toLocal()?.toLocalDate() == today
+                    Status.ACTIVE -> if (day == today) !due.isAfter(day) else due == day
+                    Status.DONE -> due == day
                     Status.DRAFT -> false
                 }
-            }.sortedWith(compareBy({ it.status == Status.DONE }, { it.dueAt }, { -it.priority.ordinal }))
-            val taskUis = dayTasks.take(TASK_LIMIT).map { UiMapper.task(it, today, showDate = false, now) }
-            val weekday = Dates.weekdayLong(day)
-
-            when (selection.dayOffset) {
-                0 -> {
-                    val upcoming = dayEvents.filter { it.effectiveEnd!!.isAfter(now) }
-                    val hero = upcoming.firstOrNull { !it.allDay }
-                    if (hero != null) {
-                        val until = if (!hero.start!!.isAfter(now)) "läuft" else Dates.until(hero.start, now)
-                        sections += OverviewSection.Next(ui(hero), until, upcoming.filter { it.id != hero.id }.map(ui))
-                    } else if (upcoming.isNotEmpty()) {
-                        sections += OverviewSection.Events("Heute", upcoming.map(ui))
-                    }
-                    if (upcoming.isEmpty()) sections += OverviewSection.Hint(if (dayEvents.isEmpty()) "Heute keine Termine." else "Keine Termine mehr heute.")
-                    if (taskUis.isNotEmpty()) sections += OverviewSection.Tasks("Aufgaben heute", taskUis, dayTasks.size - TASK_LIMIT)
-                }
-                1 -> {
-                    if (dayEvents.isNotEmpty()) sections += OverviewSection.Events("Termine morgen", dayEvents.map(ui))
-                    if (taskUis.isNotEmpty()) sections += OverviewSection.Tasks("Aufgaben morgen", taskUis, dayTasks.size - TASK_LIMIT)
-                    if (dayEvents.isEmpty() && taskUis.isEmpty()) {
-                        sections += OverviewSection.Hint("Für morgen ist noch nichts geplant.")
-                    } else if (dayEvents.isEmpty()) {
-                        sections += OverviewSection.Hint("Keine Termine an diesem Tag.")
-                    }
-                }
-                else -> {
-                    if (dayEvents.isNotEmpty()) sections += OverviewSection.Events("Termine am $weekday", dayEvents.map(ui))
-                    if (taskUis.isNotEmpty()) sections += OverviewSection.Tasks("Aufgaben am $weekday", taskUis, dayTasks.size - TASK_LIMIT)
-                    if (dayEvents.isEmpty() && taskUis.isEmpty()) {
-                        sections += OverviewSection.Hint("An diesem Tag ist nichts geplant.")
-                    } else if (dayEvents.isEmpty()) {
-                        sections += OverviewSection.Hint("Keine Termine an diesem Tag.")
-                    }
-                }
             }
+            val dayNotes = notes.count { it.note.status == Status.ACTIVE && it.note.reminderAt?.toLocalDate() == day }
+            val upcoming = if (day == today) dayEvents.filter { it.effectiveEnd!!.isAfter(now) } else dayEvents
+            val next = upcoming.firstOrNull { !it.allDay } ?: upcoming.firstOrNull()
+            val openTask = dayTasks.firstOrNull { it.status == Status.ACTIVE }
+            val (label, title) = when {
+                next != null && next.allDay -> "Ganztägig" to next.title
+                next != null -> "${if (day == today) "Als Nächstes" else "Erster Termin"} · ${Dates.time(next.start!!)}" to next.title
+                openTask != null -> "Aufgabe" to openTask.title
+                day.isBefore(today) -> "" to "Vorbei"
+                else -> "" to "Nichts geplant"
+            }
+            val headline = when (ChronoUnit.DAYS.between(today, day)) {
+                0L -> "Heute"
+                1L -> "Morgen"
+                -1L -> "Gestern"
+                else -> Dates.weekdayLong(day)
+            }
+            DayTileUi(
+                date = day,
+                letter = LETTERS.getValue(day.dayOfWeek),
+                short = "${Dates.weekdayShort(day)} ${day.dayOfMonth}",
+                number = "${day.dayOfMonth}",
+                headline = headline,
+                events = dayEvents.size,
+                tasks = dayTasks.count { it.status == Status.ACTIVE },
+                notes = dayNotes,
+                isToday = day == today,
+                nextLabel = label,
+                nextTitle = title,
+                a11y = "${Dates.longDay(day)}: ${dayEvents.size} Termine, ${dayTasks.size} Aufgaben" +
+                    if (title.isNotBlank()) ". $label $title" else "",
+            )
         }
 
-        val feed = notes.filter { it.note.status == Status.ACTIVE }.sortedByDescending { it.note.createdAt }.take(NOTE_LIMIT)
+        val currentWeek = weekStartOf(today, weekStart)
+        val weeks = (-WEEKS_BACK..WEEKS_AHEAD).map { w ->
+            val start = currentWeek.plusWeeks(w.toLong())
+            WeekUi(start, start.plusDays(3).get(fields.weekOfWeekBasedYear()), w == 0)
+        }
+        val selectedWeek = weeks.indexOfFirst { it.start == monday }.coerceAtLeast(0)
+
+        val nowInstant = now.atZone(java.time.ZoneId.systemDefault()).toInstant()
+        val all = buildList {
+            events.forEach { e -> add(Item(EntryType.Event, e.id, e.title, eventMeta(e, today), e.focused, e.openedAt, e.createdAt)) }
+            tasks.forEach { t -> add(Item(EntryType.Task, t.id, t.title, taskMeta(t, today), t.focused && t.status != Status.DONE, t.openedAt, t.createdAt)) }
+            notes.forEach { n -> add(Item(EntryType.Note, n.note.id, n.note.title.ifBlank { n.note.body.lineSequence().firstOrNull().orEmpty().take(40).ifBlank { "Ohne Titel" } }, "Notiz", n.note.focused, n.note.openedAt, n.note.createdAt)) }
+        }
+        val focus = all.filter { it.focused }.sortedByDescending { it.opened ?: it.created }.map { it.ui("") }
+        val opened = all.filter { it.opened != null }.sortedByDescending { it.opened }.take(FEED_LIMIT).map { it.ui(ago(it.opened!!, nowInstant, today)) }
+        val created = all.sortedByDescending { it.created }.take(FEED_LIMIT).map { it.ui(ago(it.created, nowInstant, today)) }
+
         return OverviewState(
-            dateLabel = dateLabel,
-            canPrev = selection.week || selection.dayOffset > 0,
-            canNext = selection.week || selection.dayOffset < OverviewSelection.MAX_OFFSET,
-            tiles = tiles,
-            selectedTile = selected,
-            sections = sections,
-            notes = UiMapper.noteDays(feed, today),
             today = today,
+            selected = selected,
+            days = days,
+            weeks = weeks,
+            selectedWeek = selectedWeek,
+            unread = log.count { !it.read },
+            focus = focus,
+            opened = opened,
+            created = created,
         )
+    }
+
+    private data class Item(val type: EntryType, val id: Long, val title: String, val meta: String, val focused: Boolean, val opened: Instant?, val created: Instant) {
+        fun ui(whenLabel: String) = EntryUi(type, id, title, meta, whenLabel)
+    }
+
+    private fun eventMeta(e: Event, today: LocalDate): String {
+        val start = e.start ?: return "Termin · Entwurf"
+        val day = Dates.dueLabel(start.toLocalDate(), today).replaceFirstChar(Char::uppercase)
+        return listOfNotNull("Termin", if (e.allDay) day else "$day, ${Dates.time(start)}", e.location.ifBlank { null }).joinToString(" · ")
+    }
+
+    private fun taskMeta(t: Task, today: LocalDate): String = when {
+        t.status == Status.DONE -> "Aufgabe · erledigt"
+        t.dueAt == null -> "Aufgabe · Entwurf"
+        else -> "Aufgabe · fällig ${Dates.dueLabel(t.dueAt.toLocalDate(), today)}"
+    }
+
+    /** „gerade eben“, „vor 5 Min“, „08:12“ (heute), „gestern“, „Mo, 23. Nov.“ */
+    fun ago(at: Instant, now: Instant, today: LocalDate): String {
+        val minutes = Duration.between(at, now).toMinutes()
+        val local = at.toLocal()
+        return when {
+            minutes < 1 -> "gerade eben"
+            minutes < 60 -> "vor $minutes Min"
+            local.toLocalDate() == today -> Dates.time(local)
+            local.toLocalDate() == today.minusDays(1) -> "gestern"
+            else -> Dates.shortDate(local.toLocalDate())
+        }
     }
 }

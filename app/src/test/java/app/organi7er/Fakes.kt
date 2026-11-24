@@ -37,6 +37,12 @@ class FakeTaskDao : TaskDao {
     override suspend fun deleteAll() {
         items.value = emptyList()
     }
+    override suspend fun setFocused(id: Long, focused: Boolean) {
+        items.value = items.value.map { if (it.id == id) it.copy(focused = focused) else it }
+    }
+    override suspend fun markOpened(id: Long, at: Instant) {
+        items.value = items.value.map { if (it.id == id) it.copy(openedAt = at) else it }
+    }
     override suspend fun insertAll(items: List<Task>) {
         this.items.value = this.items.value + items
     }
@@ -57,5 +63,11 @@ class FakeTaskRepository(initial: List<Task>) : TaskRepository {
         flow.value = flow.value.map {
             if (it.id == id) it.copy(status = if (done) Status.DONE else Status.ACTIVE, doneAt = if (done) Instant.now() else null) else it
         }
+    }
+    override suspend fun setFocused(id: Long, focused: Boolean) {
+        flow.value = flow.value.map { if (it.id == id) it.copy(focused = focused) else it }
+    }
+    override suspend fun markOpened(id: Long) {
+        flow.value = flow.value.map { if (it.id == id) it.copy(openedAt = Instant.now()) else it }
     }
 }

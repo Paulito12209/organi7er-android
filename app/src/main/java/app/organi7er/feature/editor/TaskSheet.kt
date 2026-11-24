@@ -16,6 +16,7 @@ import app.organi7er.core.designsystem.components.ConfirmDialog
 import app.organi7er.core.designsystem.components.DatePickerSheet
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.FieldLabel
+import app.organi7er.core.designsystem.components.FocusToggle
 import app.organi7er.core.designsystem.components.FormField
 import app.organi7er.core.designsystem.components.Hint
 import app.organi7er.core.designsystem.components.Ms
@@ -54,6 +55,7 @@ fun TaskSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Unit
     var priority by remember { mutableStateOf(Priority.NORMAL) }
     var listName by remember { mutableStateOf("") }
     var subStatus by remember { mutableStateOf<TaskSubStatus?>(null) }
+    var focused by remember { mutableStateOf(false) }
     var picker by remember { mutableStateOf<String?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -68,6 +70,7 @@ fun TaskSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Unit
                 priority = t.priority
                 listName = t.listName
                 subStatus = t.subStatus
+                focused = t.focused
             }
         }
         loaded = true
@@ -121,6 +124,7 @@ fun TaskSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Unit
         }
 
         FormField(note, { note = it }, "Notiz", icon = Ms.editNote, singleLine = false, minLines = 2)
+        FocusToggle(focused) { focused = it }
 
         SheetActions(
             primary = if (planning) "Planen" else "Speichern",
@@ -143,6 +147,7 @@ fun TaskSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Unit
                         listName = listName.trim(),
                         status = status,
                         subStatus = if (status == Status.ACTIVE) subStatus else null,
+                        focused = focused,
                     ),
                 )
                 onDismiss()

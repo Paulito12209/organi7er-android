@@ -52,6 +52,10 @@ data class Event(
     val subStatus: EventSubStatus? = null,
     /** Ursprüngliche Zeit, wenn ein Termin verschoben wurde („vorher 11:00“). */
     val previousStart: LocalDateTime? = null,
+    /** „Im Fokus“ auf der Übersicht (angeheftet). */
+    val focused: Boolean = false,
+    /** Zuletzt geöffnet, für den Verlauf. */
+    val openedAt: Instant? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now(),
 ) {
@@ -91,6 +95,10 @@ data class Task(
     val subStatus: TaskSubStatus? = null,
     val doneAt: Instant? = null,
     val listName: String = "",
+    /** „Im Fokus“ auf der Übersicht (angeheftet). */
+    val focused: Boolean = false,
+    /** Zuletzt geöffnet, für den Verlauf. */
+    val openedAt: Instant? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now(),
 )
@@ -104,6 +112,10 @@ data class Note(
     val reminderAt: LocalDateTime? = null,
     val status: Status = Status.ACTIVE,
     val subStatus: NoteSubStatus? = null,
+    /** „Im Fokus“ auf der Übersicht (angeheftet). */
+    val focused: Boolean = false,
+    /** Zuletzt geöffnet, für den Verlauf. */
+    val openedAt: Instant? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = Instant.now(),
 )
@@ -130,6 +142,19 @@ data class NoteWithImages(
     val sortedImages: List<NoteImage> get() = images.sortedBy { it.position }
 }
 
+/** Mitschrift jeder ausgelösten Benachrichtigung für die Seite „Benachrichtigungen“. */
+@Immutable
+@Entity(tableName = "notification_log", indices = [Index("createdAt")])
+data class NotificationEntry(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    /** Kanal: reminders, briefing, drafts. */
+    val kind: String,
+    val title: String,
+    val text: String,
+    val createdAt: Instant = Instant.now(),
+    val read: Boolean = false,
+)
+
 @Immutable
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -142,4 +167,7 @@ data class AppSettings(
     val morningBriefingTime: Int = 7 * 60 + 30,
     val draftReminders: Boolean = false,
     val sampleDataSeeded: Boolean = false,
+    val profileName: String = "",
+    /** Absoluter Pfad im App-Speicher, null = noch kein Profilbild. */
+    val profileImage: String? = null,
 )

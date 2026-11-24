@@ -53,6 +53,9 @@ object OrganiType {
     val tag = style(FontWeight.SemiBold, 11.5f, 14f, 0.01f)
     val paper = style(FontWeight.Normal, 15f, 24f)
     val filterCount = style(FontWeight.Medium, 22f, 26f)
+    val panelTitle = style(FontWeight.Normal, 20f, 26f, -0.01f)
+    val statValue = style(FontWeight.Light, 26f, 30f, -0.02f)
+    val heroValue = style(FontWeight.Light, 30f, 36f, -0.02f)
 }
 
 /** Material-Komponenten (Picker, Snackbar …) bekommen ebenfalls Outfit. */

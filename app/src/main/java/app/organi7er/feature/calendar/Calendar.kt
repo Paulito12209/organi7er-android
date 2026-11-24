@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,6 +67,7 @@ import app.organi7er.core.model.Dates
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.EventSubStatus
 import app.organi7er.core.model.Status
+import app.organi7er.feature.common.AppHeader
 import app.organi7er.feature.common.EventList
 import app.organi7er.feature.common.EventUi
 import app.organi7er.feature.common.UiMapper
@@ -214,8 +214,9 @@ fun CalendarScreen(vm: CalendarViewModel = hiltViewModel()) {
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         item(key = "head") {
-            Row(Modifier.statusBarsPadding().padding(top = 8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+            AppHeader(
+                "Termine",
+                eyebrow = {
                     Row(
                         Modifier
                             .heightIn(min = 32.dp)
@@ -226,8 +227,8 @@ fun CalendarScreen(vm: CalendarViewModel = hiltViewModel()) {
                         Text(Dates.monthYear(state.selected).uppercase(), style = OrganiTheme.type.overline, color = c.textSoft)
                         MsIcon(Ms.expandMore, null, tint = c.textSoft, size = 16.dp)
                     }
-                    Text("Termine", Modifier.semantics { heading() }, style = OrganiTheme.type.pageTitle, color = c.text)
-                }
+                },
+            ) {
                 if (state.segment == 1 && state.selected != state.today) {
                     PillButton("Heute", { vm.select(state.today) }, variant = PillVariant.Soft, small = true)
                 }

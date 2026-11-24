@@ -36,6 +36,8 @@ object TestDataModule {
 
     @Provides fun noteDao(db: OrganiDatabase) = db.noteDao()
 
+    @Provides fun notificationDao(db: OrganiDatabase) = db.notificationDao()
+
     @Provides
     @Singleton
     fun dataStore(@ApplicationContext context: Context): DataStore<Preferences> =

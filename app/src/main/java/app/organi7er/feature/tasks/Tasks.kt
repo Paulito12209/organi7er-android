@@ -4,21 +4,13 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -42,6 +34,7 @@ import app.organi7er.core.model.Dates.toLocal
 import app.organi7er.core.model.Priority
 import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
+import app.organi7er.feature.common.AppHeader
 import app.organi7er.feature.common.TaskList
 import app.organi7er.feature.common.TaskUi
 import app.organi7er.feature.common.UiMapper
@@ -161,8 +154,7 @@ fun TasksScreen(vm: TasksViewModel = hiltViewModel()) {
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         item(key = "head") {
-            Row(Modifier.statusBarsPadding().padding(top = 8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Aufgaben", Modifier.weight(1f).semantics { heading() }, style = OrganiTheme.type.pageTitle, color = c.text)
+            AppHeader("Aufgaben") {
                 if (state.segment == 1) {
                     SoftIconButton(Ms.swapVert, "Sortieren nach ${if (state.sort == TaskSort.DUE) TaskSort.PRIORITY.label else TaskSort.DUE.label}", vm::toggleSort)
                 }

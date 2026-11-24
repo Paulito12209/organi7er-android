@@ -76,7 +76,21 @@ object Notifications {
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
+    /** Zugriff aus Receivern/Workern ohne eigene Injektion. */
+    @dagger.hilt.EntryPoint
+    @dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+    interface LogEntryPoint {
+        fun notifications(): NotificationRepository
+
+        @ApplicationScope fun scope(): CoroutineScope
+    }
+
     fun post(context: Context, channel: String, id: Int, title: String, text: String) {
+        // Mitschreiben auch ohne Systemberechtigung: die Seite „Benachrichtigungen“ zeigt alles, was fällig war.
+        runCatching {
+            val ep = dagger.hilt.android.EntryPointAccessors.fromApplication(context.applicationContext, LogEntryPoint::class.java)
+            ep.scope().launch { ep.notifications().log(channel, title, text) }
+        }
         if (!canPost(context)) return
         val open = PendingIntent.getActivity(
             context,

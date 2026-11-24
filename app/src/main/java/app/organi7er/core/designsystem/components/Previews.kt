@@ -30,7 +30,6 @@ private fun ButtonsPreview() = PreviewFrame {
         PillButton("Soft", {}, variant = PillVariant.Soft)
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { EntryType.entries.forEach { CaptureButton(it, {}) } }
-    ExtendedAddButton(EntryType.Note, expanded = true, onClick = {})
 }
 
 @PreviewLightDark

@@ -8,19 +8,23 @@ import androidx.lifecycle.viewModelScope
 import app.organi7er.core.data.EventRepository
 import app.organi7er.core.data.ImageStore
 import app.organi7er.core.data.NoteRepository
+import app.organi7er.core.data.NotificationRepository
 import app.organi7er.core.data.SettingsRepository
 import app.organi7er.core.data.TaskRepository
+import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.model.AppSettings
 import app.organi7er.core.model.CalendarEntity
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.Note
 import app.organi7er.core.model.Task
+import app.organi7er.feature.common.ShellInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -48,7 +52,13 @@ class EditorViewModel @Inject constructor(
     private val notes: NoteRepository,
     private val images: ImageStore,
     settings: SettingsRepository,
+    notifications: NotificationRepository,
 ) : ViewModel() {
+    /** Ungelesene Benachrichtigungen und Profilbild für den Kopf aller Seiten. */
+    val shell: StateFlow<ShellInfo> = combine(notifications.entries, settings.settings) { log, s ->
+        ShellInfo(unread = log.count { !it.read }, profileImage = s.profileImage)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ShellInfo())
+
     val calendars: StateFlow<List<CalendarEntity>> = events.calendars.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val settings: StateFlow<AppSettings> = settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
     val taskLists: StateFlow<List<String>> = tasks.tasks
@@ -63,6 +73,23 @@ class EditorViewModel @Inject constructor(
     fun saveTask(task: Task) = viewModelScope.launch { tasks.save(task) }
     fun deleteTask(id: Long) = viewModelScope.launch { tasks.delete(id) }
     fun setTaskDone(id: Long, done: Boolean) = viewModelScope.launch { tasks.setDone(id, done) }
+
+    /** Für „Zuletzt geöffnet“. */
+    fun markOpened(type: EntryType, id: Long) = viewModelScope.launch {
+        when (type) {
+            EntryType.Event -> events.markOpened(id)
+            EntryType.Task -> tasks.markOpened(id)
+            EntryType.Note -> notes.markOpened(id)
+        }
+    }
+
+    fun setFocused(type: EntryType, id: Long, focused: Boolean) = viewModelScope.launch {
+        when (type) {
+            EntryType.Event -> events.setFocused(id, focused)
+            EntryType.Task -> tasks.setFocused(id, focused)
+            EntryType.Note -> notes.setFocused(id, focused)
+        }
+    }
 
     fun createNote(note: Note, uris: List<Uri>, files: List<String>, onCreated: (Long) -> Unit = {}) = viewModelScope.launch {
         val id = notes.save(note)
@@ -88,6 +115,7 @@ data class AppActions(
     val openNote: (Long) -> Unit = {},
     val openTab: (Int) -> Unit = {},
     val openSettings: () -> Unit = {},
+    val openNotifications: () -> Unit = {},
     val openCatalog: () -> Unit = {},
     val back: () -> Unit = {},
     val takePhoto: (noteId: Long) -> Unit = {},

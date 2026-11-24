@@ -29,6 +29,7 @@ import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Spacing
 import app.organi7er.core.designsystem.components.DatePickerSheet
 import app.organi7er.core.designsystem.components.EntryType
+import app.organi7er.core.designsystem.components.FocusToggle
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.OrganiSheet
 import app.organi7er.core.designsystem.components.PaperTextField
@@ -64,6 +65,7 @@ fun NoteSheet(vm: EditorViewModel, onDismiss: () -> Unit) {
     var title by remember { mutableStateOf("") }
     var body by remember { mutableStateOf("") }
     var draft by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(false) }
     var reminder by remember { mutableStateOf<LocalDateTime?>(null) }
     var picker by remember { mutableStateOf<String?>(null) }
     val images = remember { mutableStateListOf<PendingImage>() }
@@ -132,12 +134,13 @@ fun NoteSheet(vm: EditorViewModel, onDismiss: () -> Unit) {
             }
             SoftSwitch(draft, { draft = it }, contentDescription = "Als Entwurf ablegen")
         }
+        FocusToggle(focused) { focused = it }
 
         SheetActions(
             primary = "Speichern",
             enabled = title.isNotBlank() || body.isNotBlank() || images.isNotEmpty(),
             onPrimary = {
-                val note = Note(title = title.trim(), body = body.trim(), reminderAt = reminder, status = if (draft) Status.DRAFT else Status.ACTIVE)
+                val note = Note(title = title.trim(), body = body.trim(), reminderAt = reminder, status = if (draft) Status.DRAFT else Status.ACTIVE, focused = focused)
                 vm.createNote(
                     note,
                     images.filterIsInstance<PendingImage.FromUri>().map { it.uri },

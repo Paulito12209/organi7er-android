@@ -4,12 +4,14 @@ import android.net.Uri
 import app.organi7er.core.data.db.CalendarDao
 import app.organi7er.core.data.db.EventDao
 import app.organi7er.core.data.db.NoteDao
+import app.organi7er.core.data.db.NotificationDao
 import app.organi7er.core.data.db.TaskDao
 import app.organi7er.core.model.CalendarEntity
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.Note
 import app.organi7er.core.model.NoteImage
 import app.organi7er.core.model.NoteWithImages
+import app.organi7er.core.model.NotificationEntry
 import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
 import java.time.Instant
@@ -26,6 +28,8 @@ interface EventRepository {
     suspend fun delete(id: Long)
     suspend fun saveCalendar(calendar: CalendarEntity): Long
     suspend fun deleteCalendar(calendar: CalendarEntity)
+    suspend fun setFocused(id: Long, focused: Boolean)
+    suspend fun markOpened(id: Long)
 }
 
 interface TaskRepository {
@@ -34,6 +38,8 @@ interface TaskRepository {
     suspend fun save(task: Task): Long
     suspend fun delete(id: Long)
     suspend fun setDone(id: Long, done: Boolean)
+    suspend fun setFocused(id: Long, focused: Boolean)
+    suspend fun markOpened(id: Long)
 }
 
 interface NoteRepository {
@@ -45,6 +51,8 @@ interface NoteRepository {
     suspend fun addImages(noteId: Long, uris: List<Uri>)
     suspend fun addImageFile(noteId: Long, path: String)
     suspend fun removeImage(image: NoteImage)
+    suspend fun setFocused(id: Long, focused: Boolean)
+    suspend fun markOpened(id: Long)
 }
 
 @Singleton
@@ -63,7 +71,7 @@ class RoomEventRepository @Inject constructor(
         val id = if (event.id == 0L) {
             dao.insert(event.copy(createdAt = now, updatedAt = now))
         } else {
-            dao.update(event.copy(updatedAt = now))
+            dao.update(event.copy(updatedAt = now, openedAt = dao.get(event.id)?.openedAt ?: event.openedAt))
             event.id
         }
         reminders.scheduleEvent(event.copy(id = id))
@@ -78,6 +86,10 @@ class RoomEventRepository @Inject constructor(
     override suspend fun saveCalendar(calendar: CalendarEntity) = calendarDao.upsert(calendar)
 
     override suspend fun deleteCalendar(calendar: CalendarEntity) = calendarDao.delete(calendar)
+
+    override suspend fun setFocused(id: Long, focused: Boolean) = dao.setFocused(id, focused)
+
+    override suspend fun markOpened(id: Long) = dao.markOpened(id, Instant.now())
 }
 
 @Singleton
@@ -93,7 +105,7 @@ class RoomTaskRepository @Inject constructor(private val dao: TaskDao) : TaskRep
         return if (normalized.id == 0L) {
             dao.insert(normalized.copy(createdAt = now, updatedAt = now))
         } else {
-            dao.update(normalized.copy(updatedAt = now))
+            dao.update(normalized.copy(updatedAt = now, openedAt = dao.get(normalized.id)?.openedAt ?: normalized.openedAt))
             normalized.id
         }
     }
@@ -109,6 +121,10 @@ class RoomTaskRepository @Inject constructor(private val dao: TaskDao) : TaskRep
         }
         dao.update(updated.copy(updatedAt = Instant.now()))
     }
+
+    override suspend fun setFocused(id: Long, focused: Boolean) = dao.setFocused(id, focused)
+
+    override suspend fun markOpened(id: Long) = dao.markOpened(id, Instant.now())
 }
 
 @Singleton
@@ -128,7 +144,7 @@ class RoomNoteRepository @Inject constructor(
         val id = if (note.id == 0L) {
             dao.insert(note.copy(createdAt = now, updatedAt = now))
         } else {
-            dao.update(note.copy(updatedAt = now))
+            dao.update(note.copy(updatedAt = now, openedAt = dao.get(note.id)?.openedAt ?: note.openedAt))
             note.id
         }
         reminders.scheduleNote(note.copy(id = id))
@@ -162,7 +178,28 @@ class RoomNoteRepository @Inject constructor(
         touch(image.noteId)
     }
 
+    override suspend fun setFocused(id: Long, focused: Boolean) = dao.setFocused(id, focused)
+
+    override suspend fun markOpened(id: Long) = dao.markOpened(id, Instant.now())
+
     private suspend fun touch(noteId: Long) {
         dao.get(noteId)?.let { dao.update(it.copy(updatedAt = Instant.now())) }
     }
+}
+
+interface NotificationRepository {
+    val entries: Flow<List<NotificationEntry>>
+    suspend fun log(kind: String, title: String, text: String)
+    suspend fun markAllRead()
+}
+
+@Singleton
+class RoomNotificationRepository @Inject constructor(private val dao: NotificationDao) : NotificationRepository {
+    override val entries = dao.observeAll().distinctUntilChanged()
+
+    override suspend fun log(kind: String, title: String, text: String) {
+        dao.insert(NotificationEntry(kind = kind, title = title, text = text))
+    }
+
+    override suspend fun markAllRead() = dao.markAllRead()
 }

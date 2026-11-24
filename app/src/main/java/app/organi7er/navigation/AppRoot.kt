@@ -4,11 +4,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -57,15 +59,16 @@ import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Primitives
 import app.organi7er.core.designsystem.components.EntryType
-import app.organi7er.core.designsystem.components.ExtendedAddButton
-import app.organi7er.core.designsystem.components.FloatingTabBar
+import app.organi7er.core.designsystem.components.FusedTabBar
 import app.organi7er.core.designsystem.components.Ms
+import app.organi7er.core.designsystem.components.QuickCaptureOverlay
 import app.organi7er.core.designsystem.components.TabBarFade
 import app.organi7er.core.designsystem.components.TabBarHeight
 import app.organi7er.core.designsystem.components.TabItem
 import app.organi7er.core.designsystem.components.aura
 import app.organi7er.feature.calendar.CalendarScreen
 import app.organi7er.feature.catalog.CatalogScreen
+import app.organi7er.feature.common.LocalShell
 import app.organi7er.feature.editor.AppActions
 import app.organi7er.feature.editor.EditorRequest
 import app.organi7er.feature.editor.EditorViewModel
@@ -75,6 +78,7 @@ import app.organi7er.feature.editor.NoteSheet
 import app.organi7er.feature.editor.TaskSheet
 import app.organi7er.feature.notes.NoteDetailScreen
 import app.organi7er.feature.notes.NotesScreen
+import app.organi7er.feature.notifications.NotificationsScreen
 import app.organi7er.feature.overview.OverviewScreen
 import app.organi7er.feature.settings.SettingsScreen
 import app.organi7er.feature.tasks.TasksScreen
@@ -98,6 +102,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable data class NoteDetailRoute(val id: Long)
 
+@Serializable data object NotificationsRoute
+
 private val Tabs = listOf(
     TabItem("Übersicht", Ms.home, Ms.homeFilled),
     TabItem("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
@@ -107,7 +113,7 @@ private val Tabs = listOf(
 private val TabRoutes: List<Any> = listOf(OverviewRoute, CalendarRoute, TasksRoute, NotesRoute)
 
 /** Platz, den Inhalte unten freihalten müssen (Leiste + Add-Button). */
-val ContentBottomPadding: Dp = TabBarHeight + 16.dp + 56.dp + 40.dp
+val ContentBottomPadding: Dp = TabBarHeight + 16.dp + 48.dp
 
 @Composable
 fun OrganiAppRoot() {
@@ -128,12 +134,9 @@ fun OrganiAppRoot() {
         dest.hasRoute(NotesRoute::class) -> 3
         else -> -1
     }
-    val fabType = when (tabIndex) {
-        1 -> EntryType.Event
-        2 -> EntryType.Task
-        3 -> EntryType.Note
-        else -> null
-    }
+    var captureOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(dest?.id) { captureOpen = false }
+    val shell by editor.shell.collectAsStateWithLifecycle()
 
     // Einklappen beim Scrollen: Leiste weg, nur der Anlege-Knopf bleibt (Schwelle ~8 dp gegen Flackern).
     var collapsed by remember { mutableStateOf(false) }
@@ -184,7 +187,14 @@ fun OrganiAppRoot() {
 
     val actions = remember(nav, editor) {
         AppActions(
-            openEditor = { request = it },
+            openEditor = { r ->
+                when (r) {
+                    is EditorRequest.EditEvent -> editor.markOpened(EntryType.Event, r.id)
+                    is EditorRequest.EditTask -> editor.markOpened(EntryType.Task, r.id)
+                    else -> Unit
+                }
+                request = r
+            },
             toggleTask = { task ->
                 val done = task.status != app.organi7er.core.model.Status.DONE
                 editor.setTaskDone(task.id, done)
@@ -196,7 +206,10 @@ fun OrganiAppRoot() {
                     }
                 }
             },
-            openNote = { id -> nav.navigate(NoteDetailRoute(id)) },
+            openNote = { id ->
+                editor.markOpened(EntryType.Note, id)
+                nav.navigate(NoteDetailRoute(id))
+            },
             openTab = { i ->
                 nav.navigate(TabRoutes[i]) {
                     popUpTo(nav.graph.findStartDestination().id) { saveState = true }
@@ -204,7 +217,8 @@ fun OrganiAppRoot() {
                     restoreState = true
                 }
             },
-            openSettings = { nav.navigate(SettingsRoute) },
+            openSettings = { nav.navigate(SettingsRoute) { launchSingleTop = true } },
+            openNotifications = { nav.navigate(NotificationsRoute) { launchSingleTop = true } },
             openCatalog = { nav.navigate(CatalogRoute) },
             back = { nav.popBackStack() },
             takePhoto = { id ->
@@ -224,13 +238,8 @@ fun OrganiAppRoot() {
     val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val showBar = tabIndex >= 0
     val barVisible = showBar && !collapsed
-    val fabBottom by animateDpAsState(
-        if (barVisible) navInset + 16.dp + TabBarHeight + 16.dp else navInset + 16.dp,
-        tween(250),
-        label = "fabBottom",
-    )
 
-    CompositionLocalProvider(LocalAppActions provides actions) {
+    CompositionLocalProvider(LocalAppActions provides actions, LocalShell provides shell) {
         Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier
@@ -249,7 +258,14 @@ fun OrganiAppRoot() {
                     composable<CalendarRoute> { CalendarScreen() }
                     composable<TasksRoute> { TasksScreen() }
                     composable<NotesRoute> { NotesScreen() }
-                    composable<SettingsRoute> { SettingsScreen() }
+                    composable<SettingsRoute>(
+                        enterTransition = { slideInHorizontally(tween(280)) { it } },
+                        popExitTransition = { slideOutHorizontally(tween(240)) { it } },
+                    ) { SettingsScreen() }
+                    composable<NotificationsRoute>(
+                        enterTransition = { slideInVertically(tween(280)) { -it } },
+                        popExitTransition = { slideOutVertically(tween(240)) { -it } },
+                    ) { NotificationsScreen() }
                     composable<CatalogRoute> { CatalogScreen() }
                     composable<NoteDetailRoute> { NoteDetailScreen(it.toRoute<NoteDetailRoute>().id) }
                 }
@@ -266,33 +282,34 @@ fun OrganiAppRoot() {
                 TabBarFade(navInset + 16.dp + TabBarHeight + 16.dp)
             }
 
-            AnimatedVisibility(
-                visible = barVisible,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                enter = slideInVertically(tween(250)) { it * 2 } + fadeIn(tween(200)),
-                exit = slideOutVertically(tween(250)) { it * 2 } + fadeOut(tween(200)),
-            ) {
-                FloatingTabBar(
-                    items = Tabs,
-                    selected = tabIndex.coerceAtLeast(0),
-                    onSelect = { i -> if (i == tabIndex) collapsed = false else actions.openTab(i) },
-                    hazeState = contentHaze,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = navInset + 16.dp),
-                )
-            }
+            QuickCaptureOverlay(
+                visible = captureOpen,
+                onDismiss = { captureOpen = false },
+                onPick = { type ->
+                    captureOpen = false
+                    request = when (type) {
+                        EntryType.Event -> EditorRequest.NewEvent()
+                        EntryType.Task -> EditorRequest.NewTask()
+                        EntryType.Note -> EditorRequest.NewNote
+                    }
+                },
+                plusEnd = 16.dp + 29.dp,
+                plusBottom = navInset + 16.dp + TabBarHeight / 2,
+            )
 
-            if (fabType != null) {
-                ExtendedAddButton(
-                    type = fabType,
-                    expanded = !collapsed,
-                    onClick = {
-                        request = when (fabType) {
-                            EntryType.Event -> EditorRequest.NewEvent()
-                            EntryType.Task -> EditorRequest.NewTask()
-                            EntryType.Note -> EditorRequest.NewNote
-                        }
+            if (showBar) {
+                FusedTabBar(
+                    items = Tabs,
+                    selected = tabIndex,
+                    onSelect = { i ->
+                        captureOpen = false
+                        if (i == tabIndex) collapsed = false else actions.openTab(i)
                     },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = fabBottom),
+                    onAdd = { captureOpen = !captureOpen },
+                    addOpen = captureOpen,
+                    showTabs = barVisible && !captureOpen,
+                    hazeState = contentHaze,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(start = 16.dp, end = 16.dp, bottom = navInset + 16.dp),
                 )
             }
 

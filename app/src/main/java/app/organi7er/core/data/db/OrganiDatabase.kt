@@ -12,11 +12,14 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import app.organi7er.core.model.CalendarEntity
 import app.organi7er.core.model.Event
 import app.organi7er.core.model.Note
 import app.organi7er.core.model.NoteImage
 import app.organi7er.core.model.NoteWithImages
+import app.organi7er.core.model.NotificationEntry
 import app.organi7er.core.model.Task
 import java.time.Instant
 import java.time.LocalDateTime
@@ -61,6 +64,12 @@ interface CalendarDao {
 
 @Dao
 interface EventDao {
+    @Query("UPDATE events SET focused = :focused WHERE id = :id")
+    suspend fun setFocused(id: Long, focused: Boolean)
+
+    @Query("UPDATE events SET openedAt = :at WHERE id = :id")
+    suspend fun markOpened(id: Long, at: Instant)
+
     @Query("SELECT * FROM events ORDER BY start IS NULL, start, id")
     fun observeAll(): Flow<List<Event>>
 
@@ -91,6 +100,12 @@ interface EventDao {
 
 @Dao
 interface TaskDao {
+    @Query("UPDATE tasks SET focused = :focused WHERE id = :id")
+    suspend fun setFocused(id: Long, focused: Boolean)
+
+    @Query("UPDATE tasks SET openedAt = :at WHERE id = :id")
+    suspend fun markOpened(id: Long, at: Instant)
+
     @Query("SELECT * FROM tasks ORDER BY dueAt IS NULL, dueAt, id")
     fun observeAll(): Flow<List<Task>>
 
@@ -118,6 +133,12 @@ interface TaskDao {
 
 @Dao
 interface NoteDao {
+    @Query("UPDATE notes SET focused = :focused WHERE id = :id")
+    suspend fun setFocused(id: Long, focused: Boolean)
+
+    @Query("UPDATE notes SET openedAt = :at WHERE id = :id")
+    suspend fun markOpened(id: Long, at: Instant)
+
     @Transaction
     @Query("SELECT * FROM notes ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<NoteWithImages>>
@@ -163,9 +184,39 @@ interface NoteDao {
     suspend fun withUpcomingReminders(from: LocalDateTime): List<Note>
 }
 
+@Dao
+interface NotificationDao {
+    @Query("SELECT * FROM notification_log ORDER BY createdAt DESC LIMIT 200")
+    fun observeAll(): Flow<List<NotificationEntry>>
+
+    @Insert
+    suspend fun insert(entry: NotificationEntry): Long
+
+    @Query("UPDATE notification_log SET read = 1 WHERE read = 0")
+    suspend fun markAllRead()
+
+    @Query("DELETE FROM notification_log")
+    suspend fun deleteAll()
+}
+
+/** v2: Fokus + zuletzt geöffnet je Eintrag, Mitschrift der Benachrichtigungen. */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        listOf("events", "tasks", "notes").forEach { t ->
+            db.execSQL("ALTER TABLE `$t` ADD COLUMN `focused` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE `$t` ADD COLUMN `openedAt` INTEGER")
+        }
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `notification_log` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kind` TEXT NOT NULL, " +
+                "`title` TEXT NOT NULL, `text` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `read` INTEGER NOT NULL)",
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_notification_log_createdAt` ON `notification_log` (`createdAt`)")
+    }
+}
+
 @Database(
-    entities = [CalendarEntity::class, Event::class, Task::class, Note::class, NoteImage::class],
-    version = 1,
+    entities = [CalendarEntity::class, Event::class, Task::class, Note::class, NoteImage::class, NotificationEntry::class],
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -174,4 +225,5 @@ abstract class OrganiDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun taskDao(): TaskDao
     abstract fun noteDao(): NoteDao
+    abstract fun notificationDao(): NotificationDao
 }

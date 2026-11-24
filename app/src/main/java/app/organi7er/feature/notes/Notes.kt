@@ -4,19 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -39,6 +33,7 @@ import app.organi7er.core.designsystem.components.SoftIconButton
 import app.organi7er.core.model.Dates
 import app.organi7er.core.model.NoteWithImages
 import app.organi7er.core.model.Status
+import app.organi7er.feature.common.AppHeader
 import app.organi7er.feature.common.NoteFeedCard
 import app.organi7er.feature.common.UiMapper
 import app.organi7er.feature.editor.LocalAppActions
@@ -169,8 +164,7 @@ fun NotesScreen(vm: NotesViewModel = hiltViewModel()) {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(key = "head") {
-            Row(Modifier.statusBarsPadding().padding(top = 8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Notizen", Modifier.weight(1f).semantics { heading() }, style = OrganiTheme.type.pageTitle, color = c.text)
+            AppHeader("Notizen") {
                 if (state.segment != 0) {
                     SoftIconButton(Ms.swapVert, if (state.newestFirst) "Älteste zuerst" else "Neueste zuerst", vm::toggleSort)
                 }

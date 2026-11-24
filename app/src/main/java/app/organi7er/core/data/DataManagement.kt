@@ -43,6 +43,7 @@ class SampleData @Inject constructor(
         db.eventDao().getAll().forEach { reminders.cancelEvent(it.id) }
         db.noteDao().getAll().forEach { reminders.cancelNote(it.id) }
         db.withTransaction {
+            db.notificationDao().deleteAll()
             db.noteDao().deleteAll()
             db.taskDao().deleteAll()
             db.eventDao().deleteAll()
@@ -79,8 +80,8 @@ class SampleData @Inject constructor(
             Event(title = "Kino", start = soon.plusHours(8).plusMinutes(30), end = soon.plusHours(10).plusMinutes(30), location = "mit Max", calendarId = private, subStatus = EventSubStatus.TENTATIVE),
             Event(title = "Daily und Planung", start = tomorrow.atTime(9, 0), end = tomorrow.atTime(10, 0), location = "Büro", calendarId = work),
             Event(title = "Yoga", start = tomorrow.atTime(18, 30), end = tomorrow.atTime(20, 0), location = "Studio Mitte", calendarId = health),
-            Event(title = "Geburtstag Mama", start = today.plusDays(3).atStartOfDay(), allDay = true, calendarId = private),
-            Event(title = "Frühstück mit dem Team", start = friday.atTime(8, 30), end = friday.atTime(9, 30), location = "Büro", calendarId = work),
+            Event(title = "Geburtstag Mama", start = today.plusDays(3).atStartOfDay(), allDay = true, calendarId = private, focused = true),
+            Event(title = "Frühstück mit dem Team", start = friday.atTime(8, 30), end = friday.atTime(9, 30), location = "Büro", calendarId = work, focused = true),
             Event(title = "Workshop Q1-Planung", start = friday.atTime(10, 0), end = friday.atTime(16, 0), location = "Büro", calendarId = work),
             Event(title = "Retro", start = friday.atTime(16, 30), end = friday.atTime(17, 15), location = "Büro", calendarId = work),
             Event(title = "Afterwork", start = friday.atTime(18, 0), end = friday.atTime(20, 0), location = "Bar Central", calendarId = private),
@@ -95,7 +96,7 @@ class SampleData @Inject constructor(
         }
 
         val tasks = listOf(
-            Task(title = "Steuerunterlagen an Lena", dueAt = today.atTime(18, 0), dueHasTime = true, priority = Priority.HIGH, listName = "Privat"),
+            Task(title = "Steuerunterlagen an Lena", dueAt = today.atTime(18, 0), dueHasTime = true, priority = Priority.HIGH, listName = "Privat", focused = true),
             Task(title = "Komponenten-Screenshots sortieren", dueAt = today.atStartOfDay(), listName = "Organi7er", subStatus = TaskSubStatus.IN_PROGRESS),
             Task(title = "Paket zur Post bringen", dueAt = today.atTime(17, 0), dueHasTime = true, listName = "Privat", subStatus = TaskSubStatus.BLOCKED),
             Task(title = "Rückruf Versicherung", dueAt = today.minusDays(1).atStartOfDay(), listName = "Privat"),
@@ -229,6 +230,7 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
             val file = json.decodeFromString(BackupFile.serializer(), text)
             val dt = { s: String? -> s?.let(LocalDateTime::parse) }
             db.withTransaction {
+                db.notificationDao().deleteAll()
                 db.noteDao().deleteAll()
                 db.taskDao().deleteAll()
                 db.eventDao().deleteAll()
@@ -239,7 +241,7 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
                         Event(
                             it.id, it.title, dt(it.start), dt(it.end), it.allDay, it.location, it.calendarId, it.reminderMinutes, it.note,
                             Status.valueOf(it.status), it.subStatus?.let(EventSubStatus::valueOf), dt(it.previousStart),
-                            Instant.ofEpochMilli(it.createdAt), Instant.ofEpochMilli(it.updatedAt),
+                            createdAt = Instant.ofEpochMilli(it.createdAt), updatedAt = Instant.ofEpochMilli(it.updatedAt),
                         )
                     },
                 )
@@ -248,7 +250,7 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
                         Task(
                             it.id, it.title, it.note, dt(it.dueAt), it.dueHasTime, Priority.valueOf(it.priority), Status.valueOf(it.status),
                             it.subStatus?.let(TaskSubStatus::valueOf), it.doneAt?.let(Instant::ofEpochMilli), it.listName,
-                            Instant.ofEpochMilli(it.createdAt), Instant.ofEpochMilli(it.updatedAt),
+                            createdAt = Instant.ofEpochMilli(it.createdAt), updatedAt = Instant.ofEpochMilli(it.updatedAt),
                         )
                     },
                 )
@@ -261,8 +263,8 @@ class BackupManager @Inject constructor(private val db: OrganiDatabase, private 
                             dt(it.reminderAt),
                             Status.valueOf(it.status),
                             it.subStatus?.let(NoteSubStatus::valueOf),
-                            Instant.ofEpochMilli(it.createdAt),
-                            Instant.ofEpochMilli(it.updatedAt),
+                            createdAt = Instant.ofEpochMilli(it.createdAt),
+                            updatedAt = Instant.ofEpochMilli(it.updatedAt),
                         )
                     },
                 )
