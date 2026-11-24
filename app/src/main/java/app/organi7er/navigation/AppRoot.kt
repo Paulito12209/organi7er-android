@@ -16,6 +16,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.mutableFloatStateOf
@@ -214,6 +217,8 @@ fun OrganiAppRoot() {
     }
     // Schnelles Erfassen: Dock unten, Eingabe direkt im Dock.
     // Der Typ des Schnell-Eintrags folgt dem Reiter.
+    var composerOpen by remember { mutableStateOf(false) }
+    var composerClose by remember { mutableIntStateOf(0) }
     val dockType = when (tabIndex) {
         1 -> EntryType.Event
         2 -> EntryType.Task
@@ -360,7 +365,7 @@ fun OrganiAppRoot() {
                             }
 
                             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                                if (showBar && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f) {
+                                if (showBar && !composerOpen && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f) {
                                     raw += available.y
                                     apply()
                                     return Offset(0f, available.y)
@@ -419,6 +424,34 @@ fun OrganiAppRoot() {
                     )
                 }
 
+                // Abdunkelung hinter dem aufgeklappten Composer: liegt über Inhalt und Edge-Picker, unter dem Composer.
+                val scrim by androidx.compose.animation.core.animateFloatAsState(if (composerOpen) 1f else 0f, tween(220), label = "composerScrim")
+                if (scrim > 0f) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.55f * scrim))
+                            // Verschluckt jede Berührung (nichts dahinter reagiert); Tippen oder Ziehen klappt den Composer zu.
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown()
+                                    down.consume()
+                                    var closed = false
+                                    while (true) {
+                                        val event = awaitPointerEvent()
+                                        event.changes.forEach { it.consume() }
+                                        val ch = event.changes.firstOrNull { it.id == down.id } ?: break
+                                        if (!closed && (ch.pressed.not() || (ch.position - down.position).getDistance() > viewConfiguration.touchSlop)) {
+                                            closed = true
+                                            composerClose++
+                                        }
+                                        if (!ch.pressed) break
+                                    }
+                                }
+                            },
+                    )
+                }
+
                 AnimatedVisibility(
                     showBar,
                     Modifier.align(Alignment.BottomCenter),
@@ -441,6 +474,8 @@ fun OrganiAppRoot() {
                         },
                         onCamera = { request = EditorRequest.NewNote(startCamera = true) },
                         onMessage = actions.showMessage,
+                        onExpandedChange = { composerOpen = it },
+                        closeSignal = composerClose,
                     )
                 }
 

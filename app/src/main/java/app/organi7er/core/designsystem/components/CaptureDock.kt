@@ -1,6 +1,7 @@
 package app.organi7er.core.designsystem.components
 
 import android.app.Activity
+import android.content.Context
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.RecognizerIntent
@@ -59,6 +60,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
@@ -137,9 +139,9 @@ private val CardBlurRadius = 34.dp
  * Der Alphawert = wie durchsichtig das Glas ist (kleiner = mehr vom unscharfen Hintergrund sichtbar).
  */
 private fun EntryType.glassTop(dark: Boolean): Color = when (this) {
-    EntryType.Note -> if (dark) Color(0xFF4E4110).copy(alpha = 0.50f) else Color(0xFFFFE680).copy(alpha = 0.30f)
-    EntryType.Task -> if (dark) Color(0xFF1F4280).copy(alpha = 0.48f) else Color(0xFFB8D2FA).copy(alpha = 0.34f)
-    EntryType.Event -> if (dark) Color(0xFF142E5E).copy(alpha = 0.52f) else Color(0xFF9DB8E6).copy(alpha = 0.36f)
+    EntryType.Note -> if (dark) Color(0xFF4E4110).copy(alpha = 0.25f) else Color(0xFFFFE680).copy(alpha = 0.15f)
+    EntryType.Task -> if (dark) Color(0xFF1F4280).copy(alpha = 0.24f) else Color(0xFFB8D2FA).copy(alpha = 0.17f)
+    EntryType.Event -> if (dark) Color(0xFF142E5E).copy(alpha = 0.26f) else Color(0xFF9DB8E6).copy(alpha = 0.18f)
 }
 
 /** Aktives Typ-Symbol: in der Farbe des Glases, nur kräftiger, damit es lesbar bleibt. */
@@ -174,13 +176,30 @@ fun CaptureDock(
     onMessage: (String) -> Unit,
     haze: HazeState,
     modifier: Modifier = Modifier,
+    onExpandedChange: (Boolean) -> Unit = {},
+    closeSignal: Int = 0,
 ) {
     val c = OrganiTheme.colors
     val haptics = LocalHapticFeedback.current
     val focusManager = LocalFocusManager.current
     val askNotifications = rememberNotificationPermission()
     var expanded by remember { mutableStateOf(false) }
-    var chosen by remember(type) { mutableStateOf(type) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("capture_dock", Context.MODE_PRIVATE) }
+    // Gewählte Kategorie: bleibt nach dem Schließen erhalten. Beim ersten Start am Tag ist es immer Termin.
+    var chosen by remember {
+        val today = LocalDate.now().toString()
+        val saved = if (prefs.getString("day", null) == today) prefs.getString("type", null)?.let { n -> Types.firstOrNull { it.name == n } } else null
+        mutableStateOf(saved ?: EntryType.Event)
+    }
+    // Wechselt der Reiter, folgt die Kategorie ihm (nicht beim allerersten Aufbau).
+    var firstType by remember { mutableStateOf(true) }
+    LaunchedEffect(type) {
+        if (firstType) firstType = false else chosen = type
+    }
+    LaunchedEffect(chosen) {
+        prefs.edit().putString("day", LocalDate.now().toString()).putString("type", chosen.name).apply()
+    }
     var field by remember { mutableStateOf(TextFieldValue("")) }
     var details by remember { mutableStateOf("") }
     var showDetails by remember { mutableStateOf(false) }
@@ -211,7 +230,6 @@ fun CaptureDock(
     val collapse = {
         focusManager.clearFocus()
         expanded = false
-        chosen = type
     }
     val save = {
         if (canSend) {
@@ -222,6 +240,11 @@ fun CaptureDock(
         }
     }
     BackHandler(expanded) { collapse() }
+    // Von außen (Berührung der Abdunkelung) zuklappen.
+    LaunchedEffect(closeSignal) { if (closeSignal > 0 && expanded) collapse() }
+    val expandedCallback by rememberUpdatedState(onExpandedChange)
+    LaunchedEffect(expanded) { expandedCallback(expanded) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { expandedCallback(false) } }
 
     // Unschärfe unter dem Composer, ohne Abdunklung: an der Oberkante 0 %, in der Mitte 50 %, an der Unterkante 100 %.
     val dockBlur = remember {
@@ -264,7 +287,7 @@ fun CaptureDock(
                 // Das Unschärfe-Feld läuft über Pille und Abstand nach unten; die Pille liegt darüber.
                 Box(Modifier.hazeBlur(HazeInput.Sources(haze), dockBlur).padding(horizontal = 12.dp).padding(bottom = 8.dp)) {
                     CollapsedPill(
-                        placeholder = type.placeholder(),
+                        placeholder = chosen.placeholder(),
                         text = field.text,
                         onOpen = { expanded = true },
                         onCamera = onCamera,
@@ -344,7 +367,7 @@ fun CaptureDock(
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         Types.forEach { t -> TypeIcon(t, t == chosen) { chosen = t } }
                         Spacer(Modifier.weight(1f))
-                        RoundIcon(Ms.close, "Schließen", size = 40.dp, iconSize = 20.dp) { collapse() }
+                        CloseIcon { collapse() }
                     }
 
                     // Text; erste Zeile wird der Titel, der Rest die Notiz.
@@ -506,6 +529,22 @@ private fun RoundIcon(icon: Int, description: String, size: androidx.compose.ui.
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) { MsIcon(icon, null, tint = c.text, size = iconSize) }
+}
+
+/** Schließen-Knopf: durchsichtig, nur ein weißer Rand und ein weißes ×. */
+@Composable
+private fun CloseIcon(onClick: () -> Unit) {
+    val c = OrganiTheme.colors
+    val line = if (c.isDark) Color.White.copy(alpha = 0.55f) else Color.White
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(OrganiShapes.circle)
+            .border(1.dp, line, OrganiShapes.circle)
+            .clickable(role = Role.Button, onClickLabel = "Schließen", onClick = onClick)
+            .semantics { contentDescription = "Schließen" },
+        contentAlignment = Alignment.Center,
+    ) { MsIcon(Ms.close, null, tint = if (c.isDark) Color.White else c.text, size = 20.dp) }
 }
 
 /** Typ nur als Symbol, ohne Knopf-Fläche: aktiv in der Typfarbe des Glases, sonst dezent grau. */
