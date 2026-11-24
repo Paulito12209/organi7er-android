@@ -30,6 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -64,6 +70,43 @@ object GlassShapes {
     val pill = RoundedCornerShape(percent = 50)
 }
 
+/**
+ * Liquid-Glass für kleine Knöpfe und Pillen im Kopf (Einstellungen, Suche).
+ * Licht fällt immer im 45°-Winkel von oben links ein – unabhängig von der Form –, damit runder
+ * Knopf und breite Pille gleich beleuchtet aussehen:
+ *  - Fläche: getönter Grund, darüber ein Glanz, der oben links beginnt und zur Mitte ausläuft.
+ *  - Kante: oben links hell, in der Mitte fast unsichtbar, unten rechts ein schwacher Gegenschein.
+ */
+@Composable
+fun Modifier.liquidGlass(shape: Shape = GlassShapes.pill): Modifier {
+    val c = OrganiTheme.colors
+    val base = if (c.isDark) c.glassChip else Color.Black.copy(alpha = 0.05f)
+    val sheenTop = Color.White.copy(alpha = if (c.isDark) 0.10f else 0.55f)
+    val edgeLight = Color.White.copy(alpha = if (c.isDark) 0.30f else 0.95f)
+    val edgeMid = if (c.isDark) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.04f)
+    val edgeShade = if (c.isDark) Color.White.copy(alpha = 0.14f) else Color.Black.copy(alpha = 0.10f)
+    return this
+        .clip(shape)
+        .drawWithCache {
+            // Gleicher Winkel für jede Form: Verlauf über ein Quadrat mit der mittleren Kantenlänge.
+            val d = (size.width + size.height) / 2f
+            val end = Offset(d, d)
+            val sheen = Brush.linearGradient(0f to sheenTop, 0.55f to Color.Transparent, start = Offset.Zero, end = end)
+            val edge = Brush.linearGradient(0f to edgeLight, 0.45f to edgeMid, 1f to edgeShade, start = Offset.Zero, end = Offset(size.width, size.height))
+            val stroke = 1.dp.toPx()
+            val outline = shape.createOutline(
+                Size(size.width - stroke, size.height - stroke),
+                layoutDirection,
+                this,
+            )
+            onDrawBehind {
+                drawRect(base)
+                drawRect(sheen)
+                translate(stroke / 2f, stroke / 2f) { drawOutline(outline, edge, style = Stroke(stroke)) }
+            }
+        }
+}
+
 /** Runder Glasknopf mit feiner Kante (Pfeil ↗, Schließen ×). */
 @Composable
 fun GlassCircleButton(
@@ -79,9 +122,13 @@ fun GlassCircleButton(
         Box(
             Modifier
                 .size(size)
-                .clip(GlassShapes.pill)
-                .background(if (filled) c.glassSolid else if (c.isDark) c.glassChip else Color.Black.copy(alpha = 0.05f))
-                .border(1.dp, c.glassEdge, GlassShapes.pill)
+                .then(
+                    if (filled) {
+                        Modifier.clip(GlassShapes.pill).background(c.glassSolid).border(1.dp, c.glassEdge, GlassShapes.pill)
+                    } else {
+                        Modifier.liquidGlass(GlassShapes.pill)
+                    },
+                )
                 .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onClick)
                 .semantics { this.contentDescription = contentDescription },
             contentAlignment = Alignment.Center,

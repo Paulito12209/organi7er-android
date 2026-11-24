@@ -55,7 +55,7 @@ import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.MsIcon
 import app.organi7er.core.designsystem.components.SegmentedList
 import app.organi7er.core.designsystem.components.aura
-import app.organi7er.core.designsystem.components.glass
+import app.organi7er.core.designsystem.components.liquidGlass
 import app.organi7er.core.designsystem.components.icon
 import app.organi7er.core.designsystem.components.segmentItem
 import app.organi7er.core.model.Dates
@@ -158,7 +158,7 @@ fun SearchScreen(vm: SearchViewModel, onOpen: (SearchHit) -> Unit, onClose: () -
                 Modifier
                     .weight(1f)
                     .height(48.dp)
-                    .glass(OrganiShapes.pill, fill = c.glassStrong)
+                    .liquidGlass(OrganiShapes.pill)
                     .padding(start = 16.dp, end = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),

@@ -42,7 +42,7 @@ import app.organi7er.core.designsystem.Spacing
 import app.organi7er.core.designsystem.components.GlassCircleButton
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.MsIcon
-import app.organi7er.core.designsystem.components.glass
+import app.organi7er.core.designsystem.components.liquidGlass
 import app.organi7er.feature.editor.LocalAppActions
 import coil3.compose.AsyncImage
 import java.io.File
@@ -114,15 +114,16 @@ private fun SearchPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val c = OrganiTheme.colors
     Row(
         modifier
-            .height(44.dp)
-            .glass(OrganiShapes.pill, fill = c.glassStrong)
+            .height(42.dp)
+            // Gleiches Glas wie der Einstellungsknopf daneben.
+            .liquidGlass(OrganiShapes.pill)
             .clickable(role = Role.Button, onClickLabel = "Suche öffnen", onClick = onClick)
             .semantics { contentDescription = "Suchen" }
             .padding(start = 14.dp, end = 26.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        MsIcon(Ms.search, null, tint = c.text, size = 19.dp)
+        MsIcon(Ms.search, null, tint = c.text, size = 18.dp)
         Text("Suchen", style = OrganiTheme.type.body.copy(fontSize = 15.sp), color = c.textMuted, maxLines = 1)
     }
 }

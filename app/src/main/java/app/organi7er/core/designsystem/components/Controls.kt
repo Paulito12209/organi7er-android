@@ -286,7 +286,7 @@ fun CheckKnob(checked: Boolean, onToggle: () -> Unit, label: String, modifier: M
 
 /**
  * Reiter als einzelne Pillen: der aktive ist schwarz gefüllt (im dunklen Modus weiß),
- * die anderen sind Liquid-Glass-Pillen. Breite nach Inhalt; reicht der Platz nicht, scrollt die Zeile.
+ * die anderen im selben Liquid Glass wie Such-Pille und Einstellungsknopf. Breite nach Inhalt; reicht der Platz nicht, scrollt die Zeile.
  */
 @Composable
 fun SegmentedControl(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
@@ -308,7 +308,7 @@ fun SegmentedControl(options: List<String>, selected: Int, onSelect: (Int) -> Un
                         if (isSel) {
                             Modifier.softShadow(OrganiShapes.pill, c.shadowSoft).clip(OrganiShapes.pill).background(c.text)
                         } else {
-                            Modifier.glass(OrganiShapes.pill, fill = c.glassStrong)
+                            Modifier.liquidGlass(OrganiShapes.pill)
                         },
                     )
                     .selectable(isSel, role = Role.Tab, onClick = { onSelect(i) })
