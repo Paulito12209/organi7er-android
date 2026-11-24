@@ -346,7 +346,10 @@ fun OrganiAppRoot() {
                     val pullDeadZone = with(LocalDensity.current) { 28.dp.toPx() }
                     // Gesamte Fingerbewegung der laufenden Geste (unabhängig davon, wer sie verbraucht).
                     // So lässt sich erkennen, ob die Geste eigentlich seitlich war (Wochentage, KW-Leiste, Karten).
-                    val gesture = remember { floatArrayOf(0f, 0f) } // [0] Summe |dx|, [1] Summe |dy|
+                    // [0] Summe |dx|, [1] Summe |dy|, [2] = 1, sobald die Seite in dieser Geste gescrollt hat.
+                    // Wer erst hochscrollt und dabei oben ankommt, löst die Suche nicht aus: die Seite rastet oben ein,
+                    // erst ein neuer Zug von ganz oben zieht die Suche mit Widerstand auf.
+                    val gesture = remember { floatArrayOf(0f, 0f, 0f) }
                     val pullConnection = remember(showBar) {
                         object : NestedScrollConnection {
                             var raw = 0f
@@ -373,7 +376,9 @@ fun OrganiAppRoot() {
                             }
 
                             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                                if (consumed.y != 0f) gesture[2] = 1f
                                 if (showBar && !composerOpen && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f &&
+                                    gesture[2] == 0f &&
                                     (raw > 0f || (mostlyVertical() && consumed.y == 0f && gesture[1] > pullDeadZone)) &&
                                     (raw == 0f || mostlyVertical())
                                 ) {
@@ -403,6 +408,7 @@ fun OrganiAppRoot() {
                                     awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                                     gesture[0] = 0f
                                     gesture[1] = 0f
+                                    gesture[2] = 0f
                                     do {
                                         val ev = awaitPointerEvent(PointerEventPass.Initial)
                                         ev.changes.firstOrNull()?.let {
