@@ -384,19 +384,20 @@ private fun DayTile(
         Modifier
             .floatShadow(shape, c.shadowFloat)
             .clip(shape)
-            .background(Brush.linearGradient(listOf(Primitives.Navy900, Primitives.Navy700, Color(0xFF27428A))))
+            // Helles Silber: oben links fast weiß, nach unten rechts kühles Grau.
+            .background(Brush.linearGradient(listOf(Silver100, Silver200, Silver300)))
             .drawWithContent {
-                // Warmer Gelb-Schimmer unten rechts.
+                // Weicher Glanz oben links.
                 drawRect(
                     Brush.radialGradient(
-                        listOf(Primitives.Yellow500.copy(alpha = 0.55f), Primitives.Yellow500.copy(alpha = 0.12f), Color.Transparent),
-                        center = Offset(size.width * 1.0f, size.height * 1.05f),
-                        radius = size.width * 0.85f,
+                        listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0f)),
+                        center = Offset(size.width * 0.15f, size.height * 0.0f),
+                        radius = size.width * 0.9f,
                     ),
                 )
                 drawContent()
             }
-            .border(1.dp, Color.White.copy(alpha = 0.18f), shape)
+            .border(1.dp, Color.White.copy(alpha = 0.7f), shape)
     } else {
         Modifier
             .softShadow(shape, c.shadowSoft)
@@ -425,21 +426,29 @@ private fun DayTile(
     }
 }
 
+/** Silberverlauf der aktiven Tageskachel. */
+private val Silver100 = Color(0xFFF7F8FA)
+private val Silver200 = Color(0xFFE3E6EB)
+private val Silver300 = Color(0xFFC4C9D1)
+
+/** Schrift auf der silbernen Kachel. */
+private val OnSilver = Color(0xFF0A0A0B)
+
 @Composable
 private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
-    val soft = Color.White.copy(alpha = 0.68f)
+    val soft = OnSilver.copy(alpha = 0.6f)
     Column(modifier.fillMaxSize().padding(start = 18.dp, end = 14.dp, top = 16.dp, bottom = 16.dp)) {
         Row(Modifier.fillMaxWidth()) {
             // Datum groß, darunter „Heute“ / „Morgen“ / Wochentag.
             Column(Modifier.weight(1f)) {
-                Text(d.short, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = Color.White, maxLines = 1)
+                Text(d.short, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = OnSilver, maxLines = 1)
                 Text(d.headline, Modifier.padding(top = 2.dp), style = OrganiTheme.type.label, color = soft, maxLines = 1)
             }
             // Zähler rechts untereinander.
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Count(Ms.calendarToday, d.events, Color.White.copy(alpha = 0.9f))
-                Count(Ms.checklist, d.tasks, Color.White.copy(alpha = 0.9f))
-                Count(Ms.description, d.notes, Color.White.copy(alpha = 0.9f))
+                Count(Ms.calendarToday, d.events, OnSilver.copy(alpha = 0.85f))
+                Count(Ms.checklist, d.tasks, OnSilver.copy(alpha = 0.85f))
+                Count(Ms.description, d.notes, OnSilver.copy(alpha = 0.85f))
             }
         }
         Spacer(Modifier.weight(1f))
@@ -449,7 +458,7 @@ private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
                 Text(
                     d.nextTitle,
                     style = OrganiTheme.type.title.copy(fontSize = 18.sp, lineHeight = 22.sp),
-                    color = Color.White,
+                    color = OnSilver,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )

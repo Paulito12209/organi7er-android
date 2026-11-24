@@ -22,13 +22,14 @@ class NavigationTest {
 
     @Before fun init() = hilt.inject()
 
-    /** Edge-Picker: erst antippen (klappt auf), dann das Ziel wählen. Die Uhr steht still, damit er nicht vorher zuklappt. */
+    /** Edge-Picker: erst antippen (klappt auf), dann das Ziel wählen. Der aktuelle Reiter steht nicht zur Wahl. */
     private fun pick(label: String) {
         compose.mainClock.autoAdvance = false
         compose.onNodeWithContentDescription("Navigation").performClick()
         compose.mainClock.advanceTimeBy(600)
         compose.onNodeWithContentDescription(label).performClick()
-        compose.mainClock.advanceTimeBy(600)
+        // Warten, bis der Picker von selbst wieder zuklappt (2,5 s).
+        compose.mainClock.advanceTimeBy(3200)
         compose.mainClock.autoAdvance = true
     }
 

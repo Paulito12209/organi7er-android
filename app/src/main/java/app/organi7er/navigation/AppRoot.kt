@@ -286,11 +286,12 @@ fun OrganiAppRoot() {
                 // Edge-Picker: Navigation am rechten Rand, liegt im Inhalt und rutscht mit ihm weg.
                 if (showBar) {
                     EdgePicker(
-                        items = Tabs,
-                        selected = tabIndex,
-                        onSelect = { i -> if (i != tabIndex) actions.openTab(i) },
+                        // Nur die Reiter, auf denen man gerade nicht ist.
+                        items = Tabs.filterIndexed { i, _ -> i != tabIndex },
+                        selected = -1,
+                        onSelect = { i -> actions.openTab(if (i >= tabIndex) i + 1 else i) },
                         onSwipeLeft = openSettingsPanel,
-                        // Hängt am Dock: das untere Ende der Kerbe läuft genau an dessen Oberkante in den Rand aus. Bleibt beim Composer stehen.
+                        // Hängt am Dock: das untere Ende der Kerbe läuft an dessen Oberkante in den Rand aus. Bleibt beim Composer stehen.
                         modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = navInset + DockMinHeight),
                     )
                 }

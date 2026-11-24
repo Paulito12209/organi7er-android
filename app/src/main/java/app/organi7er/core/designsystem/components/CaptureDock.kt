@@ -96,8 +96,7 @@ private val Types = listOf(EntryType.Event, EntryType.Task, EntryType.Note)
 /** Mindesthöhe des eingeklappten Docks (ohne Begrüßung, ohne Navigationsleisten-Abstand). */
 val DockMinHeight = 94.dp
 
-/** Rechts oben eckig: dort läuft der Edge-Picker in das Dock aus. */
-private val DockShape = RoundedCornerShape(topStart = 32.dp, topEnd = 0.dp)
+private val DockShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
 
 private fun EntryType.placeholder(): String = when (this) {
     EntryType.Event -> "Neuer Termin"

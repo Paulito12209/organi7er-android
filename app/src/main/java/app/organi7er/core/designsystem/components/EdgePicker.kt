@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,13 +63,16 @@ private const val AutoCloseMillis = 2500L
 private val ClosedWidth = 16.dp
 private val OpenWidth = 64.dp
 private val ClosedHeight = 112.dp
-private val OpenHeight = 288.dp
+/** Raum über und unter den Symbolen für die auslaufenden Enden der Kerbe. */
+private val OpenEnds = 74.dp
 private val ClosedCurve = 40.dp
 private val OpenCurve = 56.dp
 private val Chip = 46.dp
 private val ChipGap = 8.dp
 
 /**
+ * [selected] = -1, wenn keines der [items] gerade aktiv ist.
+ *
  * Kerbe am rechten Rand mit weich auslaufenden Enden (wie in Paralist). Eingeklappt nur ein
  * 16 dp schmaler Griff; Antippen klappt sie auf, nach [AutoCloseMillis] ohne Berührung wieder zu.
  * Ziehen nach oben/unten wählt ein Ziel, ein Wisch nach links am Rand öffnet das Menü ([onSwipeLeft]).
@@ -86,6 +90,7 @@ fun EdgePicker(
     val density = LocalDensity.current
     var open by remember { mutableStateOf(false) }
     var touches by remember { mutableIntStateOf(0) }
+    var hover by remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(open, touches) {
         if (open) {
@@ -96,14 +101,19 @@ fun EdgePicker(
 
     val spec = spring<Dp>(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
     val width by animateDpAsState(if (open) OpenWidth else ClosedWidth, spec, label = "edgeW")
-    val height by animateDpAsState(if (open) OpenHeight else ClosedHeight, spec, label = "edgeH")
+    val openHeight = Chip * items.size + ChipGap * (items.size - 1) + OpenEnds
+    val height by animateDpAsState(if (open) openHeight else ClosedHeight, spec, label = "edgeH")
     val curve by animateDpAsState(if (open) OpenCurve else ClosedCurve, spec, label = "edgeC")
     val content by animateFloatAsState(if (open) 1f else 0f, label = "edgeContent")
 
     val fill = if (c.isDark) Color.White else Color(0xFF0A0A0B)
     val onFill = if (c.isDark) Color(0xFF0A0A0B) else Color.White
     val shape = remember(curve) { NotchShape(curve) }
-    val sel = selected.coerceIn(0, items.lastIndex)
+    // -1 = kein Ziel hervorgehoben (der aktuelle Reiter steht gar nicht zur Wahl).
+    val sel = if (selected in items.indices) selected else -1
+    // Gesten laufen länger als eine Komposition: immer die aktuelle Auswahl und den aktuellen Handler nehmen.
+    val currentSel by rememberUpdatedState(sel)
+    val currentOnSelect by rememberUpdatedState(onSelect)
 
     // Sichtbarer Höhenbereich der Chips innerhalb der Kerbe.
     val listHeight = Chip * items.size + ChipGap * (items.size - 1)
@@ -121,7 +131,7 @@ fun EdgePicker(
             // Der Android-Zurück-Wisch vom rechten Rand darf hier nicht dazwischenfunken.
             .systemGestureExclusion()
             // Tippfläche über die ganze Höhe: Antippen klappt auf (oder wählt, wenn offen).
-            .pointerInput(open, items.size) {
+            .pointerInput(open, items) {
                 detectTapGestures { p ->
                     touches++
                     if (!open) {
@@ -129,9 +139,9 @@ fun EdgePicker(
                         haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     } else if (p.x >= size.width - with(density) { OpenWidth.toPx() }) {
                         val i = slotAt(p.y, size.height.toFloat())
-                        if (i != sel) {
+                        if (i != currentSel) {
                             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                            onSelect(i)
+                            currentOnSelect(i)
                         }
                     }
                 }
@@ -146,18 +156,24 @@ fun EdgePicker(
                     onHorizontalDrag = { _, d -> dx += d },
                 )
             }
-            // Ziehen entlang der Kerbe wählt das Ziel unter dem Finger.
-            .pointerInput(open, items.size) {
+            // Ziehen entlang der Kerbe hebt das Ziel unter dem Finger hervor, Loslassen wechselt.
+            .pointerInput(open, items) {
                 if (!open) return@pointerInput
                 detectVerticalDragGestures(
                     onDragStart = { touches++ },
-                    onDragEnd = { touches++ },
+                    onDragEnd = {
+                        touches++
+                        val i = hover
+                        hover = -1
+                        if (i >= 0 && i != currentSel) currentOnSelect(i)
+                    },
+                    onDragCancel = { hover = -1 },
                     onVerticalDrag = { change, _ ->
                         touches++
                         val i = slotAt(change.position.y, size.height.toFloat())
-                        if (i != sel) {
+                        if (i != hover) {
                             haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                            onSelect(i)
+                            hover = i
                         }
                     },
                 )
@@ -187,7 +203,7 @@ fun EdgePicker(
                 verticalArrangement = Arrangement.spacedBy(ChipGap, Alignment.CenterVertically),
             ) {
                 items.forEachIndexed { i, item ->
-                    val active = i == sel
+                    val active = i == sel || i == hover
                     Box(
                         Modifier
                             .size(Chip)
