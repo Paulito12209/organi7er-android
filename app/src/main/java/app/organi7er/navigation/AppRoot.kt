@@ -33,7 +33,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Density
@@ -339,14 +341,20 @@ fun OrganiAppRoot() {
                     Box(Modifier.fillMaxSize().aura(glow))
                     // Oben weiter nach unten ziehen → die Suche wächst aus der Pille auf. Mit Widerstand:
                     // der Finger legt etwa das 2,5-Fache der sichtbaren Strecke zurück.
-                    val pullTravel = with(LocalDensity.current) { 70.dp.toPx() }
+                    val pullTravel = with(LocalDensity.current) { 110.dp.toPx() }
+                    // Totwert: die ersten Pixel des Ziehens zählen nicht, damit kein Versehen die Suche öffnet.
+                    val pullDeadZone = with(LocalDensity.current) { 28.dp.toPx() }
+                    // Gesamte Fingerbewegung der laufenden Geste (unabhängig davon, wer sie verbraucht).
+                    // So lässt sich erkennen, ob die Geste eigentlich seitlich war (Wochentage, KW-Leiste, Karten).
+                    val gesture = remember { floatArrayOf(0f, 0f) } // [0] Summe |dx|, [1] Summe |dy|
                     val pullConnection = remember(showBar) {
                         object : NestedScrollConnection {
                             var raw = 0f
                             var passed = false
+                            private fun mostlyVertical() = gesture[0] * 1.6f < gesture[1]
                             private fun apply() {
                                 searchJob?.cancel()
-                                searchP = (raw * 0.4f / pullTravel).coerceIn(0f, 1f)
+                                searchP = (((raw - pullDeadZone).coerceAtLeast(0f)) * 0.3f / pullTravel).coerceIn(0f, 1f)
                                 val over = searchP >= 0.5f
                                 if (over != passed) {
                                     passed = over
@@ -365,7 +373,10 @@ fun OrganiAppRoot() {
                             }
 
                             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
-                                if (showBar && !composerOpen && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f) {
+                                if (showBar && !composerOpen && !searchActive && source == NestedScrollSource.UserInput && available.y > 0f &&
+                                    (raw > 0f || (mostlyVertical() && consumed.y == 0f && gesture[1] > pullDeadZone)) &&
+                                    (raw == 0f || mostlyVertical())
+                                ) {
                                     raw += available.y
                                     apply()
                                     return Offset(0f, available.y)
@@ -384,7 +395,26 @@ fun OrganiAppRoot() {
                             }
                         }
                     }
-                    Box(Modifier.fillMaxSize().nestedScroll(pullConnection)) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                    gesture[0] = 0f
+                                    gesture[1] = 0f
+                                    do {
+                                        val ev = awaitPointerEvent(PointerEventPass.Initial)
+                                        ev.changes.firstOrNull()?.let {
+                                            val d = it.positionChange()
+                                            gesture[0] += kotlin.math.abs(d.x)
+                                            gesture[1] += kotlin.math.abs(d.y)
+                                        }
+                                    } while (ev.changes.any { it.pressed })
+                                }
+                            }
+                            .nestedScroll(pullConnection),
+                    ) {
                     NavHost(
                         navController = nav,
                         startDestination = OverviewRoute,

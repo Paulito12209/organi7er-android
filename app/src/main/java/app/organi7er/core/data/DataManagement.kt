@@ -62,7 +62,7 @@ class SampleData @Inject constructor(
         val private = db.calendarDao().upsert(CalendarEntity(name = "Privat", colorHex = CalendarPalette.PRIVATE))
         db.calendarDao().upsert(CalendarEntity(name = "Gesundheit", colorHex = CalendarPalette.HEALTH))
 
-        // Drei Geburtstage, alle ganztägig und mit Foto; der eigene steht im Fokus.
+        // Drei Geburtstage, alle ganztägig und mit Foto; Günter und der eigene stehen im Fokus.
         val year = now.year
         suspend fun birthday(title: String, month: Int, day: Int, photo: Int, name: String, focus: Boolean = false) {
             db.eventDao().insert(
@@ -78,7 +78,7 @@ class SampleData @Inject constructor(
             )
         }
         birthday("Piros Geburtstag", 11, 20, R.raw.photo_piro, "photo_piro.jpg")
-        birthday("Günters Geburtstag", 12, 6, R.raw.photo_guenter, "photo_guenter.jpg")
+        birthday("Günters Geburtstag", 12, 6, R.raw.photo_guenter, "photo_guenter.jpg", focus = true)
         birthday("Pauls Geburtstag", 12, 13, R.raw.photo_paul, "photo_paul.jpg", focus = true)
 
         // Einzige Notiz: ein Entwurf als Augenzwinkern.
