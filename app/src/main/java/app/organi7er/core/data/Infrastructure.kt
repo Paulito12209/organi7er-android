@@ -154,6 +154,13 @@ class ImageStore @Inject constructor(@ApplicationContext private val context: Co
 
     suspend fun deleteAll() = withContext(Dispatchers.IO) { dir.listFiles()?.forEach { it.delete() } }
 
+    /** Kopiert ein mitgeliefertes Bild (res/raw) in den App-Speicher (nur für Beispieldaten). */
+    suspend fun copyRaw(resId: Int, name: String): String = withContext(Dispatchers.IO) {
+        val file = File(dir, name)
+        context.resources.openRawResource(resId).use { input -> file.outputStream().use { input.copyTo(it) } }
+        file.absolutePath
+    }
+
     /** Erzeugt ein weiches Verlaufsbild als Beispielfoto (nur für Beispieldaten). */
     suspend fun createSampleImage(variant: Int): String = withContext(Dispatchers.IO) {
         val w = 600

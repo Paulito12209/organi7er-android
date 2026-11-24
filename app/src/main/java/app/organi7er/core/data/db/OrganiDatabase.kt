@@ -221,9 +221,23 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/** v4: Titelbild je Termin. */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `events` ADD COLUMN `imagePath` TEXT")
+    }
+}
+
+/** v5: Geburtstags-Markierung je Termin. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `events` ADD COLUMN `isBirthday` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
 @Database(
     entities = [CalendarEntity::class, Event::class, Task::class, Note::class, NoteImage::class, NotificationEntry::class],
-    version = 3,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

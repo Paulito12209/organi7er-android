@@ -109,7 +109,7 @@ fun AppHeader(
         Text(
             title,
             Modifier
-                .padding(top = if (eyebrow != null) 4.dp else 26.dp)
+                .padding(top = if (eyebrow != null) 4.dp else if (halo) 34.dp else 26.dp)
                 .then(if (halo) Modifier.titleHalo() else Modifier)
                 .semantics { heading() },
             style = OrganiTheme.type.pageTitle.copy(fontSize = 40.sp, lineHeight = 44.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = (-0.035).em),

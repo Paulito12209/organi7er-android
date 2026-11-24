@@ -35,6 +35,11 @@ private val HeroTop = Color(0xFF000000)
 private val HeroMid = Color(0xFF09090B)
 private val HeroBottom = Color(0xFF121316)
 
+/** Helles Gegenstück (heller Modus): fast weiß oben → zartes Grau unten, Punkte dunkel. */
+private val HeroTopLight = Color(0xFFFFFFFF)
+private val HeroMidLight = Color(0xFFF6F7F8)
+private val HeroBottomLight = Color(0xFFECEDF0)
+
 /** Lage des Horizonts der Punktlandschaft (0 = oben, 1 = unten im Kopfbereich). */
 private const val HorizonAt = 0.56f
 
@@ -55,16 +60,23 @@ private const val WaveHeight = 0.32f
  * Landschaft aus Punkten in Perspektive (wie ein gepunktetes Gelände bis zum Horizont).
  * Unten abgerundet, oben läuft er bis an die Bildschirmkante.
  */
-internal fun Modifier.heroBackground(): Modifier = drawWithCache {
+internal fun Modifier.heroBackground(dark: Boolean = true): Modifier = drawWithCache {
+    val ink = if (dark) Color.White else Color.Black
     val w = size.width
     val h = size.height
     val shape = RoundedCornerShape(bottomStart = HeroRadius, bottomEnd = HeroRadius)
     val clip = Path().apply { addOutline(shape.createOutline(size, layoutDirection, this@drawWithCache)) }
     val horizon = h * HorizonAt
-    val base = Brush.verticalGradient(0f to HeroTop, 0.45f to HeroMid, 1f to HeroBottom)
+    val base = if (dark) {
+        Brush.verticalGradient(0f to HeroTop, 0.45f to HeroMid, 1f to HeroBottom)
+    } else {
+        Brush.verticalGradient(0f to HeroTopLight, 0.45f to HeroMidLight, 1f to HeroBottomLight)
+    }
+    // Dunkle Punkte auf Weiß wirken kräftiger: etwas zurücknehmen.
+    val dotScale = if (dark) 1f else 0.7f
     // Leichter Dunst oben links und ein Schimmer am Horizont.
-    val haze = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent), Offset(w * 0.2f, h * 0.3f), w * 0.9f)
-    val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = 0.06f), Color.Transparent), Offset(w * 0.5f, horizon), w * 0.65f)
+    val haze = Brush.radialGradient(listOf((if (dark) Color.White else Color.Black).copy(alpha = if (dark) 0.05f else 0.015f), Color.Transparent), Offset(w * 0.2f, h * 0.3f), w * 0.9f)
+    val glow = Brush.radialGradient(listOf(Color.White.copy(alpha = if (dark) 0.06f else 0.8f), Color.Transparent), Offset(w * 0.5f, horizon), w * 0.65f)
     val rows = dotRows(w, h, horizon, density)
     onDrawBehind {
         clipPath(clip) {
@@ -72,11 +84,11 @@ internal fun Modifier.heroBackground(): Modifier = drawWithCache {
             drawRect(haze)
             drawRect(glow)
             rows.forEach { r ->
-                drawPoints(r.points, PointMode.Points, Color.White.copy(alpha = r.alpha), strokeWidth = r.size, cap = StrokeCap.Round)
+                drawPoints(r.points, PointMode.Points, ink.copy(alpha = r.alpha * dotScale), strokeWidth = r.size, cap = StrokeCap.Round)
             }
             // Feine helle Kante unten, damit sich der Bereich vom Seitenhintergrund löst.
             drawLine(
-                Brush.horizontalGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.10f), Color.Transparent)),
+                Brush.horizontalGradient(listOf(Color.Transparent, ink.copy(alpha = if (dark) 0.10f else 0.08f), Color.Transparent)),
                 Offset(0f, h - 0.5f),
                 Offset(w, h - 0.5f),
                 strokeWidth = 1f,

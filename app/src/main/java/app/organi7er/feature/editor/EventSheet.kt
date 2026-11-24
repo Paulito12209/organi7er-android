@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -136,6 +139,18 @@ fun EventSheet(request: EditorRequest, vm: EditorViewModel, onDismiss: () -> Uni
 
     OrganiSheet(onDismiss) {
         SheetHeader(headline, EntryType.Event, onDismiss)
+        // Titelbild des Termins ganz oben.
+        original?.imagePath?.let { path ->
+            coil3.compose.AsyncImage(
+                model = java.io.File(path),
+                contentDescription = "Bild zum Termin",
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
+            )
+        }
         TitleField(title, { title = it }, "Was steht an?", autoFocus = original == null)
 
         if (!planning) {

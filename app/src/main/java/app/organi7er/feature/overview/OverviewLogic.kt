@@ -41,6 +41,10 @@ data class DayTileUi(
     val nextEventId: Long? = null,
     /** Link des nächsten Termins (Remote-Meeting); leer = keiner. */
     val nextLink: String = "",
+    /** Titelbild des nächsten Termins; null = keins. Füllt dann die aktive Kachel. */
+    val nextImage: String? = null,
+    /** Mindestens ein Geburtstag an diesem Tag. */
+    val birthday: Boolean = false,
     val a11y: String,
 )
 
@@ -140,6 +144,8 @@ object OverviewBuilder {
                 nextTitle = title,
                 nextEventId = next?.id,
                 nextLink = next?.link.orEmpty(),
+                nextImage = next?.imagePath,
+                birthday = dayEvents.any { it.isBirthday },
                 a11y = "${Dates.longDay(day)}: ${dayEvents.size} Termine, ${dayTasks.size} Aufgaben" +
                     if (title.isNotBlank()) ". $label $title" else "",
             )

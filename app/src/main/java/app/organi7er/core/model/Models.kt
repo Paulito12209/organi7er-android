@@ -61,6 +61,10 @@ data class Event(
     val updatedAt: Instant = Instant.now(),
     /** Link zum Termin, z. B. Remote-Meeting (Google Meet, Zoom); leer = keiner. */
     @ColumnInfo(defaultValue = "") val link: String = "",
+    /** Titelbild des Termins (absoluter Pfad im App-Speicher), null = keins. */
+    val imagePath: String? = null,
+    /** Geburtstag: die Tageskachel schimmert dann (inaktiv) in dunklen Regenbogenfarben. */
+    @ColumnInfo(defaultValue = "0") val isBirthday: Boolean = false,
 ) {
     /** Ende für Berechnungen: ganztägig = Tagesende, sonst Ende oder Start + 1 h. */
     val effectiveEnd: LocalDateTime?

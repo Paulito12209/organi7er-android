@@ -53,6 +53,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
@@ -133,14 +135,14 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
             contentPadding = PaddingValues(start = Spacing.page, end = Spacing.page, bottom = ContentBottomPadding),
         ) {
             // Kopfbereich auf dunklem Hintergrund mit Punktlandschaft: Kopfzeile, Tageskacheln, KW-Auswahl.
-            // Immer im dunklen Farbschema, damit Schrift und Glas auf dem Schwarz lesbar bleiben.
+            // Hell: das weiße Gegenstück mit dunklen Punkten.
             item(key = "hero", contentType = "hero") {
-                CompositionLocalProvider(LocalOrganiColors provides DarkOrganiColors) {
+                run {
                     Column(
                         Modifier
                             .fillMaxWidth()
                             .bleed()
-                            .heroBackground()
+                            .heroBackground(OrganiTheme.colors.isDark)
                             // Unten kein Abstand: der Bereich endet genau an der Unterkante der KW-Pille.
                             .padding(horizontal = Spacing.page),
                     ) {
@@ -151,7 +153,7 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                             tall = state.unread == 0,
                             onSelect = vm::selectDay,
                             onOpen = { actions.openTab(TAB_CALENDAR) },
-                            modifier = Modifier.padding(top = 28.dp).bleed(Spacing.page - TileEdge),
+                            modifier = Modifier.padding(top = 20.dp).bleed(Spacing.page - TileEdge),
                         )
                         WeekPicker(state, vm::selectWeek, Modifier.padding(top = 18.dp))
                     }
@@ -345,17 +347,26 @@ private fun DayTile(
     // Schmale Kacheln deckend, je tiefer desto etwas dunkler (hell) bzw. heller (dunkel).
     val base = if (c.isDark) Color(0xFF141416) else Color.White
     val shade = if (c.isDark) Color.White.copy(alpha = 0.018f * (6 - depth.coerceAtMost(6))) else Color.Black.copy(alpha = 0.022f * depth)
+    // Aktiv: mit Termin-Bild als Foto unter weißem Halo, sonst hell silbern (dunkel) bzw. dunkel silbern (hell).
+    val photo = d.nextImage.takeIf { active }
+    val ink = when {
+        !active -> c.text
+        photo != null || !c.isDark -> Color.White
+        else -> OnSilver
+    }
     val bg = if (active) {
         Modifier
             .floatShadow(shape, c.shadowFloat)
             .clip(shape)
-            .frostedGlass(shape)
+            .then(if (photo != null || !c.isDark) Modifier else Modifier.frostedGlass(shape))
+            .then(if (photo == null && !c.isDark) Modifier.darkSilver(shape) else Modifier)
     } else {
         Modifier
             .softShadow(shape, c.shadowSoft)
             .clip(shape)
             .background(base)
             .background(shade)
+            .then(if (d.birthday) Modifier.background(RainbowTint(c.isDark)) else Modifier)
             .border(1.dp, if (c.isDark) Color.White.copy(alpha = 0.07f) else Color.Black.copy(alpha = 0.05f), shape)
     }
     Box(
@@ -364,8 +375,17 @@ private fun DayTile(
             .selectable(active, role = Role.Tab, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = d.a11y },
     ) {
+        if (photo != null) {
+            coil3.compose.AsyncImage(
+                model = java.io.File(photo),
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.matchParentSize(),
+            )
+            Box(Modifier.matchParentSize().photoHalo(shape))
+        }
         if (open > 0.35f) {
-            BigTileContent(d, Modifier.graphicsLayer { alpha = ((open - 0.35f) / 0.65f).coerceIn(0f, 1f) })
+            BigTileContent(d, ink, Modifier.graphicsLayer { alpha = ((open - 0.35f) / 0.65f).coerceIn(0f, 1f) })
         } else {
             SmallTileContent(
                 d,
@@ -376,6 +396,24 @@ private fun DayTile(
             )
         }
     }
+}
+
+/**
+ * Dunkler Regenbogen auf schmalen Geburtstags-Kacheln: gedämpfte Farben von oben nach unten.
+ * Deckkraft hier einstellen (dunkel kräftiger, hell zarter).
+ */
+private fun RainbowTint(dark: Boolean): Brush {
+    val a = if (dark) 0.26f else 0.18f
+    return Brush.verticalGradient(
+        listOf(
+            Color(0xFFB0303A).copy(alpha = a),
+            Color(0xFFB36A1F).copy(alpha = a),
+            Color(0xFF9A9A22).copy(alpha = a),
+            Color(0xFF2F8F4E).copy(alpha = a),
+            Color(0xFF2A6FB0).copy(alpha = a),
+            Color(0xFF6A3FB0).copy(alpha = a),
+        ),
+    )
 }
 
 /** Mattglas der aktiven Tageskachel: Grundton oben → unten. */
@@ -401,12 +439,95 @@ private fun Modifier.frostedGlass(shape: androidx.compose.ui.graphics.Shape): Mo
     }
 }
 
+/** Dunkles Silber der aktiven Kachel im hellen Modus: oben → unten. */
+private val Graphite100 = Color(0xFF55585E)
+private val Graphite200 = Color(0xFF34363B)
+private val Graphite300 = Color(0xFF1F2024)
+
+/** Dunkles Silber (heller Modus): Graphit-Verlauf, zarter Lichtrand und Glanz oben – Schrift weiß. */
+private fun Modifier.darkSilver(shape: androidx.compose.ui.graphics.Shape): Modifier = drawWithCache {
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val base = Brush.verticalGradient(0f to Graphite100, 0.5f to Graphite200, 1f to Graphite300)
+    val sheen = Brush.verticalGradient(0f to Color.White.copy(alpha = 0.16f), 0.35f to Color.White.copy(alpha = 0f))
+    val rim = (1..8).map { k -> (k * 2.4f).dp.toPx() to 0.035f } + (1.5.dp.toPx() to 0.28f)
+    onDrawWithContent {
+        drawOutline(outline, base)
+        rim.forEach { (w, a) -> drawOutline(outline, Color.White.copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(w)) }
+        drawRect(sheen)
+        drawContent()
+    }
+}
+
+/** Stärke des weißen Halos über dem Foto (0 = keiner, 1 = sehr milchig) und Breite des Rands. */
+private const val HaloStrength = 0.022f
+private val HaloWidth = 20.dp
+
+/** Anzahl der übereinandergelegten Schichten des Halos: mehr = weicherer Verlauf. */
+private const val HaloSteps = 44
+
+/** Körnung über dem Foto: Anzahl der Punkte und Deckkraft. */
+private const val GrainDots = 9000
+private const val GrainAlpha = 0.06f
+
+/**
+ * Wie die Vorlage „Flasks Per Day“: das Foto liegt hinten, darüber ein milchig-weißer Halo,
+ * der vom Rand nach innen ausläuft, eine feine Körnung und unten/oben eine leichte Abdunklung für die weiße Schrift.
+ */
+private fun Modifier.photoHalo(shape: androidx.compose.ui.graphics.Shape): Modifier = drawWithCache {
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val shade = Brush.verticalGradient(
+        0f to Color.Black.copy(alpha = 0.38f),
+        0.32f to Color.Black.copy(alpha = 0.06f),
+        0.55f to Color.Black.copy(alpha = 0.10f),
+        1f to Color.Black.copy(alpha = 0.62f),
+    )
+    // Schichten zwischen Außenkante und einem nach innen gerückten Rechteck mit runden Ecken:
+    // nahe am Rand liegen viele Schichten übereinander (hell), nach innen immer weniger – ein weicher Auslauf
+    // ohne sichtbare Stufen, und auch die Innenkante ist an den Ecken rund.
+    val outer = Path().apply { addOutline(outline) }
+    val radius = TileRadius.toPx()
+    val layers = (0 until HaloSteps).map { k ->
+        val inset = HaloWidth.toPx() * (k + 1) / HaloSteps
+        Path().apply {
+            addPath(outer)
+            addRoundRect(
+                androidx.compose.ui.geometry.RoundRect(
+                    inset, inset, size.width - inset, size.height - inset,
+                    androidx.compose.ui.geometry.CornerRadius((radius - inset * 0.25f).coerceAtLeast(4f)),
+                ),
+            )
+            fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+        }
+    }
+    val bright = Brush.radialGradient(
+        listOf(Color.White.copy(alpha = 0.16f), Color.Transparent),
+        Offset(size.width * 0.15f, size.height * 0.05f),
+        size.width * 0.9f,
+    )
+    val rnd = java.util.Random(7)
+    val light = ArrayList<Offset>(GrainDots / 2)
+    val dark = ArrayList<Offset>(GrainDots / 2)
+    repeat(GrainDots) { i ->
+        val o = Offset(rnd.nextFloat() * size.width, rnd.nextFloat() * size.height)
+        if (i % 2 == 0) light += o else dark += o
+    }
+    val dot = 0.7.dp.toPx()
+    onDrawBehind {
+        drawRect(shade)
+        drawRect(bright)
+        layers.forEach { drawPath(it, Color.White.copy(alpha = HaloStrength)) }
+        drawOutline(outline, Color.White.copy(alpha = 0.45f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
+        drawPoints(light, androidx.compose.ui.graphics.PointMode.Points, Color.White.copy(alpha = GrainAlpha), strokeWidth = dot)
+        drawPoints(dark, androidx.compose.ui.graphics.PointMode.Points, Color.Black.copy(alpha = GrainAlpha), strokeWidth = dot)
+    }
+}
+
 /** Schrift auf der silbernen Kachel. */
 private val OnSilver = Color(0xFF0A0A0B)
 
 @Composable
-private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
-    val soft = OnSilver.copy(alpha = 0.6f)
+private fun BigTileContent(d: DayTileUi, ink: Color, modifier: Modifier) {
+    val soft = ink.copy(alpha = if (ink == Color.White) 0.75f else 0.6f)
     Column(modifier.fillMaxSize().padding(start = 18.dp, end = 14.dp, top = 16.dp, bottom = 16.dp)) {
         Row(Modifier.fillMaxWidth()) {
             // Datum groß, darunter „Heute“ / „Morgen“ / Wochentag.
@@ -415,8 +536,8 @@ private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
                 val day = d.short.substringBefore(' ')
                 val num = d.short.substringAfter(' ', "")
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(day, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = OnSilver, maxLines = 1)
-                    if (num.isNotBlank()) DotText(num, Modifier.padding(bottom = 7.dp), height = 21.dp, color = OnSilver)
+                    Text(day, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = ink, maxLines = 1)
+                    if (num.isNotBlank()) DotText(num, Modifier.padding(bottom = 7.dp), height = 21.dp, color = ink)
                 }
                 Text(d.headline, Modifier.padding(top = 2.dp), style = OrganiTheme.type.label, color = soft, maxLines = 1)
             }
@@ -426,15 +547,15 @@ private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
         Spacer(Modifier.weight(1f))
         // Zähler waagerecht, dicht über „Als Nächstes“.
         Row(Modifier.padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Count(Ms.calendarToday, d.events)
-            Count(Ms.checklist, d.tasks)
-            Count(Ms.description, d.notes)
+            Count(Ms.calendarToday, d.events, ink)
+            Count(Ms.checklist, d.tasks, ink)
+            Count(Ms.description, d.notes, ink)
         }
         if (d.nextLabel.isNotBlank()) Text(d.nextLabel, style = OrganiTheme.type.tileCaption.copy(fontSize = 12.sp), color = soft, maxLines = 1)
         Text(
             d.nextTitle,
             style = OrganiTheme.type.title.copy(fontSize = 18.sp, lineHeight = 22.sp),
-            color = OnSilver,
+            color = ink,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -457,20 +578,27 @@ private fun SmallTileContent(d: DayTileUi, modifier: Modifier) {
 
 /** Zähler der aktiven Kachel: Symbol in einem zarten Silberkreis, die Zahl im Punktraster rechts daneben. */
 @Composable
-private fun Count(@DrawableRes icon: Int, n: Int) {
+private fun Count(@DrawableRes icon: Int, n: Int, ink: Color) {
+    val light = ink == Color.White
     val shape = OrganiShapes.circle
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Box(
             Modifier
                 .size(30.dp)
                 .clip(shape)
-                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.6f), OnSilver.copy(alpha = 0.04f))))
-                .border(1.dp, OnSilver.copy(alpha = 0.13f), shape),
+                .background(
+                    if (light) {
+                        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.26f), Color.White.copy(alpha = 0.06f)))
+                    } else {
+                        Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.6f), ink.copy(alpha = 0.04f)))
+                    },
+                )
+                .border(1.dp, if (light) Color.White.copy(alpha = 0.35f) else ink.copy(alpha = 0.13f), shape),
             contentAlignment = Alignment.Center,
         ) {
-            MsIcon(icon, null, tint = OnSilver.copy(alpha = 0.7f), size = 14.dp)
+            MsIcon(icon, null, tint = ink.copy(alpha = if (light) 0.95f else 0.7f), size = 14.dp)
         }
-        DotText("$n", height = 9.dp, color = OnSilver.copy(alpha = 0.85f))
+        DotText("$n", height = 9.dp, color = ink.copy(alpha = if (light) 1f else 0.85f))
     }
 }
 
@@ -542,14 +670,15 @@ private fun WeekPicker(state: OverviewState, onSelect: (WeekUi) -> Unit, modifie
                         .padding(horizontal = if (sel) 22.dp else 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // Gewählt wie „Suchen“: „KW“ weiß, die Zahl im gedämpften Weißgrau.
+                    // Gewählt: „KW“ in hellem Silber (10 % dunkler als die Schrift), die Zahl in voller Schriftfarbe (dunkel: weiß).
+                    val kw = if (c.isDark) androidx.compose.ui.graphics.lerp(c.text, Color.Black, 0.10f) else c.textMuted
                     val ink = when {
-                        sel -> c.textMuted
+                        sel -> c.text
                         w.isCurrent -> c.text
                         else -> c.textSoft
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (sel) Text("KW", style = OrganiTheme.type.label.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold), color = c.text)
+                        if (sel) Text("KW", style = OrganiTheme.type.label.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold), color = kw)
                         DotText("${w.number}", height = 10.dp, color = ink)
                     }
                 }

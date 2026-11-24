@@ -426,10 +426,18 @@ fun OrganiAppRoot() {
                     exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(120)),
                 ) {
                     CaptureDock(
+                        haze = contentHaze,
                         type = dockType,
                         onSave = { e ->
                             editor.quickAdd(e)
                             actions.showMessage("${e.type.shortLabel} gespeichert")
+                        },
+                        onDetails = { e ->
+                            request = when (e.type) {
+                                EntryType.Event -> EditorRequest.NewEvent(e.at?.toLocalDate(), e.title, e.rest, e.focused)
+                                EntryType.Task -> EditorRequest.NewTask(e.at?.toLocalDate(), e.title, e.rest, e.focused)
+                                EntryType.Note -> EditorRequest.NewNote(e.title, e.rest, e.focused)
+                            }
                         },
                         onCamera = { request = EditorRequest.NewNote(startCamera = true) },
                         onMessage = actions.showMessage,
@@ -579,8 +587,8 @@ private val SettingsPeek = 64.dp
 private fun SettingsPanel(progress: Animatable<Float, AnimationVector1D>, close: () -> Unit) {
     if (progress.value <= 0f && !progress.isRunning) return
     BackHandler(progress.targetValue > 0f, close)
-    // Das Menü ist immer hell, auch wenn die App dunkel ist.
-    OrganiTheme(darkTheme = false) {
+    // Das Menü folgt dem Farbschema der App: hell im hellen, dunkel im dunklen Modus.
+    OrganiTheme(darkTheme = OrganiTheme.colors.isDark) {
         Box(Modifier.fillMaxSize().background(OrganiTheme.colors.bg)) {
             SettingsScreen(onBack = close, startInset = SettingsPeek)
         }

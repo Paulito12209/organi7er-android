@@ -250,7 +250,14 @@ fun SoftSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, modifier: M
                     .size(22.dp)
                     .softShadow(OrganiShapes.circle, Color(0x40061B3A))
                     .clip(OrganiShapes.circle)
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.White, Color(0xFFE9EEF6)))),
+                    // Dunkel und eingeschaltet ist die Spur weiß: dann ein schwarzer Knopf, damit er sichtbar bleibt.
+                    .background(
+                        if (c.isDark && checked) {
+                            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF2A2B2F), Color(0xFF0A0A0B)))
+                        } else {
+                            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.White, Color(0xFFE9EEF6)))
+                        },
+                    ),
             )
         }
     }
