@@ -2,6 +2,7 @@ package app.organi7er
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,14 +23,14 @@ class NavigationTest {
 
     @Before fun init() = hilt.inject()
 
-    /** Edge-Picker: erst antippen (klappt auf), dann das Ziel wählen. Der aktuelle Reiter steht nicht zur Wahl. */
+    /** Edge-Picker: eingeklappt antippen (klappt auf), dann ein Icon wählen. Nach 2 s klappt er von allein wieder zu. */
     private fun pick(label: String) {
         compose.mainClock.autoAdvance = false
         compose.onNodeWithContentDescription("Navigation").performClick()
         compose.mainClock.advanceTimeBy(600)
         compose.onNodeWithContentDescription(label).performClick()
-        // Warten, bis der Picker von selbst wieder zuklappt (2,5 s).
-        compose.mainClock.advanceTimeBy(3200)
+        // Einrasten der Feder abwarten.
+        compose.mainClock.advanceTimeBy(1000)
         compose.mainClock.autoAdvance = true
     }
 

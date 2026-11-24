@@ -8,6 +8,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,10 +77,13 @@ import app.organi7er.core.designsystem.Primitives
 import app.organi7er.core.designsystem.components.CaptureDock
 import app.organi7er.core.designsystem.components.DockMinHeight
 import app.organi7er.core.designsystem.components.EdgePicker
+import app.organi7er.core.designsystem.components.EdgeBlue
+import app.organi7er.core.designsystem.components.EdgeGold
+import app.organi7er.core.designsystem.components.EdgeNavy
+import app.organi7er.core.designsystem.components.EdgeSilver
 import app.organi7er.core.designsystem.components.EdgeTab
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.Ms
-import app.organi7er.core.designsystem.components.QuickComposer
 import app.organi7er.core.designsystem.components.aura
 import app.organi7er.core.designsystem.components.rest
 import app.organi7er.core.designsystem.components.shortLabel
@@ -124,10 +129,10 @@ import kotlinx.serialization.Serializable
 @Serializable data object NotificationsRoute
 
 private val Tabs = listOf(
-    EdgeTab("Übersicht", Ms.home, Ms.homeFilled),
-    EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
-    EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled),
-    EdgeTab("Notizen", Ms.description, Ms.descriptionFilled),
+    EdgeTab("Übersicht", Ms.home, Ms.homeFilled, EdgeSilver),
+    EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled, EdgeNavy),
+    EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled, EdgeBlue),
+    EdgeTab("Notizen", Ms.description, Ms.descriptionFilled, EdgeGold),
 )
 private val TabRoutes: List<Any> = listOf(OverviewRoute, CalendarRoute, TasksRoute, NotesRoute)
 
@@ -158,12 +163,23 @@ fun OrganiAppRoot() {
         dest.hasRoute(NotesRoute::class) -> 3
         else -> -1
     }
-    // Schnelles Erfassen: Dock unten, hochgeklappt der Composer.
-    var composerOpen by remember { mutableStateOf(false) }
-    var composerDictate by remember { mutableStateOf(false) }
-    var composerType by rememberSaveable { mutableStateOf(EntryType.Note) }
-    LaunchedEffect(dest?.id) { composerOpen = false }
+    // Schnelles Erfassen: Dock unten, Eingabe direkt im Dock.
+    // Der Typ des Schnell-Eintrags folgt dem Reiter.
+    val dockType = when (tabIndex) {
+        1 -> EntryType.Event
+        2 -> EntryType.Task
+        else -> EntryType.Note
+    }
     val shell by editor.shell.collectAsStateWithLifecycle()
+    // Hintergrund-Glow je Reiter: Übersicht neutral, Termine Navy, Aufgaben Blau, Notizen Gold.
+    val glowTarget = when (tabIndex) {
+        1 -> EdgeNavy.mid
+        2 -> EdgeBlue.inner
+        3 -> EdgeGold.mid
+        else -> EdgeSilver.inner
+    }
+    val glow by animateColorAsState(glowTarget, tween(400), label = "tabGlow")
+    val imeVisible = WindowInsets.isImeVisible
 
     // Bilder für Notizen direkt aus dem Feed (Platzhalter „Foto aufnehmen / oder aus Galerie“).
     var imageTarget by remember { mutableStateOf<Long?>(null) }
@@ -259,7 +275,7 @@ fun OrganiAppRoot() {
                         .fillMaxSize()
                         .hazeSource(contentHaze),
                 ) {
-                    Box(Modifier.fillMaxSize().aura())
+                    Box(Modifier.fillMaxSize().aura(glow))
                     NavHost(
                         navController = nav,
                         startDestination = OverviewRoute,
@@ -284,15 +300,16 @@ fun OrganiAppRoot() {
                 SystemBarBlur(navInset, contentHaze, Modifier.align(Alignment.BottomCenter))
 
                 // Edge-Picker: Navigation am rechten Rand, liegt im Inhalt und rutscht mit ihm weg.
-                if (showBar) {
+                // Bei offener Tastatur weicht der Edge-Picker zurück, sonst läge er unter der Tastatur.
+                if (showBar && !imeVisible) {
                     EdgePicker(
-                        // Nur die Reiter, auf denen man gerade nicht ist.
-                        items = Tabs.filterIndexed { i, _ -> i != tabIndex },
-                        selected = -1,
-                        onSelect = { i -> actions.openTab(if (i >= tabIndex) i + 1 else i) },
+                        // Alle Reiter, der aktive steht in der Mitte.
+                        items = Tabs,
+                        selected = tabIndex,
+                        onSelect = { i -> actions.openTab(i) },
                         onSwipeLeft = openSettingsPanel,
                         // Hängt am Dock: das untere Ende der Kerbe läuft an dessen Oberkante in den Rand aus. Bleibt beim Composer stehen.
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = navInset + DockMinHeight),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = navInset + DockMinHeight - 8.dp),
                     )
                 }
 
@@ -303,41 +320,15 @@ fun OrganiAppRoot() {
                     exit = slideOutVertically(tween(200)) { it } + fadeOut(tween(120)),
                 ) {
                     CaptureDock(
-                        type = composerType,
-                        onOpen = {
-                            composerDictate = false
-                            composerOpen = true
+                        type = dockType,
+                        onSave = { e ->
+                            editor.quickAdd(e)
+                            actions.showMessage("${e.type.shortLabel} gespeichert")
                         },
                         onCamera = { request = EditorRequest.NewNote(startCamera = true) },
-                        onDictate = {
-                            composerDictate = true
-                            composerOpen = true
-                        },
+                        onMessage = actions.showMessage,
                     )
                 }
-
-                QuickComposer(
-                    visible = composerOpen,
-                    type = composerType,
-                    onTypeChange = { composerType = it },
-                    startDictation = composerDictate,
-                    onDismiss = { composerOpen = false },
-                    onSave = { e ->
-                        composerOpen = false
-                        editor.quickAdd(e)
-                        actions.showMessage("${e.type.shortLabel} gespeichert")
-                    },
-                    onDetails = { e ->
-                        composerOpen = false
-                        request = when (e.type) {
-                            EntryType.Event -> EditorRequest.NewEvent(e.at?.toLocalDate(), e.title, e.rest, e.focused)
-                            EntryType.Task -> EditorRequest.NewTask(e.at?.toLocalDate(), e.title, e.rest, e.focused)
-                            EntryType.Note -> EditorRequest.NewNote(e.title, e.rest, e.focused)
-                        }
-                    },
-                    onMessage = actions.showMessage,
-                    hazeState = contentHaze,
-                )
 
                 SnackbarHost(
                     snackbar,

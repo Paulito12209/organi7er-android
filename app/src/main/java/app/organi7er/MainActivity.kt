@@ -9,12 +9,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import app.organi7er.core.data.SettingsRepository
 import app.organi7er.core.designsystem.OrganiTheme
+import app.organi7er.core.designsystem.components.OrganiSplash
 import app.organi7er.core.designsystem.isDark
 import app.organi7er.core.model.ThemeMode
 import app.organi7er.navigation.OrganiAppRoot
@@ -54,6 +58,11 @@ class MainActivity : ComponentActivity() {
             }
             enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
         }
-        OrganiTheme(darkTheme = dark) { OrganiAppRoot() }
+        // Ladebildschirm nur beim Kaltstart; eine Drehung zeigt ihn nicht erneut.
+        var splashDone by rememberSaveable { mutableStateOf(false) }
+        OrganiTheme(darkTheme = dark) {
+            OrganiAppRoot()
+            if (!splashDone) OrganiSplash(dark = dark, onFinished = { splashDone = true })
+        }
     }
 }

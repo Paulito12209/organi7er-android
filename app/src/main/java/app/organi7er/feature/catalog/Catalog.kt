@@ -33,6 +33,10 @@ import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.EventRow
 import app.organi7er.core.designsystem.components.FilterTile
 import app.organi7er.core.designsystem.components.EdgePicker
+import app.organi7er.core.designsystem.components.EdgeBlue
+import app.organi7er.core.designsystem.components.EdgeGold
+import app.organi7er.core.designsystem.components.EdgeNavy
+import app.organi7er.core.designsystem.components.EdgeSilver
 import app.organi7er.core.designsystem.components.EdgeTab
 import app.organi7er.core.designsystem.components.GlassCard
 import app.organi7er.core.designsystem.components.Ms
@@ -139,10 +143,10 @@ fun CatalogContent() {
     Box(Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.CenterEnd) {
         EdgePicker(
             listOf(
-                EdgeTab("Übersicht", Ms.home, Ms.homeFilled),
-                EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled),
-                EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled),
-                EdgeTab("Notizen", Ms.description, Ms.descriptionFilled),
+                EdgeTab("Übersicht", Ms.home, Ms.homeFilled, EdgeSilver),
+                EdgeTab("Termine", Ms.calendarToday, Ms.calendarTodayFilled, EdgeNavy),
+                EdgeTab("Aufgaben", Ms.checklist, Ms.checklistFilled, EdgeBlue),
+                EdgeTab("Notizen", Ms.description, Ms.descriptionFilled, EdgeGold),
             ),
             tab,
             { tab = it },

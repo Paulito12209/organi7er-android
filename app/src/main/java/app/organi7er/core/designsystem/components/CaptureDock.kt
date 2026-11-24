@@ -4,42 +4,35 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.RecognizerIntent
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,38 +41,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.organi7er.core.model.Dates
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
-import app.organi7er.core.designsystem.Primitives
 import app.organi7er.core.designsystem.Spacing
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeBlurStyle
 import dev.chrisbanes.haze.blur.hazeBlur
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.Locale
-import kotlinx.coroutines.delay
 
 /** Was das schnelle Erfassen liefert: Typ, ein Text (erste Zeile = Titel), optional Zeitpunkt, Fokus. */
 data class QuickEntry(val type: EntryType, val text: String, val at: LocalDateTime?, val focused: Boolean)
@@ -90,13 +77,14 @@ val QuickEntry.title: String get() = text.trim().lines().firstOrNull().orEmpty()
 /** Alle weiteren Zeilen = Notiz bzw. Text. */
 val QuickEntry.rest: String get() = text.trim().lines().drop(1).joinToString("\n").trim()
 
-/** Reihenfolge der Typen im Composer. */
+/** Reihenfolge der Typen im Dock. */
 private val Types = listOf(EntryType.Event, EntryType.Task, EntryType.Note)
 
-/** Mindesthöhe des eingeklappten Docks (ohne Begrüßung, ohne Navigationsleisten-Abstand). */
-val DockMinHeight = 94.dp
+/** Gesamthöhe des Docks ohne Navigationsleisten-Abstand: Unschärfe-Band, Typ-Zeile, Eingabezeile. */
+val DockMinHeight = 100.dp
 
-private val DockShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+/** Höhe des Unschärfe-Bands direkt über dem Dock. */
+private val BlurBandHeight = 36.dp
 
 private fun EntryType.placeholder(): String = when (this) {
     EntryType.Event -> "Neuer Termin"
@@ -107,58 +95,100 @@ private fun EntryType.placeholder(): String = when (this) {
 // ------------------------------------------------------------------ Dock
 
 /**
- * Unten angedockte Karte statt Navigationsleiste: Begrüßung („Guten Morgen, Paul“) und das Eingabefeld
- * mit Kamera links und Diktat rechts. Antippen oder Hochziehen öffnet den [QuickComposer].
- * Beim Scrollen nach unten verschwindet die Begrüßung ([showGreeting]).
+ * Unten angedockte Eingabe wie bei Gemini: Typ-Zeile, dann eine Pille mit Kamera links, Texteingabe
+ * und Wellen-Knopf rechts. Kein Blatt mehr: Die Tastatur schiebt das Dock einfach nach oben.
+ * Der Wellen-Knopf diktiert, „Senden“ auf der Tastatur speichert. Über dem Dock liegt ein
+ * weicher Ausblend-Verlauf, der bei offener Tastatur schwächer wird. Der Typ folgt dem Reiter.
  */
 @Composable
 fun CaptureDock(
     type: EntryType,
-    onOpen: () -> Unit,
+    onSave: (QuickEntry) -> Unit,
     onCamera: () -> Unit,
-    onDictate: () -> Unit,
+    onMessage: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = OrganiTheme.colors
-    val threshold = with(LocalDensity.current) { 24.dp.toPx() }
+    val haptics = LocalHapticFeedback.current
+    var field by remember { mutableStateOf(TextFieldValue("")) }
+    val focus = remember { FocusRequester() }
+    val imeVisible = WindowInsets.isImeVisible
+    val canSend = field.text.isNotBlank()
+
+    val dictate = rememberDictation(
+        onResult = { spoken ->
+            val sep = if (field.text.isBlank() || field.text.endsWith(" ") || field.text.endsWith("\n")) "" else " "
+            val t = field.text + sep + spoken
+            field = TextFieldValue(t, TextRange(t.length))
+        },
+        onUnavailable = { onMessage("Diktat ist auf diesem Gerät nicht verfügbar") },
+    )
+
+    val entry = { QuickEntry(type, field.text.trim(), null, false) }
+    val save = {
+        if (canSend) {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            onSave(entry())
+            field = TextFieldValue("")
+        }
+    }
+
+    // Weiches Ausblenden des Inhalts über dem Dock, ohne Kante; bei offener Tastatur schwächer.
+    val bandAlpha by animateFloatAsState(if (imeVisible) 0.15f else 0.6f, tween(250), label = "dockFade")
+    val bandTint = Brush.verticalGradient(0f to Color.Transparent, 0.3f to c.bg.copy(alpha = bandAlpha), 1f to c.bg.copy(alpha = bandAlpha))
+
     Column(
         modifier
             .fillMaxWidth()
-            .shadow(18.dp, DockShape, ambientColor = Color.Black.copy(alpha = 0.18f), spotColor = Color.Black.copy(alpha = 0.18f))
-            .clip(DockShape)
-            .background(c.surface)
-            .pointerInput(onOpen) {
-                var dy = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { dy = 0f },
-                    onDragEnd = { if (dy < -threshold) onOpen() },
-                    onVerticalDrag = { _, d -> dy += d },
-                )
-            }
-            .navigationBarsPadding()
-            .padding(horizontal = Spacing.page)
-            .padding(top = 10.dp, bottom = 12.dp),
+            .background(bandTint)
+            // Tastatur oder Navigationsleiste, je nachdem, was höher ist: das Dock sitzt immer darüber.
+            .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars)),
     ) {
-        Box(
-            Modifier
-                .align(Alignment.CenterHorizontally)
-                .size(width = 36.dp, height = 4.dp)
-                .clip(OrganiShapes.pill)
-                .background(c.textSoft.copy(alpha = 0.35f)),
-        )
-        Row(
-            Modifier
-                .padding(top = 12.dp)
-                .fillMaxWidth()
-                .height(56.dp)
-                .clip(OrganiShapes.pill)
-                .background(c.surface2)
-                .clickable(role = Role.Button, onClickLabel = "Neuen Eintrag erfassen", onClick = onOpen),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            DockIcon(Ms.photoCamera, "Foto-Notiz aufnehmen", onCamera, Modifier.padding(start = 4.dp))
-            Text(type.placeholder(), Modifier.weight(1f).padding(horizontal = 6.dp), style = OrganiTheme.type.body.copy(fontSize = 17.sp), color = c.textSoft, maxLines = 1)
-            DockIcon(Ms.graphicEq, "Diktieren", onDictate, Modifier.padding(end = 4.dp))
+        Spacer(Modifier.fillMaxWidth().height(BlurBandHeight))
+        Column(Modifier.padding(horizontal = 12.dp).padding(bottom = 8.dp)) {
+            // Eingabe-Pille: Kamera · Text · Wellen-Knopf (weiß, allein rechts).
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(OrganiShapes.pill)
+                    .background(c.surface2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DockIcon(Ms.photoCamera, "Foto-Notiz aufnehmen", onCamera, Modifier.padding(start = 4.dp))
+                BasicTextField(
+                    value = field,
+                    onValueChange = { field = it },
+                    singleLine = true,
+                    textStyle = OrganiTheme.type.body.copy(fontSize = 17.sp, color = c.text),
+                    cursorBrush = SolidColor(c.text),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { save() }),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 6.dp)
+                        .focusRequester(focus)
+                        .semantics { contentDescription = type.placeholder() },
+                    decorationBox = { inner ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (field.text.isEmpty()) {
+                                Text(type.placeholder(), style = OrganiTheme.type.body.copy(fontSize = 17.sp), color = c.textSoft, maxLines = 1)
+                            }
+                            inner()
+                        }
+                    },
+                )
+                // Wellen-Symbol: einziger Sprach-Knopf, nur das Symbol in Weiß, ohne Kreis.
+                Box(
+                    Modifier
+                        .padding(end = 6.dp)
+                        .size(44.dp)
+                        .clip(OrganiShapes.circle)
+                        .clickable(role = Role.Button, onClickLabel = "Diktieren", onClick = dictate)
+                        .semantics { contentDescription = "Diktieren" },
+                    contentAlignment = Alignment.Center,
+                ) { MsIcon(Ms.graphicEq, null, tint = if (c.isDark) Color.White else c.text, size = 26.dp) }
+            }
         }
     }
 }
@@ -200,239 +230,6 @@ fun rememberDictation(onResult: (String) -> Unit, onUnavailable: () -> Unit): ()
     }
 }
 
-// ------------------------------------------------------------------ Composer
-
-/**
- * Hochgeklapptes Eingabeblatt über der Tastatur: oben Termin · Aufgabe · Notiz und ×, darunter der Text,
- * unten + (alle Felder), Details, Erinnerung, Fokus, rechts Diktat und Senden.
- */
-@Composable
-fun QuickComposer(
-    visible: Boolean,
-    type: EntryType,
-    onTypeChange: (EntryType) -> Unit,
-    startDictation: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (QuickEntry) -> Unit,
-    onDetails: (QuickEntry) -> Unit,
-    onMessage: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    hazeState: HazeState? = null,
-) {
-    val c = OrganiTheme.colors
-    BackHandler(visible, onDismiss)
-    Box(modifier.fillMaxSize()) {
-        AnimatedVisibility(visible, enter = fadeIn(tween(180)), exit = fadeOut(tween(160))) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .then(
-                        if (hazeState != null) {
-                            Modifier.hazeBlur(HazeInput.Sources(hazeState), remember { HazeBlurStyle { blurRadius(28.dp); noiseFactor(0f) } })
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .background(if (c.isDark) Color(0x99000000) else Color(0x66FFFFFF))
-                    .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
-            )
-        }
-        AnimatedVisibility(
-            visible,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically(tween(240)) { it / 2 } + fadeIn(tween(160)),
-            exit = slideOutVertically(tween(200)) { it / 2 } + fadeOut(tween(140)),
-        ) {
-            ComposerCard(type, onTypeChange, startDictation, onDismiss, onSave, onDetails, onMessage)
-        }
-    }
-}
-
-@Composable
-private fun ComposerCard(
-    type: EntryType,
-    onTypeChange: (EntryType) -> Unit,
-    startDictation: Boolean,
-    onDismiss: () -> Unit,
-    onSave: (QuickEntry) -> Unit,
-    onDetails: (QuickEntry) -> Unit,
-    onMessage: (String) -> Unit,
-) {
-    val c = OrganiTheme.colors
-    val haptics = LocalHapticFeedback.current
-    val askNotifications = rememberNotificationPermission()
-    var field by remember { mutableStateOf(TextFieldValue("")) }
-    var details by remember { mutableStateOf("") }
-    var showDetails by remember { mutableStateOf(false) }
-    val detailsFocus = remember { FocusRequester() }
-    var at by remember { mutableStateOf<LocalDateTime?>(null) }
-    var focused by remember { mutableStateOf(false) }
-    var picker by remember { mutableStateOf<String?>(null) }
-    val focus = remember { FocusRequester() }
-    val shape = RoundedCornerShape(32.dp)
-    val canSend = field.text.isNotBlank() || details.isNotBlank()
-
-    val dictate = rememberDictation(
-        onResult = { spoken ->
-            val sep = if (field.text.isBlank() || field.text.endsWith(" ") || field.text.endsWith("\n")) "" else " "
-            val t = field.text + sep + spoken
-            field = TextFieldValue(t, TextRange(t.length))
-        },
-        onUnavailable = { onMessage("Diktat ist auf diesem Gerät nicht verfügbar") },
-    )
-    LaunchedEffect(Unit) {
-        if (startDictation) {
-            dictate()
-        } else {
-            delay(80)
-            runCatching { focus.requestFocus() }
-        }
-    }
-
-    // Titel und Details werden zu einem Text: erste Zeile Titel, Rest Details.
-    val entry = { QuickEntry(type, listOf(field.text.trim(), details.trim()).filter { it.isNotEmpty() }.joinToString("\n"), at, focused) }
-
-    Column(
-        Modifier
-            .imePadding()
-            .navigationBarsPadding()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp)
-            .fillMaxWidth()
-            .shadow(24.dp, shape, ambientColor = Color.Black.copy(alpha = 0.22f), spotColor = Color.Black.copy(alpha = 0.22f))
-            .clip(shape)
-            .background(c.surface)
-            .border(1.dp, c.border.copy(alpha = 0.5f), shape)
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        // Kopf: Typ wählen, × zum Schließen.
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Types.forEach { t -> TypeChip(t, t == type) { onTypeChange(t) } }
-            Spacer(Modifier.weight(1f))
-            Box(
-                Modifier
-                    .size(44.dp)
-                    .clip(OrganiShapes.circle)
-                    .background(c.surface2)
-                    .clickable(role = Role.Button, onClickLabel = "Schließen", onClick = onDismiss)
-                    .semantics { contentDescription = "Schließen" },
-                contentAlignment = Alignment.Center,
-            ) { MsIcon(Ms.close, null, tint = c.text, size = 20.dp) }
-        }
-
-        // Text; erste Zeile wird der Titel, der Rest die Notiz.
-        Box(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 4.dp)) {
-            if (field.text.isEmpty()) Text(type.placeholder(), style = OrganiTheme.type.headline.copy(fontSize = 20.sp), color = c.textSoft)
-            BasicTextField(
-                value = field,
-                onValueChange = { field = it },
-                textStyle = OrganiTheme.type.headline.copy(fontSize = 20.sp, color = c.text),
-                cursorBrush = SolidColor(c.brandBlue),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus).semantics { contentDescription = type.placeholder() },
-            )
-        }
-
-        // Details-Text unter dem Titel, über das Text-Symbol eingeblendet.
-        AnimatedVisibility(showDetails) {
-            Box(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                if (details.isEmpty()) Text("Details hinzufügen", style = OrganiTheme.type.body, color = c.textSoft)
-                BasicTextField(
-                    value = details,
-                    onValueChange = { details = it },
-                    textStyle = OrganiTheme.type.body.copy(color = c.textMuted),
-                    cursorBrush = SolidColor(c.brandBlue),
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    modifier = Modifier.fillMaxWidth().focusRequester(detailsFocus).semantics { contentDescription = "Details" },
-                )
-            }
-        }
-        LaunchedEffect(showDetails) { if (showDetails) runCatching { detailsFocus.requestFocus() } }
-
-        AnimatedVisibility(at != null) {
-            val value = at
-            if (value != null) {
-                Row(
-                    Modifier
-                        .clip(OrganiShapes.pill)
-                        .background(c.surface2)
-                        .clickable(role = Role.Button, onClickLabel = "Erinnerung entfernen") { at = null }
-                        .padding(start = 12.dp, end = 6.dp)
-                        .heightIn(min = 36.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    MsIcon(Ms.notifications, null, tint = c.text, size = 16.dp)
-                    Text(
-                        "${Dates.relativeDay(value.toLocalDate(), LocalDate.now()).replaceFirstChar(Char::uppercase)}, ${Dates.time(value)}",
-                        style = OrganiTheme.type.label,
-                        color = c.text,
-                    )
-                    MsIcon(Ms.close, null, tint = c.textSoft, size = 16.dp)
-                }
-            }
-        }
-
-        // Werkzeugzeile: + · Details · Erinnerung · Fokus … Diktat · Senden.
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            // + rund im Stil des Diktat-Knopfs: öffnet das volle Blatt mit allen Feldern.
-            Box(
-                Modifier
-                    .size(44.dp)
-                    .clip(OrganiShapes.circle)
-                    .background(c.surface2)
-                    .clickable(role = Role.Button, onClickLabel = "Mit allen Feldern öffnen") { onDetails(entry()) }
-                    .semantics { contentDescription = "Mit allen Feldern öffnen" },
-                contentAlignment = Alignment.Center,
-            ) { MsIcon(Ms.add, null, tint = c.text, size = 22.dp) }
-            Spacer(Modifier.width(4.dp))
-            ToolIcon(Ms.subject, if (showDetails) "Details ausblenden" else "Details hinzufügen", tint = if (showDetails || details.isNotBlank()) c.brandBlue else c.text) {
-                showDetails = !showDetails || details.isNotBlank()
-            }
-            ToolIcon(Ms.notifications, "Erinnerung", tint = if (at != null) c.brandBlue else c.text) { picker = "date" }
-            ToolIcon(Ms.flag, if (focused) "Nicht mehr fokussieren" else "Fokussieren", tint = if (focused) Primitives.Yellow600 else c.text) { focused = !focused }
-            Spacer(Modifier.weight(1f))
-            Box(
-                Modifier
-                    .size(width = 64.dp, height = 44.dp)
-                    .clip(OrganiShapes.pill)
-                    .background(c.surface2)
-                    .clickable(role = Role.Button, onClickLabel = "Diktieren", onClick = dictate)
-                    .semantics { contentDescription = "Diktieren" },
-                contentAlignment = Alignment.Center,
-            ) { MsIcon(Ms.graphicEq, null, tint = c.text, size = 22.dp) }
-            Spacer(Modifier.width(8.dp))
-            val sendFill = if (c.isDark) Color.White else Color(0xFF0A0A0B)
-            val sendOn = if (c.isDark) Color(0xFF0A0A0B) else Color.White
-            Box(
-                Modifier
-                    .size(44.dp)
-                    .clip(OrganiShapes.circle)
-                    .background(if (canSend) sendFill else c.surface2)
-                    .clickable(enabled = canSend, role = Role.Button, onClickLabel = "Speichern") {
-                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                        onSave(entry())
-                    }
-                    .semantics { contentDescription = "Speichern" },
-                contentAlignment = Alignment.Center,
-            ) { MsIcon(Ms.arrowUpward, null, tint = if (canSend) sendOn else c.textSoft, size = 22.dp) }
-        }
-    }
-
-    when (picker) {
-        "date" -> DatePickerSheet(at?.toLocalDate() ?: LocalDate.now(), { picker = null }, { d ->
-            at = d.atTime(at?.toLocalTime() ?: LocalTime.of(9, 0))
-            picker = "time"
-        }, minDate = LocalDate.now())
-        "time" -> TimePickerSheet(at?.toLocalTime() ?: LocalTime.of(9, 0), { picker = null }) { t ->
-            at = (at?.toLocalDate() ?: LocalDate.now()).atTime(t)
-            picker = null
-            askNotifications()
-        }
-    }
-}
-
 /** Der gewählte Typ zeigt Symbol und Namen, die anderen nur das Symbol. */
 @Composable
 private fun TypeChip(type: EntryType, active: Boolean, onClick: () -> Unit) {
@@ -453,16 +250,4 @@ private fun TypeChip(type: EntryType, active: Boolean, onClick: () -> Unit) {
         MsIcon(type.icon, null, tint = if (active) on else c.text, size = 20.dp)
         if (active) Text(type.shortLabel, style = OrganiTheme.type.label.copy(fontSize = 15.sp, fontWeight = FontWeight.Medium), color = on, maxLines = 1)
     }
-}
-
-@Composable
-private fun ToolIcon(icon: Int, description: String, tint: Color = OrganiTheme.colors.text, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(Spacing.touch)
-            .clip(OrganiShapes.circle)
-            .clickable(role = Role.Button, onClickLabel = description, onClick = onClick)
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) { MsIcon(icon, null, tint = tint, size = 24.dp) }
 }

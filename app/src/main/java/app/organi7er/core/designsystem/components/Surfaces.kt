@@ -119,12 +119,24 @@ fun Modifier.knob(shape: Shape): Modifier {
 
 /** Hintergrund: weiche, große Farbschlieren, damit die Glasflächen Tiefe bekommen. */
 @Composable
-fun Modifier.aura(): Modifier {
+fun Modifier.aura(glow: Color? = null): Modifier {
     val c = OrganiTheme.colors
     // Schwarz-Weiß: ruhiger Verlauf, oben minimal heller (hell) bzw. leicht aufgehellt (dunkel).
     val top = if (c.isDark) Color(0xFF16161A) else Color.White
-    return background(Brush.verticalGradient(0f to top, 0.45f to c.bg, 1f to c.bg))
-
+    val base = Brush.verticalGradient(0f to top, 0.45f to c.bg, 1f to c.bg)
+    if (glow == null) return background(base)
+    // Glow wie bei Gemini: ein weicher Schein, der von der Unterkante nach oben ausläuft.
+    val alpha = if (c.isDark) 0.6f else 0.25f
+    return drawBehind {
+        drawRect(base)
+        drawRect(
+            Brush.radialGradient(
+                colors = listOf(glow.copy(alpha = alpha), Color.Transparent),
+                center = Offset(size.width / 2f, size.height),
+                radius = size.height * 0.7f,
+            ),
+        )
+    }
 }
 
 /** Optionale Unschärfe-Quelle für einzelne, ruhende Glasflächen. */
