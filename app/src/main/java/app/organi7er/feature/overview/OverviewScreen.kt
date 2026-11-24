@@ -36,6 +36,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -46,12 +47,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -72,10 +75,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.organi7er.core.designsystem.DarkOrganiColors
+import app.organi7er.core.designsystem.LocalOrganiColors
 import app.organi7er.core.designsystem.OrganiShapes
 import app.organi7er.core.designsystem.OrganiTheme
 import app.organi7er.core.designsystem.Primitives
 import app.organi7er.core.designsystem.Spacing
+import app.organi7er.core.designsystem.components.DotText
 import app.organi7er.core.designsystem.components.EntryType
 import app.organi7er.core.designsystem.components.InsetCard
 import app.organi7er.core.designsystem.components.LeadingCircle
@@ -90,6 +96,7 @@ import app.organi7er.core.designsystem.components.MeetingButton
 import app.organi7er.core.designsystem.components.floatShadow
 import app.organi7er.core.designsystem.components.glass
 import app.organi7er.core.designsystem.components.icon
+import app.organi7er.core.designsystem.components.liquidGlass
 import app.organi7er.core.designsystem.components.shortLabel
 import app.organi7er.core.designsystem.components.softShadow
 import app.organi7er.feature.common.AppHeader
@@ -125,18 +132,31 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                 },
             contentPadding = PaddingValues(start = Spacing.page, end = Spacing.page, bottom = ContentBottomPadding),
         ) {
-            item(key = "head", contentType = "head") { AppHeader("Übersicht") }
-            item(key = "tiles", contentType = "tiles") {
-                DayTiles(
-                    days = state.days,
-                    selected = state.selected,
-                    tall = state.unread == 0,
-                    onSelect = vm::selectDay,
-                    onOpen = { actions.openTab(TAB_CALENDAR) },
-                    modifier = Modifier.padding(top = 28.dp),
-                )
+            // Kopfbereich auf dunklem Hintergrund mit Punktlandschaft: Kopfzeile, Tageskacheln, KW-Auswahl.
+            // Immer im dunklen Farbschema, damit Schrift und Glas auf dem Schwarz lesbar bleiben.
+            item(key = "hero", contentType = "hero") {
+                CompositionLocalProvider(LocalOrganiColors provides DarkOrganiColors) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .bleed()
+                            .heroBackground()
+                            // Unten kein Abstand: der Bereich endet genau an der Unterkante der KW-Pille.
+                            .padding(horizontal = Spacing.page),
+                    ) {
+                        AppHeader("Übersicht", halo = true)
+                        DayTiles(
+                            days = state.days,
+                            selected = state.selected,
+                            tall = state.unread == 0,
+                            onSelect = vm::selectDay,
+                            onOpen = { actions.openTab(TAB_CALENDAR) },
+                            modifier = Modifier.padding(top = 28.dp).bleed(Spacing.page - TileEdge),
+                        )
+                        WeekPicker(state, vm::selectWeek, Modifier.padding(top = 18.dp))
+                    }
+                }
             }
-            item(key = "weeks", contentType = "weeks") { WeekPicker(state, vm::selectWeek, Modifier.padding(top = 18.dp)) }
             // Nur bei ungelesenen Benachrichtigungen – sonst fällt die Zeile samt Abstand weg.
             if (state.unread > 0) {
                 item(key = "notif", contentType = "notif") { NotificationRow(state.unread, actions.openNotifications, Modifier.padding(top = 22.dp)) }
@@ -233,9 +253,12 @@ private fun open(actions: AppActions, e: EntryUi) = when (e.type) {
     EntryType.Note -> actions.openNote(e.id)
 }
 
-/** Lässt eine Zeile über den Seitenrand bis an die Bildschirmkante laufen. */
-private fun Modifier.bleed() = layout { measurable, constraints ->
-    val extra = Spacing.page.roundToPx()
+/** Abstand der äußeren Tageskacheln zum Bildschirmrand. */
+private val TileEdge = 8.dp
+
+/** Lässt eine Zeile über den Seitenrand hinaus laufen (Standard: bis an die Bildschirmkante). */
+private fun Modifier.bleed(by: androidx.compose.ui.unit.Dp = Spacing.page) = layout { measurable, constraints ->
+    val extra = by.roundToPx()
     val w = constraints.maxWidth + extra * 2
     val placeable = measurable.measure(constraints.copy(minWidth = w, maxWidth = w))
     layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
@@ -326,20 +349,7 @@ private fun DayTile(
         Modifier
             .floatShadow(shape, c.shadowFloat)
             .clip(shape)
-            // Helles Silber: oben links fast weiß, nach unten rechts kühles Grau.
-            .background(Brush.linearGradient(listOf(Silver100, Silver200, Silver300)))
-            .drawWithContent {
-                // Weicher Glanz oben links.
-                drawRect(
-                    Brush.radialGradient(
-                        listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0f)),
-                        center = Offset(size.width * 0.15f, size.height * 0.0f),
-                        radius = size.width * 0.9f,
-                    ),
-                )
-                drawContent()
-            }
-            .border(1.dp, Color.White.copy(alpha = 0.7f), shape)
+            .frostedGlass(shape)
     } else {
         Modifier
             .softShadow(shape, c.shadowSoft)
@@ -368,10 +378,28 @@ private fun DayTile(
     }
 }
 
-/** Silberverlauf der aktiven Tageskachel. */
-private val Silver100 = Color(0xFFF7F8FA)
-private val Silver200 = Color(0xFFE3E6EB)
-private val Silver300 = Color(0xFFC4C9D1)
+/** Mattglas der aktiven Tageskachel: Grundton oben → unten. */
+private val Frost100 = Color(0xFFF7F8F9)
+private val Frost200 = Color(0xFFE9EBEE)
+private val Frost300 = Color(0xFFDCDFE3)
+
+/**
+ * Helles Mattglas wie die „Logo Design“-Pille der Vorlage: leicht grauer Kern,
+ * nach außen ein weicher, fast weißer Lichtrand und oben ein sanfter Glanz.
+ */
+private fun Modifier.frostedGlass(shape: androidx.compose.ui.graphics.Shape): Modifier = drawWithCache {
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val base = Brush.verticalGradient(0f to Frost100, 0.55f to Frost200, 1f to Frost300)
+    val sheen = Brush.verticalGradient(0f to Color.White.copy(alpha = 0.75f), 0.35f to Color.White.copy(alpha = 0f))
+    // Lichtrand: viele zarte Striche übereinander ergeben einen weichen Verlauf zum Rand hin (Hälfte liegt außerhalb und wird abgeschnitten).
+    val rim = (1..14).map { k -> (k * 2.4f).dp.toPx() to 0.07f } + (2.dp.toPx() to 0.85f)
+    onDrawWithContent {
+        drawOutline(outline, base)
+        rim.forEach { (w, a) -> drawOutline(outline, Color.White.copy(alpha = a), style = androidx.compose.ui.graphics.drawscope.Stroke(w)) }
+        drawRect(sheen)
+        drawContent()
+    }
+}
 
 /** Schrift auf der silbernen Kachel. */
 private val OnSilver = Color(0xFF0A0A0B)
@@ -383,31 +411,33 @@ private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
         Row(Modifier.fillMaxWidth()) {
             // Datum groß, darunter „Heute“ / „Morgen“ / Wochentag.
             Column(Modifier.weight(1f)) {
-                Text(d.short, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = OnSilver, maxLines = 1)
+                // Wochentag als Schrift, die Tageszahl im Punktraster.
+                val day = d.short.substringBefore(' ')
+                val num = d.short.substringAfter(' ', "")
+                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(day, style = OrganiTheme.type.statValue.copy(fontSize = 30.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium), color = OnSilver, maxLines = 1)
+                    if (num.isNotBlank()) DotText(num, Modifier.padding(bottom = 7.dp), height = 21.dp, color = OnSilver)
+                }
                 Text(d.headline, Modifier.padding(top = 2.dp), style = OrganiTheme.type.label, color = soft, maxLines = 1)
             }
-            // Zähler rechts untereinander.
-            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Count(Ms.calendarToday, d.events, OnSilver.copy(alpha = 0.85f))
-                Count(Ms.checklist, d.tasks, OnSilver.copy(alpha = 0.85f))
-                Count(Ms.description, d.notes, OnSilver.copy(alpha = 0.85f))
-            }
+            // Nur mit Link: Symbol der Plattform (Meet, Zoom, Teams …) oben rechts, Tippen öffnet das Meeting.
+            if (d.nextLink.isNotBlank()) MeetingButton(d.nextLink, Modifier.padding(start = 10.dp), size = 38.dp)
         }
         Spacer(Modifier.weight(1f))
-        if (d.nextLabel.isNotBlank()) Text(d.nextLabel, style = OrganiTheme.type.tileCaption.copy(fontSize = 12.sp), color = soft, maxLines = 1)
-        Row(verticalAlignment = Alignment.Bottom) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    d.nextTitle,
-                    style = OrganiTheme.type.title.copy(fontSize = 18.sp, lineHeight = 22.sp),
-                    color = OnSilver,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            // Nur mit Link: Symbol der Plattform (Meet, Zoom, Teams …), Tippen öffnet das Meeting.
-            if (d.nextLink.isNotBlank()) MeetingButton(d.nextLink, Modifier.padding(start = 10.dp))
+        // Zähler waagerecht, dicht über „Als Nächstes“.
+        Row(Modifier.padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Count(Ms.calendarToday, d.events)
+            Count(Ms.checklist, d.tasks)
+            Count(Ms.description, d.notes)
         }
+        if (d.nextLabel.isNotBlank()) Text(d.nextLabel, style = OrganiTheme.type.tileCaption.copy(fontSize = 12.sp), color = soft, maxLines = 1)
+        Text(
+            d.nextTitle,
+            style = OrganiTheme.type.title.copy(fontSize = 18.sp, lineHeight = 22.sp),
+            color = OnSilver,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -416,11 +446,7 @@ private fun SmallTileContent(d: DayTileUi, modifier: Modifier) {
     val c = OrganiTheme.colors
     Column(modifier.fillMaxHeight().padding(vertical = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(d.letter, style = OrganiTheme.type.tileCaption, color = c.textSoft)
-        Text(
-            d.number,
-            style = OrganiTheme.type.label.copy(fontSize = 16.sp, fontWeight = if (d.isToday) FontWeight.SemiBold else FontWeight.Medium),
-            color = c.text,
-        )
+        DotText(d.number, Modifier.padding(top = 4.dp), height = 11.dp, color = if (d.isToday) c.text else c.textMuted)
         if (d.isToday) Box(Modifier.padding(top = 3.dp).size(4.dp).clip(OrganiShapes.circle).background(Primitives.Yellow500))
         Spacer(Modifier.weight(1f))
         StackCount(Ms.calendarToday, d.events)
@@ -429,26 +455,40 @@ private fun SmallTileContent(d: DayTileUi, modifier: Modifier) {
     }
 }
 
+/** Zähler der aktiven Kachel: Symbol in einem zarten Silberkreis, die Zahl im Punktraster rechts daneben. */
 @Composable
-private fun Count(@DrawableRes icon: Int, n: Int, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        MsIcon(icon, null, tint = color, size = 14.dp)
-        Text("$n", Modifier.width(14.dp), style = OrganiTheme.type.tileStat.copy(fontSize = 13.sp), color = color)
+private fun Count(@DrawableRes icon: Int, n: Int) {
+    val shape = OrganiShapes.circle
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        Box(
+            Modifier
+                .size(30.dp)
+                .clip(shape)
+                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.6f), OnSilver.copy(alpha = 0.04f))))
+                .border(1.dp, OnSilver.copy(alpha = 0.13f), shape),
+            contentAlignment = Alignment.Center,
+        ) {
+            MsIcon(icon, null, tint = OnSilver.copy(alpha = 0.7f), size = 14.dp)
+        }
+        DotText("$n", height = 9.dp, color = OnSilver.copy(alpha = 0.85f))
     }
 }
 
 @Composable
 private fun StackCount(@DrawableRes icon: Int, n: Int) {
     val c = OrganiTheme.colors
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         MsIcon(icon, null, tint = c.textSoft, size = 12.dp)
-        Text(if (n == 0) "–" else "$n", style = OrganiTheme.type.tileStat, color = if (n == 0) c.textSoft else c.text)
+        DotText(if (n == 0) "-" else "$n", height = 8.dp, color = if (n == 0) c.textSoft else c.text)
     }
 }
 
 // ------------------------------------------------------------------ KW-Auswahl
 
 private val EdgeFade = 32.dp
+private val WeekShape = TrapezoidShape()
+
+
 
 /** Die gewählte KW steht immer in der Mitte; links und rechts blenden die Wochen über 32 dp aus. */
 @Composable
@@ -490,25 +530,28 @@ private fun WeekPicker(state: OverviewState, onSelect: (WeekUi) -> Unit, modifie
                         .heightIn(min = 38.dp)
                         .then(
                             if (sel) {
-                                Modifier.softShadow(OrganiShapes.pill, c.shadowSoft).clip(OrganiShapes.pill).background(c.text)
+                                // Trapez (oben schmal, unten breit) im selben Glas wie die Such-Pille.
+                                Modifier.liquidGlass(WeekShape)
                             } else {
                                 Modifier.clip(OrganiShapes.pill)
                             },
                         )
                         .selectable(sel, role = Role.Tab, onClick = { onSelect(w) })
                         .semantics { contentDescription = "Kalenderwoche ${w.number}" }
-                        .padding(horizontal = if (sel) 16.dp else 10.dp),
+                        // Gewählt mehr Rand, weil das Trapez oben eingezogen ist.
+                        .padding(horizontal = if (sel) 22.dp else 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        if (sel) "KW ${w.number}" else "${w.number}",
-                        style = OrganiTheme.type.label.copy(fontSize = 14.sp, fontWeight = if (sel || w.isCurrent) FontWeight.SemiBold else FontWeight.Normal),
-                        color = when {
-                            sel -> c.bg
-                            w.isCurrent -> c.text
-                            else -> c.textSoft
-                        },
-                    )
+                    // Gewählt wie „Suchen“: „KW“ weiß, die Zahl im gedämpften Weißgrau.
+                    val ink = when {
+                        sel -> c.textMuted
+                        w.isCurrent -> c.text
+                        else -> c.textSoft
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (sel) Text("KW", style = OrganiTheme.type.label.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold), color = c.text)
+                        DotText("${w.number}", height = 10.dp, color = ink)
+                    }
                 }
             }
         }

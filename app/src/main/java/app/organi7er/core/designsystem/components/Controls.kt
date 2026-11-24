@@ -368,7 +368,7 @@ fun FilterTile(label: String, count: Int, selected: Boolean, onClick: () -> Unit
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, style = OrganiTheme.type.rowMeta, color = if (selected) c.onHeroMuted else c.textMuted, maxLines = 1)
-        Text("$count", style = OrganiTheme.type.filterCount, color = if (selected) c.onHero else c.text)
+        DotText("$count", height = 15.dp, color = if (selected) c.onHero else c.text)
     }
 }
 

@@ -129,7 +129,7 @@ fun BriefingTile(
 private fun Stat(@DrawableRes icon: Int, count: Int, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         MsIcon(icon, null, tint = color, size = 12.dp)
-        Text("$count", style = OrganiTheme.type.tileStat, color = color)
+        DotText("$count", height = 8.dp, color = color)
     }
 }
 
@@ -383,7 +383,7 @@ fun NoteCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     MsIcon(Ms.image, null, tint = Color.White, size = 12.dp)
-                    Text("$imageCount", style = OrganiTheme.type.tileStat, color = Color.White)
+                    DotText("$imageCount", height = 8.dp, color = Color.White)
                 }
             } else {
                 EmptyMedia(onCamera, onGallery)

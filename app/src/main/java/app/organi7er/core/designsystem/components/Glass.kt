@@ -381,7 +381,11 @@ fun StatPill(
     ) {
         Text(label, style = OrganiTheme.type.caption, color = muted, maxLines = 1)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(value, Modifier.weight(1f, fill = false), style = OrganiTheme.type.statValue, color = fg, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (isDotable(value)) {
+                DotText(value, Modifier.weight(1f, fill = false), height = 18.dp, color = fg)
+            } else {
+                Text(value, Modifier.weight(1f, fill = false), style = OrganiTheme.type.statValue, color = fg, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (chip != null) {
                 Box(
                     Modifier

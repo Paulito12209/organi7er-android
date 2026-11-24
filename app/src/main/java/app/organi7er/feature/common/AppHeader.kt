@@ -22,6 +22,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
@@ -67,6 +69,7 @@ fun AppHeader(
     title: String,
     modifier: Modifier = Modifier,
     eyebrow: (@Composable () -> Unit)? = null,
+    halo: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val c = OrganiTheme.colors
@@ -105,7 +108,10 @@ fun AppHeader(
         if (eyebrow != null) Box(Modifier.padding(top = 26.dp)) { eyebrow() }
         Text(
             title,
-            Modifier.padding(top = if (eyebrow != null) 4.dp else 26.dp).semantics { heading() },
+            Modifier
+                .padding(top = if (eyebrow != null) 4.dp else 26.dp)
+                .then(if (halo) Modifier.titleHalo() else Modifier)
+                .semantics { heading() },
             style = OrganiTheme.type.pageTitle.copy(fontSize = 40.sp, lineHeight = 44.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = (-0.035).em),
             color = c.text,
             maxLines = 1,
@@ -150,5 +156,25 @@ private fun Logo() {
         androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
             drawOrganiSeven(if (c.isDark) Color(0xFF0A0A0B) else Color.White)
         }
+    }
+}
+
+/**
+ * Sehr zarter weißer Schleier um den Seitentitel (wie in der Vorlage „Helios“).
+ * Flach-elliptisch und nach unten verschoben, damit er nicht in die Kopfzeile darüber reicht.
+ */
+private fun Modifier.titleHalo(): Modifier = drawBehind {
+    val center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * 0.85f)
+    val r = size.height * 1.6f
+    val brush = androidx.compose.ui.graphics.Brush.radialGradient(
+        0f to Color.White.copy(alpha = 0.05f),
+        0.5f to Color.White.copy(alpha = 0.025f),
+        1f to Color.Transparent,
+        center = center,
+        radius = r,
+    )
+    // Waagerecht in die Breite ziehen: Schleier folgt dem Wort statt eines Kreises.
+    scale(scaleX = (size.width / (r * 1.6f)).coerceAtLeast(1f), scaleY = 1f, pivot = center) {
+        drawCircle(brush, r, center)
     }
 }
