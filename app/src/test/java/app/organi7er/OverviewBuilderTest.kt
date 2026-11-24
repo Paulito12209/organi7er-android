@@ -6,7 +6,8 @@ import app.organi7er.core.model.NotificationEntry
 import app.organi7er.core.model.Status
 import app.organi7er.core.model.Task
 import app.organi7er.feature.overview.OverviewBuilder
-import app.organi7er.feature.overview.normalizeLink
+import app.organi7er.core.model.Meeting
+import app.organi7er.core.model.MeetingPlatform
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -57,9 +58,18 @@ class OverviewBuilderTest {
 
     @Test
     fun `Link ohne Schema bekommt https`() {
-        assertEquals("https://meet.google.com/abc", normalizeLink(" meet.google.com/abc "))
-        assertEquals("https://zoom.us/j/1", normalizeLink("https://zoom.us/j/1"))
-        assertEquals("tel:+491234", normalizeLink("tel:+491234"))
+        assertEquals("https://meet.google.com/abc", Meeting.normalize(" meet.google.com/abc "))
+        assertEquals("https://zoom.us/j/1", Meeting.normalize("https://zoom.us/j/1"))
+        assertEquals("tel:+491234", Meeting.normalize("tel:+491234"))
+    }
+
+    @Test
+    fun `Plattform am Host erkannt`() {
+        assertEquals(MeetingPlatform.GoogleMeet, Meeting.platform("meet.google.com/abc-defg-hij"))
+        assertEquals(MeetingPlatform.Zoom, Meeting.platform("https://us02web.zoom.us/j/123"))
+        assertEquals(MeetingPlatform.Teams, Meeting.platform("https://teams.microsoft.com/l/meetup-join/x"))
+        assertEquals(MeetingPlatform.Webex, Meeting.platform("https://acme.webex.com/meet/x"))
+        assertEquals(MeetingPlatform.Other, Meeting.platform("https://notzoom.us.example.com"))
     }
 
     @Test

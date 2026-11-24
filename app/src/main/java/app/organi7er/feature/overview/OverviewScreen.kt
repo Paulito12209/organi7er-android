@@ -59,7 +59,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -85,6 +84,9 @@ import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.MsIcon
 import app.organi7er.core.designsystem.components.SectionHeader
 import app.organi7er.core.designsystem.components.SegmentedControl
+import app.organi7er.core.designsystem.components.SegmentedList
+import app.organi7er.core.designsystem.components.segmentItem
+import app.organi7er.core.designsystem.components.MeetingButton
 import app.organi7er.core.designsystem.components.floatShadow
 import app.organi7er.core.designsystem.components.glass
 import app.organi7er.core.designsystem.components.icon
@@ -166,7 +168,6 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                     tall = state.unread == 0,
                     onSelect = vm::selectDay,
                     onOpen = { actions.openTab(TAB_CALENDAR) },
-                    onNext = { id -> actions.openEditor(EditorRequest.EditEvent(id)) },
                     modifier = Modifier.padding(top = 28.dp),
                 )
             }
@@ -203,8 +204,9 @@ fun OverviewScreen(vm: OverviewViewModel = hiltViewModel()) {
                             color = OrganiTheme.colors.textSoft,
                         )
                     } else {
-                        InsetCard(padding = 8.dp) {
-                            list.forEach { e -> FeedRow(e) { open(actions, e) } }
+                        // Wie die Einstellungen: einzelne Flächen, außen 16, innen 4 abgerundet, kleine Lücke.
+                        SegmentedList {
+                            list.forEachIndexed { i, e -> FeedRow(e, i, list.size) { open(actions, e) } }
                         }
                     }
                 }
@@ -225,7 +227,7 @@ private fun SectionTitle(text: String) {
 
 /** Verlaufszeile: Icon, Titel, darunter Art („Notiz“) und ggf. ein „Entwurf“-Chip, rechts die Zeit. */
 @Composable
-private fun FeedRow(e: EntryUi, onClick: () -> Unit) {
+private fun FeedRow(e: EntryUi, index: Int, count: Int, onClick: () -> Unit) {
     val c = OrganiTheme.colors
     val parts = e.meta.split(" · ")
     val kind = parts.first()
@@ -233,15 +235,15 @@ private fun FeedRow(e: EntryUi, onClick: () -> Unit) {
     val rest = parts.drop(1).filter { it != "Entwurf" }.joinToString(" · ")
     Row(
         Modifier
-            .fillMaxWidth()
-            .heightIn(min = 60.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .segmentItem(index, count, minHeight = 64.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        LeadingCircle(size = 40.dp) { MsIcon(e.type.icon, null, tint = c.text, size = 18.dp) }
+        Box(Modifier.size(34.dp).clip(RoundedCornerShape(11.dp)).background(c.surface2), contentAlignment = Alignment.Center) {
+            MsIcon(e.type.icon, null, tint = c.text, size = 18.dp)
+        }
         Column(Modifier.weight(1f)) {
             Text(e.title, style = OrganiTheme.type.rowTitle, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -311,7 +313,6 @@ private fun DayTiles(
     tall: Boolean,
     onSelect: (java.time.LocalDate) -> Unit,
     onOpen: () -> Unit,
-    onNext: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (days.isEmpty()) return
@@ -342,7 +343,6 @@ private fun DayTiles(
                     depth = depth,
                     stripOnRight = i > active,
                     strip = step,
-                    onNext = onNext,
                     modifier = Modifier
                         // Weiter vom aktiven Tag entfernt = weiter hinten.
                         .zIndex(if (isActive) 100f else (10 - depth).toFloat())
@@ -367,7 +367,6 @@ private fun DayTile(
     depth: Int,
     stripOnRight: Boolean,
     strip: androidx.compose.ui.unit.Dp,
-    onNext: (Long) -> Unit,
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
@@ -413,7 +412,7 @@ private fun DayTile(
             .semantics(mergeDescendants = true) { contentDescription = d.a11y },
     ) {
         if (open > 0.35f) {
-            BigTileContent(d, onNext, Modifier.graphicsLayer { alpha = ((open - 0.35f) / 0.65f).coerceIn(0f, 1f) })
+            BigTileContent(d, Modifier.graphicsLayer { alpha = ((open - 0.35f) / 0.65f).coerceIn(0f, 1f) })
         } else {
             SmallTileContent(
                 d,
@@ -427,7 +426,7 @@ private fun DayTile(
 }
 
 @Composable
-private fun BigTileContent(d: DayTileUi, onNext: (Long) -> Unit, modifier: Modifier) {
+private fun BigTileContent(d: DayTileUi, modifier: Modifier) {
     val soft = Color.White.copy(alpha = 0.68f)
     Column(modifier.fillMaxSize().padding(start = 18.dp, end = 14.dp, top = 16.dp, bottom = 16.dp)) {
         Row(Modifier.fillMaxWidth()) {
@@ -455,32 +454,10 @@ private fun BigTileContent(d: DayTileUi, onNext: (Long) -> Unit, modifier: Modif
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            val id = d.nextEventId
-            val uri = LocalUriHandler.current
-            if (id != null) {
-                // Mit Link öffnet der Pfeil direkt das Meeting, sonst den Termin.
-                val hasLink = d.nextLink.isNotBlank()
-                val label = if (hasLink) "Link öffnen" else "Termin öffnen"
-                Box(
-                    Modifier
-                        .padding(start = 10.dp)
-                        .size(40.dp)
-                        .clip(OrganiShapes.circle)
-                        .background(Color.White)
-                        .clickable(role = Role.Button, onClickLabel = label) {
-                            if (hasLink) runCatching { uri.openUri(normalizeLink(d.nextLink)) }.onFailure { onNext(id) } else onNext(id)
-                        },
-                    contentAlignment = Alignment.Center,
-                ) { MsIcon(Ms.arrowOutward, label, tint = Primitives.Navy900, size = 18.dp) }
-            }
+            // Nur mit Link: Symbol der Plattform (Meet, Zoom, Teams …), Tippen öffnet das Meeting.
+            if (d.nextLink.isNotBlank()) MeetingButton(d.nextLink, Modifier.padding(start = 10.dp))
         }
     }
-}
-
-/** „meet.google.com/x“ → „https://meet.google.com/x“. */
-internal fun normalizeLink(raw: String): String {
-    val t = raw.trim()
-    return if (Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:").containsMatchIn(t)) t else "https://$t"
 }
 
 @Composable
