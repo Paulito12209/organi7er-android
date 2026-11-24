@@ -111,7 +111,7 @@ private fun EntryType.placeholder(): String = when (this) {
 // ------------------------------------------------------------------ Einstellbare Werte
 
 /** Abstand der inneren Composer-Karte zum Glas-Rahmen (links, rechts, oben, unten). */
-private val SheetGap = 12.dp
+private val SheetGap = 10.dp
 
 /** Rundung der inneren Composer-Karte. */
 private val ComposerRadius = 24.dp
