@@ -101,6 +101,8 @@ import app.organi7er.feature.notes.NoteDetailScreen
 import app.organi7er.feature.notes.NotesScreen
 import app.organi7er.feature.notifications.NotificationsScreen
 import app.organi7er.feature.overview.OverviewScreen
+import app.organi7er.feature.search.SearchScreen
+import app.organi7er.feature.search.SearchViewModel
 import app.organi7er.feature.settings.SettingsScreen
 import app.organi7er.feature.tasks.TasksScreen
 import dev.chrisbanes.haze.HazeInput
@@ -146,6 +148,9 @@ fun OrganiAppRoot() {
     val scope = rememberCoroutineScope()
     val contentHaze = rememberHazeState()
     var request by remember { mutableStateOf<EditorRequest?>(null) }
+    // Suche liegt als eigene Ebene über dem Inhalt (samt Dock), damit das Feld die ganze Breite bekommt.
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
+    val search: SearchViewModel = hiltViewModel()
 
     // Einstellungen als Panel von rechts; links bleibt ein Streifen der Übersicht sichtbar.
     val settings = remember { Animatable(0f) }
@@ -228,6 +233,7 @@ fun OrganiAppRoot() {
             },
             openSettings = { openSettingsPanel() },
             openNotifications = { nav.navigate(NotificationsRoute) { launchSingleTop = true } },
+            openSearch = { searchOpen = true },
             openCatalog = {
                 scope.launch { settings.snapTo(0f) }
                 nav.navigate(CatalogRoute)
@@ -326,6 +332,31 @@ fun OrganiAppRoot() {
                         },
                         onCamera = { request = EditorRequest.NewNote(startCamera = true) },
                         onMessage = actions.showMessage,
+                    )
+                }
+
+                // Suche: blendet über allem ein; Logo und Menüknopf weichen, das Feld läuft über die ganze Breite.
+                AnimatedVisibility(
+                    searchOpen,
+                    Modifier.fillMaxSize(),
+                    enter = fadeIn(tween(180)) + slideInVertically(tween(240)) { -it / 12 },
+                    exit = fadeOut(tween(160)) + slideOutVertically(tween(200)) { -it / 12 },
+                ) {
+                    val closeSearch = {
+                        searchOpen = false
+                        search.query.value = ""
+                    }
+                    SearchScreen(
+                        vm = search,
+                        onOpen = { hit ->
+                            closeSearch()
+                            when (hit.type) {
+                                EntryType.Event -> actions.openEditor(EditorRequest.EditEvent(hit.id))
+                                EntryType.Task -> actions.openEditor(EditorRequest.EditTask(hit.id))
+                                EntryType.Note -> actions.openNote(hit.id)
+                            }
+                        },
+                        onClose = closeSearch,
                     )
                 }
 

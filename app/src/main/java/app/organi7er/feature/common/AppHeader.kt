@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -41,6 +42,7 @@ import app.organi7er.core.designsystem.Spacing
 import app.organi7er.core.designsystem.components.GlassCircleButton
 import app.organi7er.core.designsystem.components.Ms
 import app.organi7er.core.designsystem.components.MsIcon
+import app.organi7er.core.designsystem.components.glass
 import app.organi7er.feature.editor.LocalAppActions
 import coil3.compose.AsyncImage
 import java.io.File
@@ -52,8 +54,8 @@ data class ShellInfo(val unread: Int = 0, val profileImage: String? = null)
 val LocalShell = staticCompositionLocalOf { ShellInfo() }
 
 /**
- * Kopf der Hauptseiten: Logo und daneben groß der Seitentitel, rechts Glocke (nur Icon)
- * und Profilbild bzw. Einstellungen.
+ * Kopf der Hauptseiten: Logo links, rechts Such-Pille und Profilbild bzw. Einstellungen;
+ * darunter groß der Seitentitel.
  */
 @Composable
 fun AppHeader(
@@ -66,33 +68,16 @@ fun AppHeader(
     val shell = LocalShell.current
     val app = LocalAppActions.current
     Column(modifier.statusBarsPadding().padding(top = 8.dp)) {
-        // Obere Zeile: Logo links, Glocke und Profil/Einstellungen rechts.
+        // Obere Zeile: Logo links, Suche und Profil/Einstellungen rechts.
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Logo()
             // Kein App-Name mehr im Kopf: der Name erscheint nur im Ladebildschirm.
             androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically, content = actions)
-            Box(
-                Modifier
-                    .size(Spacing.touch)
-                    .clip(OrganiShapes.circle)
-                    .clickable(role = Role.Button, onClick = app.openNotifications)
-                    .semantics { contentDescription = if (shell.unread > 0) "Benachrichtigungen, ${shell.unread} ungelesen" else "Benachrichtigungen" },
-                contentAlignment = Alignment.Center,
-            ) {
-                MsIcon(Ms.notifications, null, tint = c.text, size = 23.dp)
-                if (shell.unread > 0) {
-                    Box(
-                        Modifier
-                            .align(Alignment.Center)
-                            .padding(start = 13.dp, bottom = 13.dp)
-                            .size(9.dp)
-                            .clip(OrganiShapes.circle)
-                            .background(c.danger)
-                            .border(1.5.dp, c.bg, OrganiShapes.circle),
-                    )
-                }
-            }
+            // Suche als Glas-Pille (wie in der Vorlage). Tippen öffnet die Suche: das Feld läuft über die
+            // ganze Breite, Logo und Menüknopf weichen. Benachrichtigungen stehen nicht mehr im Kopf,
+            // sondern als Zeile in der Übersicht (nur wenn es ungelesene gibt).
+            SearchPill(app.openSearch, Modifier.padding(horizontal = Spacing.xs))
             val image = shell.profileImage
             if (image != null) {
                 Box(Modifier.size(Spacing.touch), contentAlignment = Alignment.Center) {
@@ -120,6 +105,25 @@ fun AppHeader(
             color = c.text,
             maxLines = 1,
         )
+    }
+}
+
+/** Geschlossene Suche: Lupe und „Suchen“ in einer Glas-Pille. */
+@Composable
+private fun SearchPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = OrganiTheme.colors
+    Row(
+        modifier
+            .height(44.dp)
+            .glass(OrganiShapes.pill, fill = c.glassStrong)
+            .clickable(role = Role.Button, onClickLabel = "Suche öffnen", onClick = onClick)
+            .semantics { contentDescription = "Suchen" }
+            .padding(start = 14.dp, end = 26.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        MsIcon(Ms.search, null, tint = c.text, size = 19.dp)
+        Text("Suchen", style = OrganiTheme.type.body.copy(fontSize = 15.sp), color = c.textMuted, maxLines = 1)
     }
 }
 

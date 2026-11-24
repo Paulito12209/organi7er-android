@@ -7,6 +7,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -281,30 +284,43 @@ fun CheckKnob(checked: Boolean, onToggle: () -> Unit, label: String, modifier: M
     }
 }
 
-/** Segment-Steuerung: gewähltes Segment hebt sich als heller Knopf ab. */
+/**
+ * Reiter als einzelne Pillen: der aktive ist schwarz gefüllt (im dunklen Modus weiß),
+ * die anderen sind Liquid-Glass-Pillen. Breite nach Inhalt; reicht der Platz nicht, scrollt die Zeile.
+ */
 @Composable
 fun SegmentedControl(options: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val c = OrganiTheme.colors
     Row(
         modifier
             .fillMaxWidth()
-            .clip(OrganiShapes.pill)
-            .background(c.surface2)
-            .padding(4.dp)
+            .horizontalScroll(rememberScrollState())
+            .padding(vertical = 2.dp)
             .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         options.forEachIndexed { i, label ->
             val isSel = i == selected
             Box(
                 Modifier
-                    .weight(1f)
-                    .heightIn(min = 40.dp)
-                    .then(if (isSel) Modifier.knob(OrganiShapes.pill) else Modifier.clip(OrganiShapes.pill))
-                    .selectable(isSel, role = Role.Tab, onClick = { onSelect(i) }),
+                    .heightIn(min = 44.dp)
+                    .then(
+                        if (isSel) {
+                            Modifier.softShadow(OrganiShapes.pill, c.shadowSoft).clip(OrganiShapes.pill).background(c.text)
+                        } else {
+                            Modifier.glass(OrganiShapes.pill, fill = c.glassStrong)
+                        },
+                    )
+                    .selectable(isSel, role = Role.Tab, onClick = { onSelect(i) })
+                    .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, style = OrganiTheme.type.label.copy(fontSize = OrganiTheme.type.buttonSmall.fontSize), color = if (isSel) c.text else c.textMuted, maxLines = 1)
+                Text(
+                    label,
+                    style = OrganiTheme.type.label.copy(fontSize = OrganiTheme.type.buttonSmall.fontSize, fontWeight = if (isSel) FontWeight.SemiBold else FontWeight.Medium),
+                    color = if (isSel) c.bg else c.textMuted,
+                    maxLines = 1,
+                )
             }
         }
     }

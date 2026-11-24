@@ -155,6 +155,7 @@ data class AppActions(
     val openTab: (Int) -> Unit = {},
     val openSettings: () -> Unit = {},
     val openNotifications: () -> Unit = {},
+    val openSearch: () -> Unit = {},
     val openCatalog: () -> Unit = {},
     val back: () -> Unit = {},
     val takePhoto: (noteId: Long) -> Unit = {},
